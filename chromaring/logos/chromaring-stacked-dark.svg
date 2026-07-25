@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 180" width="200" height="180">
+<defs><style>@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700');</style></defs>
+<g transform="translate(100, 68)">
+<circle cx="0" cy="0" r="36" stroke="#39FF14" fill="none" stroke-width="3"/>
+<circle cx="0" cy="0" r="24" stroke="#39FF14" fill="none" stroke-width="0.75" stroke-dasharray="3.5 5" opacity="0.25"/>
+<rect x="-2.5" y="-40.5" width="5" height="8.5" rx="1" fill="#39FF14"/>
+<rect x="-2.5" y="32" width="5" height="8.5" rx="1" fill="#39FF14"/>
+<rect x="32" y="-2.5" width="8.5" height="5" rx="1" fill="#39FF14"/>
+<rect x="-40.5" y="-2.5" width="8.5" height="5" rx="1" fill="#39FF14"/>
+<g transform="rotate(45)">
+<rect x="-2" y="-39" width="4" height="6" rx="0.75" fill="#39FF14" opacity="0.45"/>
+<rect x="-2" y="33" width="4" height="6" rx="0.75" fill="#39FF14" opacity="0.45"/>
+<rect x="33" y="-2" width="6" height="4" rx="0.75" fill="#39FF14" opacity="0.45"/>
+<rect x="-39" y="-2" width="6" height="4" rx="0.75" fill="#39FF14" opacity="0.45"/>
+</g>
+<circle cx="0" cy="0" r="3.2" fill="#39FF14" opacity="0.5"/>
+</g>
+<text x="100" y="132" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-weight="700" font-size="22" fill="#FFFFFF" letter-spacing="-0.3">Chroma-Ring</text>
+<text x="100" y="150" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-weight="500" font-size="10" fill="#666666" letter-spacing="1.5">by BarChata</text>
+</svg>

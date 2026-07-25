@@ -59,11 +59,7 @@ nav .container{display:flex;align-items:center;justify-content:space-between;hei
   font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--white);
   display:flex;align-items:center;gap:10px;
 }
-.nav-logo .mark{
-  width:28px;height:28px;border:2px solid var(--neon);border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:700;color:var(--neon);letter-spacing:1px;
-}
+.nav-icon{flex-shrink:0}
 .nav-links{display:flex;align-items:center;gap:24px}
 .nav-links a{font-size:14px;font-weight:500;color:var(--gray-300);transition:color 0.2s}
 .nav-links a:hover{color:var(--white)}
@@ -435,10 +431,24 @@ footer .links a:hover{color:var(--gray-300)}
 <!-- NAV -->
 <nav>
   <div class="container">
-    <div class="nav-logo">
-      <div class="mark">CR</div>
+    <a href="/chromaring/" class="nav-logo">
+      <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
+        <circle cx="50" cy="50" r="38" stroke="#39FF14" fill="none" stroke-width="3.5"/>
+        <circle cx="50" cy="50" r="25" stroke="#39FF14" fill="none" stroke-width="0.9" stroke-dasharray="4 6" opacity="0.25"/>
+        <rect x="47.2" y="8" width="5.6" height="9" rx="1" fill="#39FF14"/>
+        <rect x="47.2" y="83" width="5.6" height="9" rx="1" fill="#39FF14"/>
+        <rect x="83" y="47.2" width="9" height="5.6" rx="1" fill="#39FF14"/>
+        <rect x="8" y="47.2" width="9" height="5.6" rx="1" fill="#39FF14"/>
+        <g transform="rotate(45 50 50)">
+          <rect x="47.8" y="10" width="4.4" height="7" rx="0.75" fill="#39FF14" opacity="0.45"/>
+          <rect x="47.8" y="83" width="4.4" height="7" rx="0.75" fill="#39FF14" opacity="0.45"/>
+          <rect x="83" y="47.8" width="7" height="4.4" rx="0.75" fill="#39FF14" opacity="0.45"/>
+          <rect x="10" y="47.8" width="7" height="4.4" rx="0.75" fill="#39FF14" opacity="0.45"/>
+        </g>
+        <circle cx="50" cy="50" r="3.5" fill="#39FF14" opacity="0.5"/>
+      </svg>
       Chroma-Ring
-    </div>
+    </a>
     <div class="nav-links">
       <a href="#product">Product</a>
       <a href="#solutions">Solutions</a>
@@ -780,7 +790,7 @@ footer .links a:hover{color:var(--gray-300)}
 
 <script>
 var SUPABASE_URL='https://gsnxtstesvysesgbxnwr.supabase.co';
-var SUPABASE_ANON='YOUR_ANON_KEY';
+var SUPABASE_ANON='PASTE_ANON_KEY_HERE';
 
 document.getElementById('waitlistForm').addEventListener('submit',function(e){
   e.preventDefault();
