@@ -37,6 +37,7 @@
   --font-body:'Inter',sans-serif;
 }
 html{scroll-behavior:smooth}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 body{
   background:var(--bg);color:var(--gray-100);
   font-family:var(--font-body);font-size:16px;line-height:1.6;
@@ -837,7 +838,28 @@ footer .links a:hover{color:var(--gray-300)}
       <input type="email" placeholder="you@yourcompany.com" required aria-label="Email address">
       <button type="submit">Join waitlist</button>
     </form>
-    <p class="cta-note">No spam. Just launch updates and beta invitations.</p>
+    <div id="waitlistSuccess" style="display:none;text-align:center;animation:fadeUp 0.5s ease">
+      <div style="width:64px;height:64px;border-radius:50%;background:rgba(57,255,20,0.1);border:2px solid rgba(57,255,20,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#39FF14" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <h3 style="color:#fff;font-size:22px;font-weight:700;margin-bottom:8px">You're on the list!</h3>
+      <p style="color:#A0A0A0;font-size:15px;margin-bottom:16px">Check your inbox — a welcome email is on its way.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <div style="background:#111;border:1px solid #222;border-radius:10px;padding:12px 20px;text-align:center">
+          <div style="color:#39FF14;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:4px">WHAT'S NEXT</div>
+          <div style="color:#888;font-size:12px">Welcome email with beta details</div>
+        </div>
+        <div style="background:#111;border:1px solid #222;border-radius:10px;padding:12px 20px;text-align:center">
+          <div style="color:#39FF14;font-size:11px;font-weight:600;letter-spacing:1px;margin-bottom:4px">BETA PERKS</div>
+          <div style="color:#888;font-size:12px">90 days free + priority hardware</div>
+        </div>
+      </div>
+      <div style="margin-top:24px;padding:16px 24px;background:rgba(242,125,38,0.04);border:1px solid rgba(242,125,38,0.15);border-radius:10px">
+        <p style="color:#F27D26;font-size:13px;font-weight:600;margin:0 0 6px">Can't wait? Try BarChata Biz now — free.</p>
+        <a href="https://biz.barchata.com/signup?ref=chromaring-waitlist" style="color:#F27D26;font-size:13px;text-decoration:underline">Create your free account →</a>
+      </div>
+    </div>
+    <p class="cta-note" id="waitlistNote">No spam. Just launch updates and beta invitations.</p>
   </div>
 </section>
 
@@ -877,20 +899,23 @@ document.getElementById('waitlistForm').addEventListener('submit',function(e){
     body:JSON.stringify({email:email,source:'landing'})
   }).then(function(r){
     if(r.ok||r.status===201){
-      btn.textContent='You\u2019re in!';
-      btn.style.background='#22C55E';
-      input.value='';
+      document.getElementById('waitlistForm').style.display='none';
+      document.getElementById('waitlistNote').style.display='none';
+      document.getElementById('waitlistSuccess').style.display='block';
       // Trigger immediate welcome email
       fetch(SUPABASE_URL+'/functions/v1/chromaring-drip',{method:'POST',headers:{'Content-Type':'application/json'}}).catch(function(){});
     }else if(r.status===409){
-      btn.textContent='Already on the list!';
-      btn.style.background='#F27D26';
+      document.getElementById('waitlistForm').style.display='none';
+      document.getElementById('waitlistNote').style.display='none';
+      document.getElementById('waitlistSuccess').style.display='block';
+      document.querySelector('#waitlistSuccess h3').textContent='You\u2019re already on the list!';
+      document.querySelector('#waitlistSuccess p').textContent='We\u2019ve got you — watch your inbox for updates.';
     }else{
       btn.textContent='Error \u2014 try again';
       btn.style.background='#EF4444';
+      btn.disabled=false;
+      setTimeout(function(){btn.textContent='Join waitlist';btn.style.background='#39FF14'},3000);
     }
-    btn.disabled=false;
-    setTimeout(function(){btn.textContent='Join waitlist';btn.style.background='#39FF14'},3000);
   }).catch(function(){
     btn.textContent='Error \u2014 try again';
     btn.style.background='#EF4444';
