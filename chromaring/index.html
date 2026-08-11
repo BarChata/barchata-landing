@@ -880,6 +880,8 @@ document.getElementById('waitlistForm').addEventListener('submit',function(e){
       btn.textContent='You\u2019re in!';
       btn.style.background='#22C55E';
       input.value='';
+      // Trigger immediate welcome email
+      fetch(SUPABASE_URL+'/functions/v1/chromaring-drip',{method:'POST',headers:{'Content-Type':'application/json'}}).catch(function(){});
     }else if(r.status===409){
       btn.textContent='Already on the list!';
       btn.style.background='#F27D26';
