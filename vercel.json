@@ -5,10 +5,54 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
       ]
+    },
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/join",
+      "destination": "/link.html"
+    },
+    {
+      "source": "/u/:username",
+      "destination": "/link.html"
+    },
+    {
+      "source": "/user/:username",
+      "destination": "/link.html"
+    },
+    {
+      "source": "/post/:id",
+      "destination": "/link.html"
+    },
+    {
+      "source": "/venue/:id",
+      "destination": "/link.html"
+    },
+    {
+      "source": "/events",
+      "destination": "/link.html"
     }
   ]
 }

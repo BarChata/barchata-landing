@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open in BarChata</title>
+<meta name="description" content="Open this on BarChata - loyalty, events and check-ins at the bars and restaurants near you.">
+<meta name="robots" content="noindex">
+
+<!-- Link previews. These are generic on purpose: the page is static, so it
+     cannot know whose profile or which post it is showing until the browser
+     runs. A wrong-but-specific preview would be worse than a correct
+     general one. -->
+<meta property="og:site_name" content="BarChata">
+<meta property="og:title" content="Open in BarChata">
+<meta property="og:description" content="Loyalty, events and check-ins at the bars and restaurants near you.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,600;9..40,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--orange:#F27D26;--orange-hover:#E06E14;
+--orange-soft:rgba(242,125,38,0.08);--orange-border:rgba(242,125,38,0.2);
+--bg:#FBFAF7;--surface:#FFFFFF;
+--text:#16150F;--text-2:#6E6C64;--text-3:#A5A39B;
+--border:#E8E6DF;--border-2:#D8D6CE;
+--shadow:0 24px 70px rgba(22,21,15,0.09),0 4px 14px rgba(22,21,15,0.04);
+}
+@media (prefers-color-scheme:dark){
+:root{
+--orange:#F27D26;--orange-hover:#FF8C3A;
+--orange-soft:rgba(242,125,38,0.12);--orange-border:rgba(242,125,38,0.28);
+--bg:#0A0A0D;--surface:#151519;
+--text:#F0EFE9;--text-2:#93918A;--text-3:#5F5E58;
+--border:#222228;--border-2:#2C2C34;
+--shadow:0 24px 70px rgba(0,0,0,0.5),0 4px 14px rgba(0,0,0,0.3);
+}
+}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--text);background:var(--bg);line-height:1.6;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+a{color:inherit;text-decoration:none}
+.card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;box-shadow:var(--shadow);padding:2.5rem 1.75rem;text-align:center}
+.logo{width:60px;height:60px;border-radius:15px;margin:0 auto 1.25rem;display:flex;
+  align-items:center;justify-content:center;background:var(--orange);
+  font-family:'DM Sans',sans-serif;font-weight:700;font-size:30px;color:#fff}
+.pill{display:inline-flex;align-items:center;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--orange);background:var(--orange-soft);
+  border:1px solid var(--orange-border);padding:5px 13px;border-radius:100px;margin-bottom:1rem}
+h1{font-family:'DM Sans',sans-serif;font-size:24px;font-weight:700;letter-spacing:-0.02em;
+  line-height:1.25;margin-bottom:.6rem;word-break:break-word}
+.sub{font-size:15px;color:var(--text-2);margin-bottom:1.75rem}
+.btn{display:block;width:100%;padding:14px 20px;border-radius:11px;font-size:15px;font-weight:600;
+  border:1px solid transparent;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-primary{background:var(--orange);color:#fff;margin-bottom:.6rem}
+.btn-primary:hover{background:var(--orange-hover)}
+.stores{display:flex;gap:.6rem;margin-top:.6rem}
+.btn-store{flex:1;background:var(--surface);border-color:var(--border-2);color:var(--text);
+  font-size:14px;padding:12px 10px}
+.btn-store:hover{border-color:var(--text-3)}
+.foot{margin-top:1.75rem;padding-top:1.25rem;border-top:1px solid var(--border);
+  font-size:13px;color:var(--text-3)}
+.foot a{color:var(--text-2);font-weight:500}
+.foot a:hover{color:var(--orange)}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="logo">B</div>
+  <div class="pill" id="kind">BarChata</div>
+  <h1 id="title">Open in BarChata</h1>
+  <p class="sub" id="sub">Loyalty, events and check-ins at the bars and restaurants near you.</p>
+
+  <button class="btn btn-primary" id="open">Open in the app</button>
+
+  <div class="stores">
+    <a class="btn btn-store" href="https://apps.apple.com/app/id6769344926">App Store</a>
+    <a class="btn btn-store" href="https://play.google.com/store/apps/details?id=com.barchata.social">Google Play</a>
+  </div>
+
+  <p class="foot">
+    <a href="/">barchata.com</a> &nbsp;·&nbsp;
+    <a href="/privacy">Privacy</a> &nbsp;·&nbsp;
+    <a href="/terms">Terms</a>
+  </p>
+</main>
+
+<script>
+(function () {
+  // One page serves every shared link shape. Vercel rewrites /u/:username,
+  // /post/:id, /venue/:id, /join and /events here, so the real path is still
+  // in the address bar and is what tells us what to show.
+  //
+  // On iOS with the app installed the universal link means this page is
+  // usually never seen at all. It exists for everyone else: someone without
+  // the app, on desktop, or in an in-app browser that strips universal
+  // links. Before it existed, all of those hit the 404 handler and were
+  // bounced to the homepage with no idea what they had been sent.
+  var path  = (location.pathname || '/').replace(/\/+$/, '') || '/';
+  var parts = path.split('/').filter(Boolean);
+  var head  = (parts[0] || '').toLowerCase();
+  var value = parts[1] ? decodeURIComponent(parts[1]) : '';
+
+  var params = new URLSearchParams(location.search);
+  var ref    = (params.get('ref') || '').replace(/^@/, '');
+
+  var kind  = document.getElementById('kind');
+  var title = document.getElementById('title');
+  var sub   = document.getElementById('sub');
+
+  // The deep link mirrors the web path exactly - the app has a route file
+  // for each of these, so barchata://post/<id> and barchata.com/post/<id>
+  // land in the same place.
+  var deep = 'barchata://' + parts.join('/') + (location.search || '');
+
+  if (head === 'u' || head === 'user') {
+    kind.textContent  = 'Profile';
+    title.textContent = value ? '@' + value + ' on BarChata' : 'A profile on BarChata';
+    sub.textContent   = 'See their check-ins, posts and the venues they go to.';
+  } else if (head === 'post') {
+    kind.textContent  = 'Post';
+    title.textContent = 'A post on BarChata';
+    sub.textContent   = 'Open the app to see the post and join the conversation.';
+  } else if (head === 'venue') {
+    kind.textContent  = 'Venue';
+    title.textContent = 'A venue on BarChata';
+    sub.textContent   = 'Check in, earn Hearts and see what is on tonight.';
+  } else if (head === 'join') {
+    kind.textContent  = 'Invitation';
+    title.textContent = ref ? '@' + ref + ' invited you to BarChata' : 'You are invited to BarChata';
+    sub.textContent   = 'Create your account and you will both earn Hearts.';
+  } else if (head === 'events') {
+    kind.textContent  = 'Events';
+    title.textContent = 'Events on BarChata';
+    sub.textContent   = 'See what is happening tonight at venues near you.';
+  }
+
+  document.title = title.textContent;
+
+  // Deliberately NOT automatic. Firing a custom scheme on load shows
+  // "Safari cannot open the page" to everyone who does not have the app,
+  // which is most people arriving here. A tap is an explicit signal that
+  // the person believes they have it.
+  document.getElementById('open').addEventListener('click', function () {
+    var store = /android/i.test(navigator.userAgent)
+      ? 'https://play.google.com/store/apps/details?id=com.barchata.social'
+      : 'https://apps.apple.com/app/id6769344926';
+
+    // If the app opens, this tab goes to the background and the timer never
+    // runs. If it does not, the person lands on the store instead of on a
+    // scheme error.
+    var t = setTimeout(function () { location.href = store; }, 1500);
+    window.addEventListener('pagehide', function () { clearTimeout(t); });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) clearTimeout(t);
+    });
+
+    location.href = deep;
+  });
+})();
+</script>
+</body>
+</html>

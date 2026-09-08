@@ -1,0 +1,24 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "Q825E27AM6.com.barchata.social",
+        "paths": [
+          "/join",
+          "/join*",
+          "/u/*",
+          "/user/*",
+          "/post/*",
+          "/venue/*",
+          "/events",
+          "NOT /privacy",
+          "NOT /terms",
+          "NOT /community",
+          "NOT /chromaring/*",
+          "NOT /"
+        ]
+      }
+    ]
+  }
+}
