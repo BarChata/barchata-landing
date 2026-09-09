@@ -32,27 +32,27 @@
   "rewrites": [
     {
       "source": "/join",
-      "destination": "/link.html"
+      "destination": "/link"
     },
     {
       "source": "/u/:username",
-      "destination": "/link.html"
+      "destination": "/link"
     },
     {
       "source": "/user/:username",
-      "destination": "/link.html"
+      "destination": "/link"
     },
     {
       "source": "/post/:id",
-      "destination": "/link.html"
+      "destination": "/link"
     },
     {
       "source": "/venue/:id",
-      "destination": "/link.html"
+      "destination": "/link"
     },
     {
       "source": "/events",
-      "destination": "/link.html"
+      "destination": "/link"
     }
   ]
 }
