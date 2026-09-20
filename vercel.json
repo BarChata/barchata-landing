@@ -53,6 +53,10 @@
     {
       "source": "/events",
       "destination": "/link"
+    },
+    {
+      "source": "/scan/:code",
+      "destination": "/link"
     }
   ]
 }

@@ -77,6 +77,8 @@ h1{font-family:'DM Sans',sans-serif;font-size:24px;font-weight:700;letter-spacin
 
   <button class="btn btn-primary" id="open">Open in the app</button>
 
+  <a class="btn btn-store" id="web" href="#" style="display:none;margin-top:.6rem">No app? Check in on the web</a>
+
   <div class="stores">
     <a class="btn btn-store" href="https://apps.apple.com/app/id6769344926">App Store</a>
     <a class="btn btn-store" href="https://play.google.com/store/apps/details?id=com.barchata.social">Google Play</a>
@@ -133,6 +135,17 @@ h1{font-family:'DM Sans',sans-serif;font-size:24px;font-weight:700;letter-spacin
     kind.textContent  = 'Invitation';
     title.textContent = ref ? '@' + ref + ' invited you to BarChata' : 'You are invited to BarChata';
     sub.textContent   = 'Create your account and you will both earn Hearts.';
+  } else if (head === 'scan') {
+    // A venue check-in code (the QR on the coaster, table or bar). The app checks
+    // members in with one tap. Guests without the app can still check in on the web.
+    kind.textContent  = 'Check-in';
+    title.textContent = 'Check in with BarChata';
+    sub.textContent   = 'Open the app to check in and earn Hearts. No app yet? You can check in on the web.';
+    if (value) {
+      var web = document.getElementById('web');
+      web.href = 'https://biz.barchata.com/scan/' + encodeURIComponent(value);
+      web.style.display = 'block';
+    }
   } else if (head === 'events') {
     kind.textContent  = 'Events';
     title.textContent = 'Events on BarChata';

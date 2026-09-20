@@ -12,6 +12,7 @@
           "/post/*",
           "/venue/*",
           "/events",
+          "/scan/*",
           "NOT /privacy",
           "NOT /terms",
           "NOT /community",
