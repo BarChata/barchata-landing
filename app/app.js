@@ -60,6 +60,17 @@
     return null;
   }
 
+  const cleanHandle = (v) => (v || '').toLowerCase().replace(/^@+/, '').replace(/[^a-z0-9_]/g, '').slice(0, 30);
+  async function checkHandle(h) {
+    if (!/^[a-z0-9_]{3,30}$/.test(h)) return 'Your BarCode needs 3 to 30 letters, numbers or underscores.';
+    const { data } = await sb.rpc('resolve_handle', { p_handle: h }).then((x) => x, () => ({ data: null }));
+    if (data && data.found) return '@' + h + ' is taken. Try another.';
+    return null;
+  }
+  async function saveHandle(uid, h) {
+    return sb.from('profiles').update({ username: h, full_name: h }).eq('id', uid);
+  }
+
   async function findVenue(code) {
     for (const form of codeForms(code)) {
       const { data, error } = await sb.from('venues').select('id, name, address, city, cover_image, logo_url, is_active, primary_barcode').eq('primary_barcode', form).limit(1).maybeSingle();
@@ -145,7 +156,8 @@
       '<form id="authForm" class="stack" novalidate>' +
       '<div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" inputmode="email" required></div>' +
       '<div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="' + (isUp ? 'new-password' : 'current-password') + '" minlength="6" required></div>' +
-      (isUp ? '<div class="field"><label for="dob">Date of birth</label><input id="dob" inputmode="numeric" placeholder="YYYY-MM-DD" autocomplete="bday"></div>' +
+      (isUp ? '<div class="field"><label for="handle">Choose your BarCode</label><div class="prefix"><span>@</span><input id="handle" autocapitalize="off" autocomplete="username" placeholder="yourname"></div></div>' +
+        '<div class="field"><label for="dob">Date of birth</label><input id="dob" inputmode="numeric" placeholder="YYYY-MM-DD" autocomplete="bday"></div>' +
         '<div class="field"><label for="ref">Referral code (optional)</label><div class="prefix"><span>@</span><input id="ref" value="' + esc(ref.replace(/^@/, '')) + '" autocapitalize="off"></div></div>' : '') +
       '<p class="err" id="authErr"></p>' +
       '<button class="btn" type="submit" id="authBtn">' + (isUp ? 'Create account' : 'Sign in') + '</button>' +
@@ -153,6 +165,8 @@
       '</form>' + legal());
     document.querySelectorAll('[data-mode]').forEach((b) => (b.onclick = () => viewAuth(b.dataset.mode)));
     const dob = document.getElementById('dob');
+    const handleEl = document.getElementById('handle');
+    if (handleEl) handleEl.oninput = () => { handleEl.value = cleanHandle(handleEl.value); };
     if (dob) dob.oninput = () => { dob.value = formatDob(dob.value); };
     const forgot = document.getElementById('forgot');
     if (forgot) forgot.onclick = async () => {
@@ -171,14 +185,18 @@
       const btn = document.getElementById('authBtn'); btn.disabled = true;
       try {
         if (isUp) {
+          const handle = cleanHandle(handleEl.value);
+          const hErr = await checkHandle(handle);
+          if (hErr) { errEl.textContent = hErr; btn.disabled = false; return; }
           const dobErr = checkDob(dob.value); // age gate BEFORE creating the account, same rule as the app
           if (dobErr) { errEl.textContent = dobErr; btn.disabled = false; return; }
           const { data, error } = await sb.auth.signUp({ email, password: pw });
           if (error) throw error;
           if (!data.session) { render(header() + '<div class="center"><h1>Check your email</h1><p class="sub">Tap the link we sent to ' + esc(email) + ' to finish joining.</p></div>'); return; }
           const uid = data.user.id;
-          const base = email.split('@')[0].replace(/[^a-z0-9_]/g, '').slice(0, 24) || 'member';
-          await sb.from('profiles').upsert({ id: uid, email, bar_points: 0, onboarding_completed: false, account_tier: 'free', role: 'user', username: base, full_name: base });
+          // The profile row is created by the database when the account is made; set the handle on it.
+          const { error: pErr } = await saveHandle(uid, handle);
+          if (pErr) toast('Account created. Set your BarCode on the next screen.');
           await sb.from('profile_private').upsert({ profile_id: uid, date_of_birth: dob.value }, { onConflict: 'profile_id' });
           const refCode = (document.getElementById('ref').value || '').trim().replace(/^@/, '').toLowerCase();
           if (refCode) { try { localStorage.setItem('pending_referral_code', refCode); } catch (x) {} }
@@ -228,7 +246,7 @@
     }
     const handle = p && p.username ? '@' + p.username : '';
     const hearts = (p && p.bar_points) || 0;
-    const code = (p && (p.barcode || (p.username ? '@' + p.username : ''))) || uid;
+    const code = (p && (p.barcode || (p.username ? '@' + p.username : ''))) || '';
     const history = (cks || []).map((c) => {
       const v = names[c.venue_id] || {};
       return '<div class="row"><div><div class="t">' + esc(v.name || 'Venue') + '</div><div class="muted">' + esc(v.city || '') + ' · ' + new Date(c.created_at).toLocaleDateString() + '</div></div>' +
@@ -239,12 +257,31 @@
       '<h1>Hi ' + esc(handle || 'there') + '</h1><p class="sub">Show your code at the bar, or scan the venue QR code to check in.</p><div class="gap"></div>' +
       installBanner() +
       '<div class="card"><div class="muted">YOUR HEARTS</div><div class="hearts"><span class="n">' + hearts.toLocaleString() + '</span><span class="muted">Hearts</span></div></div><div class="gap"></div>' +
-      '<div class="card"><h2>My BarCode</h2><p class="muted" style="margin:4px 0 12px">' + esc(code) + '</p><div class="qr">' + qrSvg(code) + '</div></div><div class="gap"></div>' +
+      (code
+        ? '<div class="card"><h2>My BarCode</h2><p class="muted" style="margin:4px 0 12px">' + esc(code) + '</p><div class="qr">' + qrSvg(code) + '</div></div><div class="gap"></div>'
+        : '<div class="card"><h2>Choose your BarCode</h2><p class="muted" style="margin:4px 0 12px">Your BarCode is your @name. Venues scan it to add Hearts.</p>' +
+          '<form id="hf" class="stack"><div class="prefix"><span>@</span><input id="h2" class="hinput" autocapitalize="off" placeholder="yourname" style="height:52px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:16px;outline:none"></div>' +
+          '<p class="err" id="h2e"></p><button class="btn">Save my BarCode</button></form></div><div class="gap"></div>') +
       '<div class="card"><h2 style="margin-bottom:6px">Recent check-ins</h2>' + history + '</div><div class="gap"></div>' +
       '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Near me</h2><button class="btn secondary" style="width:auto;height:36px;padding:0 14px;font-size:14px" id="near">Show</button></div><div id="nearList" style="margin-top:8px"></div></div>' +
       appBanner());
     document.getElementById('out').onclick = async () => { await sb.auth.signOut({ scope: 'local' }); go('/app'); };
     document.getElementById('near').onclick = nearMe;
+    const hf = document.getElementById('hf');
+    if (hf) {
+      const h2 = document.getElementById('h2');
+      h2.oninput = () => { h2.value = cleanHandle(h2.value); };
+      hf.onsubmit = async (e) => {
+        e.preventDefault();
+        const h = cleanHandle(h2.value);
+        const err = await checkHandle(h);
+        if (err) { document.getElementById('h2e').textContent = err; return; }
+        const { error } = await saveHandle(uid, h);
+        if (error) { document.getElementById('h2e').textContent = error.message; return; }
+        toast('Saved. Your BarCode is @' + h);
+        viewHome(session);
+      };
+    }
     wireInstall();
   }
 
