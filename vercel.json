@@ -27,12 +27,25 @@
           "value": "application/json"
         }
       ]
+    },
+    {
+      "source": "/app/(sw.js|app.js|config.js)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
     }
   ],
   "rewrites": [
     {
       "source": "/join",
-      "destination": "/link"
+      "destination": "/app"
+    },
+    {
+      "source": "/join/:rest*",
+      "destination": "/app"
     },
     {
       "source": "/u/:username",
@@ -56,7 +69,11 @@
     },
     {
       "source": "/scan/:code",
-      "destination": "/link"
+      "destination": "/app"
+    },
+    {
+      "source": "/app/:path((?!.*\\.).*)",
+      "destination": "/app"
     }
   ]
 }
