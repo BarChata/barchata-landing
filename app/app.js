@@ -200,7 +200,8 @@
           await sb.from('profile_private').upsert({ profile_id: uid, date_of_birth: dob.value }, { onConflict: 'profile_id' });
           const refCode = (document.getElementById('ref').value || '').trim().replace(/^@/, '').toLowerCase();
           if (refCode) { try { localStorage.setItem('pending_referral_code', refCode); } catch (x) {} }
-          toast('Welcome to BarChata!');
+          const refMsg = await claimPendingReferral();
+          toast(refMsg || 'Welcome to BarChata!');
         } else {
           const { error } = await sb.auth.signInWithPassword({ email, password: pw });
           if (error) throw error;
@@ -231,7 +232,22 @@
     return q.createSvgTag({ cellSize: 6, margin: 0, scalable: true });
   }
 
+  // Referral Hearts are checked and paid on the server (claim_member_referral).
+  // The code is kept until the server gives a final answer, so someone who
+  // had to confirm their email first still gets it on their first visit.
+  async function claimPendingReferral() {
+    let code = '';
+    try { code = localStorage.getItem('pending_referral_code') || ''; } catch (x) {}
+    if (!code) return '';
+    const { data, error } = await sb.rpc('claim_member_referral', { p_code: code });
+    if (error) return ''; // server not ready or offline: try again next visit
+    try { localStorage.removeItem('pending_referral_code'); } catch (x) {}
+    if (data && data.success) return 'Welcome! You and @' + code + ' each got ' + (data.hearts || 100) + ' Hearts.';
+    return '';
+  }
+
   async function viewHome(session) {
+    claimPendingReferral().then((m) => { if (m) toast(m); });
     loading();
     const uid = session.user.id;
     const [{ data: p }, { data: cks }] = await Promise.all([
@@ -254,12 +270,12 @@
     }).join('') || '<p class="muted">No check-ins yet. Scan a venue QR code to check in.</p>';
 
     render(header('<button class="iconbtn" id="out" title="Sign out" aria-label="Sign out">⎋</button>') +
-      '<h1>Hi ' + esc(handle || 'there') + '</h1><p class="sub">Show your code at the bar, or scan the venue QR code to check in.</p><div class="gap"></div>' +
+      '<h1>Hi ' + esc(handle || 'there') + '</h1><p class="sub">Scan a venue\'s BarChata QR code to check in and earn Hearts.</p><div class="gap"></div>' +
       installBanner() +
       '<div class="card"><div class="muted">YOUR HEARTS</div><div class="hearts"><span class="n">' + hearts.toLocaleString() + '</span><span class="muted">Hearts</span></div></div><div class="gap"></div>' +
       (code
-        ? '<div class="card"><h2>My BarCode</h2><p class="muted" style="margin:4px 0 12px">' + esc(code) + '</p><div class="qr">' + qrSvg(code) + '</div></div><div class="gap"></div>'
-        : '<div class="card"><h2>Choose your BarCode</h2><p class="muted" style="margin:4px 0 12px">Your BarCode is your @name. Venues scan it to add Hearts.</p>' +
+        ? '<div class="card"><h2>My BarCode</h2><p class="muted" style="margin:4px 0 12px">' + esc(code) + ' · friends scan this to find you on BarChata</p><div class="qr">' + qrSvg('https://barchata.com/u/' + encodeURIComponent(code.replace(/^@/, ''))) + '</div></div><div class="gap"></div>'
+        : '<div class="card"><h2>Choose your BarCode</h2><p class="muted" style="margin:4px 0 12px">Your BarCode is your @name. Friends use it to find you, and it shows on every check-in.</p>' +
           '<form id="hf" class="stack"><div class="prefix"><span>@</span><input id="h2" class="hinput" autocapitalize="off" placeholder="yourname" style="height:52px;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:16px;outline:none"></div>' +
           '<p class="err" id="h2e"></p><button class="btn">Save my BarCode</button></form></div><div class="gap"></div>') +
       '<div class="card"><h2 style="margin-bottom:6px">Recent check-ins</h2>' + history + '</div><div class="gap"></div>' +
@@ -299,19 +315,51 @@
 
   // ------------------------------------------------------------------ install / app store
   let deferredPrompt = null;
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; const b = document.getElementById('installBtn'); if (b) b.style.display = ''; });
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
   const standalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+  // The banner is always tappable. Chrome/Edge/Android get the real install
+  // prompt when the browser offers one; everyone else gets clear steps.
+  const isAndroid = () => /android/i.test(navigator.userAgent);
+  const isMobile = () => isIOS() || isAndroid();
   function installBanner() {
     if (standalone()) return '';
-    const text = isIOS() ? 'Tap Share, then "Add to Home Screen".' : 'Add BarChata to your home screen for one-tap check-ins.';
-    return '<div class="banner"><img src="/assets/barchata-icon.png" width="40" height="40" style="border-radius:10px" alt=""><div style="flex:1"><div class="t">Install BarChata</div><div class="d">' + text + '</div></div>' +
-      (isIOS() ? '' : '<button class="btn" id="installBtn" style="width:auto;height:36px;padding:0 14px;font-size:14px;display:none">Install</button>') + '</div><div class="gap"></div>';
+    const text = isMobile() ? 'Add BarChata to your home screen for one-tap check-ins.' : 'Open BarChata on your phone and add it to your home screen.';
+    return '<button type="button" class="banner" id="installBanner" style="width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit">' +
+      '<img src="/assets/barchata-icon.png" width="40" height="40" style="border-radius:10px" alt="">' +
+      '<div style="flex:1"><div class="t">Install BarChata</div><div class="d">' + text + '</div></div>' +
+      '<span class="btn" style="width:auto;height:36px;padding:0 14px;font-size:14px;display:inline-flex;align-items:center">' + (isMobile() ? 'Install' : 'Show me') + '</span></button><div class="gap"></div>';
+  }
+  function installSteps() {
+    if (isIOS()) {
+      const safari = /safari/i.test(navigator.userAgent) && !/crios|fxios|edgios/i.test(navigator.userAgent);
+      return (safari ? '' : '<p class="muted" style="margin-bottom:10px">First open this page in <b>Safari</b>.</p>') +
+        '<ol class="steps"><li>Tap the <b>Share</b> button (square with an arrow) at the bottom of Safari.</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>. BarChata now opens like an app.</li></ol>';
+    }
+    if (isAndroid()) {
+      return '<ol class="steps"><li>Tap the <b>⋮</b> menu at the top right of Chrome.</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li><li>Tap <b>Install</b>. BarChata now opens like an app.</li></ol>';
+    }
+    return '<p class="muted" style="margin-bottom:12px">Scan this with your phone camera to open BarChata there, then add it to your home screen.</p>' +
+      '<div class="qr" style="max-width:220px;margin:0 auto">' + qrSvg(location.origin + '/app') + '</div>';
+  }
+  function showInstallSheet() {
+    const wrap = document.createElement('div');
+    wrap.className = 'sheetwrap';
+    wrap.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-label="Install BarChata"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2>Install BarChata</h2><button class="iconbtn" data-close aria-label="Close">✕</button></div>' + installSteps() + '</div>';
+    wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-close]')) wrap.remove(); });
+    document.body.appendChild(wrap);
   }
   function wireInstall() {
-    const b = document.getElementById('installBtn'); if (!b) return;
-    if (deferredPrompt) b.style.display = '';
-    b.onclick = async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; b.style.display = 'none'; };
+    const b = document.getElementById('installBanner'); if (!b) return;
+    b.onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const r = await deferredPrompt.userChoice; deferredPrompt = null;
+        if (r && r.outcome === 'accepted') { if (b.nextElementSibling) b.nextElementSibling.remove(); b.remove(); }
+        return;
+      }
+      showInstallSheet();
+    };
   }
   function appBanner() {
     if (!APP_STORE_LIVE && !PLAY_STORE_LIVE) return '<p class="legal">The BarChata app for iPhone and Android is coming soon. Your account, Hearts and check-ins carry over.</p>';
