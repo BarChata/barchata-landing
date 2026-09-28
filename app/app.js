@@ -382,9 +382,42 @@
       '</p><div class="stack" style="width:100%"><a class="btn secondary" href="/app" data-link>Go to BarChata</a></div></div>');
   }
 
+  // One-click unsubscribe for BarChata news, venue campaign and BarStock follow-up emails
+  // (link in those email footers: /app?stop=<token>). Works signed in or out.
+  async function viewStop(token) {
+    const esc = (x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const call = async (action) => {
+      try {
+        const r = await fetch(cfg.url + '/functions/v1/email-unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: action, t: token }) });
+        return await r.json();
+      } catch (x) { return { ok: false }; }
+    };
+    const show = (res) => {
+      if (!res || !res.ok) {
+        render(header() + '<div class="center"><h1>Link expired</h1><p class="sub">This unsubscribe link is not valid any more. If you keep getting emails, reply to one and we\'ll sort it out.</p><div class="stack" style="width:100%"><a class="btn secondary" href="/app" data-link>Go to BarChata</a></div></div>');
+        return;
+      }
+      const what = esc(res.label || 'These emails');
+      if (res.unsubscribed) {
+        render(header() + '<div class="center"><h1>You\'re unsubscribed</h1><p class="sub">You won\'t get any more of these: <b>' + what + '</b>. Account emails (like password resets and receipts) still arrive.</p>' +
+          '<div class="stack" style="width:100%"><button class="btn secondary" id="resub">Oops, keep sending them</button><a class="btn secondary" href="/app" data-link>Go to BarChata</a></div></div>');
+        const b = document.getElementById('resub');
+        if (b) b.onclick = async () => { b.disabled = true; b.textContent = 'One moment…'; show(await call('resubscribe')); };
+      } else {
+        render(header() + '<div class="center"><h1>Stop these emails?</h1><p class="sub"><b>' + what + '</b></p>' +
+          '<div class="stack" style="width:100%"><button class="btn" id="unsub">Unsubscribe</button><a class="btn secondary" href="/app" data-link>Keep getting them</a></div></div>');
+        const b = document.getElementById('unsub');
+        if (b) b.onclick = async () => { b.disabled = true; b.textContent = 'One moment…'; show(await call('unsubscribe')); };
+      }
+    };
+    loading();
+    show(await call('info'));
+  }
+
   async function route() {
     const params = new URLSearchParams(location.search);
     if (params.get('unsub')) return viewUnsub(params.get('unsub'));
+    if (params.get('stop')) return viewStop(params.get('stop'));
     const code = scanCodeFromPath();
     if (code) return viewScan(code);
     const { data: { session } } = await sb.auth.getSession();
