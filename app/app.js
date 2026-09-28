@@ -158,7 +158,8 @@
       '<div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="' + (isUp ? 'new-password' : 'current-password') + '" minlength="6" required></div>' +
       (isUp ? '<div class="field"><label for="handle">Choose your BarCode</label><div class="prefix"><span>@</span><input id="handle" autocapitalize="off" autocomplete="username" placeholder="yourname"></div></div>' +
         '<div class="field"><label for="dob">Date of birth</label><input id="dob" inputmode="numeric" placeholder="YYYY-MM-DD" autocomplete="bday"></div>' +
-        '<div class="field"><label for="ref">Referral code (optional)</label><div class="prefix"><span>@</span><input id="ref" value="' + esc(ref.replace(/^@/, '')) + '" autocapitalize="off"></div></div>' : '') +
+        '<div class="field"><label for="ref">Referral code (optional)</label><div class="prefix"><span>@</span><input id="ref" value="' + esc(ref.replace(/^@/, '')) + '" autocapitalize="off"></div></div>' +
+        '<label class="check"><input type="checkbox" id="tips"><span>Send me BarChata tips and offers by email. You can unsubscribe any time.</span></label>' : '') +
       '<p class="err" id="authErr"></p>' +
       '<button class="btn" type="submit" id="authBtn">' + (isUp ? 'Create account' : 'Sign in') + '</button>' +
       (isUp ? '' : '<button class="btn ghost" type="button" id="forgot">Forgot password?</button>') +
@@ -197,7 +198,8 @@
           // The profile row is created by the database when the account is made; set the handle on it.
           const { error: pErr } = await saveHandle(uid, handle);
           if (pErr) toast('Account created. Set your BarCode on the next screen.');
-          await sb.from('profile_private').upsert({ profile_id: uid, date_of_birth: dob.value }, { onConflict: 'profile_id' });
+          const tips = !!(document.getElementById('tips') || {}).checked;
+          await sb.from('profile_private').upsert({ profile_id: uid, date_of_birth: dob.value, email_tips_opt_in: tips, email_tips_opt_in_at: tips ? new Date().toISOString() : null }, { onConflict: 'profile_id' });
           const refCode = (document.getElementById('ref').value || '').trim().replace(/^@/, '').toLowerCase();
           if (refCode) { try { localStorage.setItem('pending_referral_code', refCode); } catch (x) {} }
           const refMsg = await claimPendingReferral();
@@ -367,8 +369,22 @@
   }
 
   // ------------------------------------------------------------------ router
+  // Email unsubscribe (link in the footer of BarChata tips emails). Works signed in or out.
+  async function viewUnsub(token) {
+    loading();
+    let ok = false;
+    try {
+      const r = await fetch(cfg.url + '/functions/v1/member-emails', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'unsubscribe', t: token }) });
+      ok = !!(await r.json()).ok;
+    } catch (x) {}
+    render(header() + '<div class="center"><h1>' + (ok ? 'You\'re unsubscribed' : 'Link expired') + '</h1><p class="sub">' +
+      (ok ? 'You won\'t get BarChata tips and offers by email any more. Account emails (like password resets) still arrive.' : 'This unsubscribe link is not valid any more. If you keep getting emails, reply to one and we\'ll sort it out.') +
+      '</p><div class="stack" style="width:100%"><a class="btn secondary" href="/app" data-link>Go to BarChata</a></div></div>');
+  }
+
   async function route() {
     const params = new URLSearchParams(location.search);
+    if (params.get('unsub')) return viewUnsub(params.get('unsub'));
     const code = scanCodeFromPath();
     if (code) return viewScan(code);
     const { data: { session } } = await sb.auth.getSession();
