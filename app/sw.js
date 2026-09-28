@@ -1,6 +1,6 @@
 // BarChata web app service worker: keeps the app shell available so it
 // opens instantly from the home screen. Data (Supabase) is never cached.
-const CACHE = 'bc-app-v1';
+const CACHE = 'bc-app-v2';
 const SHELL = ['/app', '/app/app.css', '/app/app.js', '/app/config.js', '/app/manifest.webmanifest', '/app/vendor/supabase.js', '/app/vendor/qrcode.js', '/assets/barchata-icon.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {

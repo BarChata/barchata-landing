@@ -200,7 +200,8 @@
           await sb.from('profile_private').upsert({ profile_id: uid, date_of_birth: dob.value }, { onConflict: 'profile_id' });
           const refCode = (document.getElementById('ref').value || '').trim().replace(/^@/, '').toLowerCase();
           if (refCode) { try { localStorage.setItem('pending_referral_code', refCode); } catch (x) {} }
-          toast('Welcome to BarChata!');
+          const refMsg = await claimPendingReferral();
+          toast(refMsg || 'Welcome to BarChata!');
         } else {
           const { error } = await sb.auth.signInWithPassword({ email, password: pw });
           if (error) throw error;
@@ -231,7 +232,22 @@
     return q.createSvgTag({ cellSize: 6, margin: 0, scalable: true });
   }
 
+  // Referral Hearts are checked and paid on the server (claim_member_referral).
+  // The code is kept until the server gives a final answer, so someone who
+  // had to confirm their email first still gets it on their first visit.
+  async function claimPendingReferral() {
+    let code = '';
+    try { code = localStorage.getItem('pending_referral_code') || ''; } catch (x) {}
+    if (!code) return '';
+    const { data, error } = await sb.rpc('claim_member_referral', { p_code: code });
+    if (error) return ''; // server not ready or offline: try again next visit
+    try { localStorage.removeItem('pending_referral_code'); } catch (x) {}
+    if (data && data.success) return 'Welcome! You and @' + code + ' each got ' + (data.hearts || 100) + ' Hearts.';
+    return '';
+  }
+
   async function viewHome(session) {
+    claimPendingReferral().then((m) => { if (m) toast(m); });
     loading();
     const uid = session.user.id;
     const [{ data: p }, { data: cks }] = await Promise.all([
