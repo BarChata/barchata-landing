@@ -312,6 +312,8 @@
       if (error) { box.innerHTML = '<p class="err">' + esc(error.message) + '</p>'; return; }
       box.innerHTML = (data || []).map((v) => '<div class="row"><div><div class="t">' + esc(v.name) + '</div><div class="muted">' + esc(v.category || '') + (v.city ? ' · ' + esc(v.city) : '') + '</div></div><span class="muted">' +
         (v.distance_m != null ? (v.distance_m < 1000 ? Math.round(v.distance_m) + ' m' : (v.distance_m / 1000).toFixed(1) + ' km') : '') + '</span></div>').join('') || '<p class="muted">No venues found nearby.</p>';
+      // Owners browsing their own neighbourhood: point them at the claim flow on Biz.
+      box.innerHTML += '<p class="muted" style="margin-top:14px">Own one of these places? <a href="https://biz.barchata.com/directory" target="_blank" rel="noopener">Claim it free on BarChata Biz</a></p>';
     }, () => { box.innerHTML = '<p class="muted">Allow location to see places near you.</p>'; }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
   }
 
