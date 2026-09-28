@@ -56,3 +56,9 @@ h2{font-family:"DM Sans";font-size:19px;font-weight:700;letter-spacing:-.2px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .legal{color:var(--text3);font-size:12px;text-align:center;margin-top:18px;line-height:1.5}
 .legal a{color:var(--text2);text-decoration:underline}
+
+.sheetwrap{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{width:100%;max-width:480px;background:#141418;border:1px solid var(--line);border-radius:20px 20px 0 0;padding:20px 20px calc(24px + var(--safe-bot))}
+@media (min-width:640px){.sheetwrap{align-items:center}.sheet{border-radius:20px}}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.45}
+.banner:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
