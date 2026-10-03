@@ -683,6 +683,7 @@ section{padding:4.5rem 0}
 </footer>
 
 <script src="/app/config.js"></script>
+<script src="/a.js" data-site="www" defer></script>
 <script>
 // Light/dark choice is shared with biz.barchata.com through the bc_theme cookie,
 // so sign-up and claim pages open in the same mode the visitor picked here.
@@ -716,7 +717,7 @@ var EX={
  auto:{biz:"Eastside Auto Care",init:"MC",name:"Maria C.",last:"Last service 5 months ago",tag:"Due soon",visits:"4",hearts:"300",fav:"Oil change",nudge:"Maria is due for her next oil change. Send a reminder with $10 off if she books this month."}
 };
 document.querySelectorAll('.biz-picker button').forEach(function(b){b.addEventListener('click',function(){
- var e=EX[b.dataset.k];if(!e)return;
+ var e=EX[b.dataset.k];if(!e)return;if(window.bcTrack)bcTrack('example_business',{type:b.dataset.k});
  document.querySelectorAll('.biz-picker button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
  ['biz','init','name','last','tag','visits','hearts','fav','nudge'].forEach(function(k){document.getElementById('d-'+k).textContent=e[k]});
 })});
@@ -729,11 +730,14 @@ document.querySelectorAll('.biz-picker button').forEach(function(b){b.addEventLi
  f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
  f.allowFullscreen=true;f.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
  var v=document.getElementById('vid');v.innerHTML='';v.appendChild(f);
+ if(window.bcTrack)bcTrack('video_play',{video:'MaIcGmHlFBs'});
 })})();
 
 // Pays-for-itself calculator.
 var price=150;
-function calc(){
+var calcTracked=false;
+function calc(ev){
+ if(ev&&!calcTracked&&window.bcTrack){calcTracked=true;setTimeout(function(){bcTrack('calculator_used',{spend:+document.getElementById('c-spend').value,margin:+document.getElementById('c-margin').value,plan:price})},3000)}
  var s=+document.getElementById('c-spend').value,m=+document.getElementById('c-margin').value;
  document.getElementById('o-spend').textContent='$'+s;document.getElementById('o-margin').textContent=m+'%';
  var n=Math.ceil(price/(s*m/100));
@@ -757,7 +761,7 @@ calc();
  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
  function close(){list.hidden=true;input.setAttribute('aria-expanded','false');active=-1}
  function open(){list.hidden=false;input.setAttribute('aria-expanded','true')}
- function go(it){if(it&&it.href)window.location.href=withMode(it.href)}
+ function go(it){if(!it||!it.href)return;if(window.bcTrack)bcTrack(it.id?(it.claimed?'claim_report_open':'claim_pick'):'claim_add_new',{venue_id:it.id||null,name:it.name||null,q:input.value.trim().slice(0,80),via:'enter'});setTimeout(function(){window.location.href=withMode(it.href)},120)}
  function mark(i){active=i;[].forEach.call(list.children,function(li,j){li.setAttribute('aria-selected',j===i?'true':'false')});
   if(list.children[i])list.children[i].scrollIntoView({block:'nearest'})}
  function render(rows,q){
@@ -770,8 +774,8 @@ calc();
    var act=el('span','fl-act'+(v.is_claimed?' done':''),v.is_claimed?'Claimed · not you?':'Claim');
    li.appendChild(ico);li.appendChild(main);li.appendChild(act);
    var href=v.is_claimed?BIZ+'/report-claim?venue='+encodeURIComponent(v.id):BIZ+'/claim/'+encodeURIComponent(v.id);
-   items.push({href:href,claimed:!!v.is_claimed});
-   li.addEventListener('mousedown',function(e){e.preventDefault();window.location.href=withMode(href)});
+   items.push({href:href,claimed:!!v.is_claimed,id:v.id,name:v.name});
+   li.addEventListener('mousedown',function(e){e.preventDefault();if(window.bcTrack)bcTrack(v.is_claimed?'claim_report_open':'claim_pick',{venue_id:v.id,name:(v.name||'').slice(0,120),q:input.value.trim().slice(0,80)});setTimeout(function(){window.location.href=withMode(href)},120)});
    list.appendChild(li);
   });
   var add=el('li','fl-add');add.setAttribute('role','option');
@@ -779,7 +783,7 @@ calc();
   var m=el('div','fl-main');m.appendChild(el('div','fl-name',rows.length?'Not in the list? Add your business':'No match — add "'+q+'" as a new business'));
   m.appendChild(el('div','fl-sub','Takes about 2 minutes'));add.appendChild(m);
   items.push({href:BIZ+'/signup'});
-  add.addEventListener('mousedown',function(e){e.preventDefault();window.location.href=withMode(BIZ+'/signup')});
+  add.addEventListener('mousedown',function(e){e.preventDefault();if(window.bcTrack)bcTrack('claim_add_new',{q:q.slice(0,80)});setTimeout(function(){window.location.href=withMode(BIZ+'/signup')},120)});
   list.appendChild(add);
   open();mark(-1);
  }
@@ -792,7 +796,8 @@ calc();
   message('Searching…');
   fetch(url,{headers:{apikey:cfg.anonKey,Authorization:'Bearer '+cfg.anonKey},signal:ctrl.signal})
    .then(function(r){return r.ok?r.json():[]})
-   .then(function(rows){if(q===lastQ)render(Array.isArray(rows)?rows:[],q)})
+   .then(function(rows){if(q===lastQ){var r=Array.isArray(rows)?rows:[];render(r,q);
+     clearTimeout(window.__bcSearchT);window.__bcSearchT=setTimeout(function(){if(window.bcTrack)bcTrack('claim_search',{q:q.slice(0,80),results:r.length,claimed:r.filter(function(x){return x.is_claimed}).length})},900)}})
    .catch(function(e){if(e&&e.name!=='AbortError')render([],q)});
  }
  input.addEventListener('input',function(){
