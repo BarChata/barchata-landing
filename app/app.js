@@ -438,7 +438,17 @@
     if (g) { e.preventDefault(); go(g.dataset.go); }
   });
   window.addEventListener('popstate', route);
-  sb.auth.onAuthStateChange((event) => { if (event === 'PASSWORD_RECOVERY') viewReset(); });
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') viewReset();
+    // Web Insights: link this browser's earlier anonymous visits to the account.
+    try {
+      const m = session && session.user && document.cookie.match(/(?:^|; )bc_vid=([0-9a-f-]{36})/i);
+      if (!m) return;
+      const key = 'bc_vid_linked:' + session.user.id + ':' + m[1];
+      if (localStorage.getItem(key)) return;
+      sb.rpc('analytics_link_visitor', { p_visitor: m[1] }).then(({ error }) => { if (!error) { try { localStorage.setItem(key, '1'); } catch (e) {} } });
+    } catch (e) { /* analytics must never break the app */ }
+  });
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/app/sw.js', { scope: '/app/' }).catch(() => {});
   route();
 })();
