@@ -64,7 +64,7 @@
       try { nav.sendBeacon(EP, new Blob([json], { type: 'text/plain' })); return; } catch (e) {}
     }
     try {
-      fetch(EP, { method: 'POST', body: json, keepalive: true, credentials: 'omit', headers: { 'Content-Type': 'text/plain' } })
+      fetch(EP, { method: 'POST', body: json, keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'text/plain' } })
         .then(function (r) { return r.json(); })
         .then(function (res) { if (first && res && res.consent === 'required' && consent === null && !dnt) banner(); })
         .catch(function () {});
