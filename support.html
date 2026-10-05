@@ -45,6 +45,9 @@ footer p{color:#A5A39B;font-size:12px;margin:0}
 .lead{font-size:17px;color:#3A3933}
 .links-row{display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:center;margin-bottom:10px}
 .links-row a{font-size:13px;color:#6E6C64}
+.alt-row{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 12px}
+.btn-alt{display:inline-block;border:1px solid #E8E6DF;background:#FBFAF7;color:#16150F!important;padding:9px 16px;border-radius:9px;font-size:14px;font-weight:500;text-decoration:none!important;cursor:pointer;font-family:inherit}
+.btn-alt:hover{border-color:#F27D26}
 </style>
 </head>
 <body>
@@ -93,5 +96,25 @@ footer p{color:#A5A39B;font-size:12px;margin:0}
   <div class="links-row"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/community">Community guidelines</a><a href="/child-safety">Child safety</a><a href="/support">Support</a><a href="/delete-account">Delete account</a></div>
   <p>&copy; 2026 BarChata Corp. All rights reserved.</p>
 </footer>
+<script>
+(function(){
+  document.querySelectorAll('a.btn[href^="mailto:"]').forEach(function(a){
+    var u = new URL(a.getAttribute('href').replace('mailto:','https://x/?to=').replace('?subject','&subject'));
+    var to = u.searchParams.get('to') || '', su = u.searchParams.get('subject') || '', body = u.searchParams.get('body') || '';
+    var row = document.createElement('div'); row.className = 'alt-row';
+    var g = document.createElement('a'); g.className = 'btn-alt'; g.target = '_blank'; g.rel = 'noopener';
+    g.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(to) + '&su=' + encodeURIComponent(su) + '&body=' + encodeURIComponent(body);
+    g.textContent = 'Open in Gmail';
+    var c = document.createElement('button'); c.type = 'button'; c.className = 'btn-alt'; c.textContent = 'Copy email address';
+    c.onclick = function(){
+      var done = function(){ c.textContent = 'Copied: ' + to; };
+      if (navigator.clipboard) navigator.clipboard.writeText(to).then(done, function(){ c.textContent = to; });
+      else c.textContent = to;
+    };
+    row.appendChild(g); row.appendChild(c);
+    a.insertAdjacentElement('afterend', row);
+  });
+})();
+</script>
 </body>
 </html>
