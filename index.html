@@ -733,8 +733,14 @@ document.querySelectorAll('.biz-picker button').forEach(function(b){b.addEventLi
  f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
  f.allowFullscreen=true;f.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
  var v=document.getElementById('vid');v.innerHTML='';v.appendChild(f);
- if(window.bcTrack)bcTrack('video_play',{video:'MaIcGmHlFBs'});
-})})();
+ if(window.bcTrack)bcTrack('video_play',{video:'MaIcGmHlFBs',from:(new URLSearchParams(location.search).get('utm_source')||'site')});
+});
+// From an email ("Watch the video"): jump to the video and start it.
+if(new URLSearchParams(location.search).get('watch')==='1'){
+ var go=function(){var s=document.getElementById('video');if(s)s.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){b.click()},700)};
+ if(document.readyState==='complete')go();else window.addEventListener('load',go);
+}
+})();
 
 // Pays-for-itself calculator.
 var price=150;
