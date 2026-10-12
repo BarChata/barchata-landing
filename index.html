@@ -68,6 +68,10 @@ section{padding:6.5rem 0}
 .nav-right .btn{white-space:nowrap}
 .nav-cta-short{display:none}
 .signin{font-size:14.5px;color:var(--text-2);padding:0 .5rem}
+.nav-links a,.signin,.nav-brand{white-space:nowrap}
+@media(min-width:961px) and (max-width:1180px){.nav-links{gap:1.1rem;font-size:14px}.nav-inner{gap:1rem}}
+@media(min-width:961px) and (max-width:1140px){.nav-links a[href*="directory"]{display:none}}
+.nav-brand{margin-right:.5rem;flex-shrink:0}
 .signin:hover{color:var(--text)}
 .theme-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-2);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .theme-btn svg{width:17px;height:17px}
@@ -107,6 +111,66 @@ section{padding:6.5rem 0}
 .nudge .row span{flex:1;text-align:center;font-size:13px;font-weight:600;padding:10px;border-radius:10px;background:var(--orange);color:#fff}
 .nudge .row span.sec{background:transparent;border:1px solid var(--border-2);color:var(--text-2)}
 .demo-cap{font-size:12px;color:var(--text-3);text-align:center;margin-top:12px}
+/* Hero: live venue profile */
+@property --c0{syntax:'<color>';inherits:true;initial-value:#120a05}
+@property --c1{syntax:'<color>';inherits:true;initial-value:#F27D26}
+@property --c2{syntax:'<color>';inherits:true;initial-value:#FFB25B}
+@property --c3{syntax:'<color>';inherits:true;initial-value:#7a2e0e}
+.vp{transition:--c0 .8s,--c1 .8s,--c2 .8s,--c3 .8s;position:relative}
+.vp[data-k=bar]{--c0:#140b06;--c1:#F27D26;--c2:#FFB25B;--c3:#8a3410}
+.vp[data-k=salon]{--c0:#1a0b14;--c1:#E86AA6;--c2:#F7B5D2;--c3:#7B2D5B}
+.vp[data-k=gym]{--c0:#06121a;--c1:#22D3EE;--c2:#3B82F6;--c3:#0E7490}
+.vp[data-k=cafe]{--c0:#160d07;--c1:#C8894D;--c2:#F2D3A6;--c3:#6B3F1D}
+.vp[data-k=retail]{--c0:#110a1c;--c1:#8B5CF6;--c2:#F0ABFC;--c3:#4C1D95}
+.vp[data-k=auto]{--c0:#0a0f16;--c1:#60A5FA;--c2:#F27D26;--c3:#1E3A5F}
+.vp-cover{position:relative;height:168px;overflow:hidden;background:radial-gradient(120% 140% at 0% 0%,var(--c3),var(--c0) 70%);color:#fff}
+.vp-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.65) 100%);pointer-events:none}
+.bk{position:absolute;border-radius:50%;filter:blur(18px);opacity:.75;mix-blend-mode:screen;animation:bkf 14s ease-in-out infinite alternate}
+.b1{width:150px;height:150px;left:-30px;top:-40px;background:var(--c1)}
+.b2{width:90px;height:90px;left:40%;top:10px;background:var(--c2);opacity:.55;animation-duration:11s;animation-delay:-3s}
+.b3{width:120px;height:120px;right:-20px;top:30px;background:var(--c1);opacity:.5;animation-duration:17s;animation-delay:-6s}
+.b4{width:40px;height:40px;left:62%;top:70px;background:var(--c2);filter:blur(6px);opacity:.8;animation-duration:9s}
+.b5{width:24px;height:24px;left:25%;top:40px;background:#fff;filter:blur(5px);opacity:.45;animation-duration:12s;animation-delay:-2s}
+@keyframes bkf{0%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,10px) scale(1.12)}100%{transform:translate(-14px,16px) scale(.92)}}
+.vp-glyph{position:absolute;right:18px;top:16px;width:96px;height:96px;color:rgba(255,255,255,.2);transition:opacity .4s}
+.vp-badges{position:absolute;left:16px;top:14px;display:flex;gap:6px;z-index:2}
+.vp-badges span{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.04em;padding:4px 9px;border-radius:999px;background:rgba(0,0,0,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15)}
+.vp-live i{width:7px;height:7px;border-radius:50%;background:#22C55E;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:vpp 1.8s infinite}
+@keyframes vpp{0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.vp-claim svg{width:11px;height:11px;color:var(--c2)}
+.vp-id{position:absolute;left:16px;right:16px;bottom:14px;display:flex;align-items:center;gap:12px;z-index:2}
+.vp-logo{width:48px;height:48px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-weight:700;font-size:17px;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c3));box-shadow:0 0 0 2px rgba(255,255,255,.85),0 8px 20px rgba(0,0,0,.35)}
+.vp-id b{display:block;font-family:'DM Sans',sans-serif;font-size:20px;letter-spacing:-.01em;line-height:1.15}
+.vp-id small{font-size:12.5px;color:rgba(255,255,255,.78)}
+.vp-id em{font-style:normal;color:#4ADE80;font-weight:600}
+.vp-kpis{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)}
+.vp-kpis div{padding:12px 16px}
+.vp-kpis div+div{border-left:1px solid var(--border)}
+.vp-kpis small{display:block;font-size:11px;color:var(--text-3);white-space:nowrap}
+.vp-kpis b{font-family:'DM Sans',sans-serif;font-size:20px;font-variant-numeric:tabular-nums}
+.vp-feed{height:52px;overflow:hidden;border-bottom:1px solid var(--border);background:linear-gradient(90deg,var(--orange-soft),transparent 70%)}
+.vp-item{display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;font-size:13.5px;color:var(--text-2)}
+.vp-item b{color:var(--text);font-weight:600}
+.vp-item.in{animation:vpin .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes vpin{from{transform:translateY(100%);opacity:0}to{transform:none;opacity:1}}
+.fa{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c3))}
+.ft{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fh{font-size:12px;font-weight:700;color:var(--orange);white-space:nowrap}
+.vp .guest{padding:16px 16px 10px}
+.vp .avatar{width:44px;height:44px;font-size:15px;color:var(--c1);background:color-mix(in srgb,var(--c1) 14%,transparent);transition:color .8s}
+.g-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px}
+.g-chips span{font-size:12px;color:var(--text-2);background:var(--bg-alt);border:1px solid var(--border);border-radius:999px;padding:4px 10px}
+.g-chips b{color:var(--text);font-weight:600}
+.vp .nudge{margin:14px 16px 16px}
+.nudge .row button{flex:1;font:inherit;font-size:13px;font-weight:600;padding:10px;border-radius:10px;background:var(--orange);color:#fff;border:1px solid var(--orange);cursor:pointer;transition:background .2s,transform .1s}
+.nudge .row button:hover{background:var(--orange-hover)}
+.nudge .row button:active{transform:scale(.98)}
+.nudge .row button.sec{background:transparent;border-color:var(--border-2);color:var(--text-2)}
+.nudge .row button.sent{background:var(--good);border-color:var(--good)}
+.vp-pop{position:absolute;right:16px;top:150px;z-index:3;font-size:12px;font-weight:700;color:#fff;background:var(--orange);padding:5px 10px;border-radius:999px;box-shadow:0 8px 20px -6px rgba(242,125,38,.6);animation:vppop 1.6s ease forwards;pointer-events:none}
+@keyframes vppop{0%{opacity:0;transform:translateY(8px) scale(.9)}15%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
+@media(max-width:600px){.vp-cover{height:150px}.vp-pop{top:104px}.vp-glyph{width:70px;height:70px}.vp-kpis div{padding:10px 12px}.vp-kpis b{font-size:17px}.vp-kpis small{font-size:10px}}
+@media (prefers-reduced-motion:reduce){.bk,.vp-live i{animation:none}.vp-item.in,.vp-pop{animation:none}}
 
 /* PROOF STRIP */
 .proof{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:2.25rem 0}
@@ -124,7 +188,7 @@ section{padding:6.5rem 0}
 /* STEPS */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;counter-reset:s}
 .step{position:relative;padding:30px;border-radius:18px;background:var(--surface);border:1px solid var(--border)}
-.step::before{counter-increment:s;content:counter(s);width:34px;height:34px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'DM Sans',sans-serif;margin-bottom:18px}
+.step:not(.fx)::before{counter-increment:s;content:counter(s);width:34px;height:34px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'DM Sans',sans-serif;margin-bottom:18px}
 .step h3{font-size:20px;margin-bottom:8px}
 .step p{color:var(--text-2);font-size:15px}
 .step .meta{margin-top:16px;font-size:13px;color:var(--text-3)}
@@ -180,6 +244,38 @@ section{padding:6.5rem 0}
 .cust li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--panel-text)}
 .cust li span{width:26px;height:26px;border-radius:8px;background:rgba(242,125,38,0.16);color:var(--orange);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .cust .btn-ghost{border-color:rgba(255,255,255,0.18);color:#fff}
+.cust{grid-template-columns:1.1fr .9fr;overflow:visible}
+#customers{overflow-x:clip}
+/* Light mode: warm light panel so the dark phone is the hero, not the background */
+html:not([data-theme="dark"]) .cust{background:radial-gradient(70% 90% at 82% 55%,rgba(242,125,38,.22),transparent 60%),linear-gradient(135deg,#FFFFFF 0%,#FFF6EE 55%,#FDEBDC 100%);color:var(--text);border:1px solid #F3E2D3;box-shadow:0 30px 70px -30px rgba(242,125,38,.28),0 6px 18px rgba(22,21,15,.05)}
+html:not([data-theme="dark"]) .cust p{color:var(--text-2)}
+html:not([data-theme="dark"]) .cust li{color:var(--text)}
+html:not([data-theme="dark"]) .cust li span{background:rgba(242,125,38,.14)}
+html:not([data-theme="dark"]) .cust .btn-ghost{border-color:var(--border-2);color:var(--text);background:#fff}
+html:not([data-theme="dark"]) .cust .btn-ghost:hover{border-color:var(--orange);color:var(--orange)}
+html:not([data-theme="dark"]) .phone-wrap::before{background:radial-gradient(closest-side,rgba(242,125,38,.45),transparent);opacity:.8}
+html:not([data-theme="dark"]) .phone{box-shadow:0 0 0 1.5px #5c5c63 inset,0 50px 90px -25px rgba(60,30,10,.45),0 20px 40px -20px rgba(22,21,15,.35)}
+html:not([data-theme="dark"]) .phone-wrap figcaption{color:var(--text-3)}
+.cust-copy ul{margin-top:.5rem}.cust-cta{margin-top:1.75rem}
+.phone-wrap{position:relative;margin:-110px auto -40px;display:flex;flex-direction:column;align-items:center}
+.phone-wrap::before{content:"";position:absolute;inset:12% -10% 18%;background:radial-gradient(closest-side,rgba(242,125,38,.38),transparent);filter:blur(30px);z-index:0}
+.phone{position:relative;z-index:1;width:300px;aspect-ratio:600/1300;border-radius:52px;padding:11px;
+ background:linear-gradient(145deg,#4a4a50,#1c1c20 40%,#3a3a40 70%,#18181b);
+ box-shadow:0 0 0 1.5px #5c5c63 inset,0 40px 80px -20px rgba(0,0,0,.6),0 18px 36px -18px rgba(0,0,0,.5);
+ transform:rotate(-3deg);transition:transform .5s ease}
+.phone-wrap:hover .phone{transform:rotate(0) translateY(-6px)}
+.ph-screen{position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;background:#000}
+.ph-screen img{display:block;width:100%;height:100%;object-fit:cover}
+.ph-island{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:31%;height:27px;background:#000;border-radius:20px}
+.ph-btn{position:absolute;width:3px;background:#3a3a40;border-radius:2px}
+.ph-act{left:-3px;top:17%;height:5%}.ph-vu{left:-3px;top:26%;height:9%}.ph-vd{left:-3px;top:37%;height:9%}.ph-pw{right:-3px;top:30%;height:14%}
+.ph-chip{position:absolute;z-index:2;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:999px;padding:9px 14px;font-size:13px;font-weight:600;box-shadow:0 12px 30px -10px rgba(0,0,0,.45);white-space:nowrap}
+.ph-chip b{color:var(--orange);margin-right:4px}
+.ph-chip-a{left:-34px;top:58%}.ph-chip-b{right:-26px;top:22%}
+.phone-wrap figcaption{margin-top:22px;font-size:12.5px;color:var(--panel-text-3);position:relative;z-index:1}
+@media(max-width:960px){.phone-wrap{margin:8px auto 0}.phone{width:250px}}
+@media(max-width:600px){.phone{width:230px;border-radius:42px;padding:9px}.ph-screen{border-radius:34px}.ph-island{height:22px;top:7px}.ph-chip{font-size:12px;padding:7px 11px}.ph-chip-a{left:-12px}.ph-chip-b{right:-10px}}
+@media (prefers-reduced-motion:reduce){.phone{transform:none}}
 
 /* BARCARD */
 .bc{display:grid;grid-template-columns:1fr 1fr;gap:3.5rem;align-items:center}
@@ -188,6 +284,200 @@ section{padding:6.5rem 0}
 .bc-card .chip{width:42px;height:30px;border-radius:6px;background:linear-gradient(135deg,#F7B37B,#F27D26)}
 .bc-card .num{font-family:'DM Sans',sans-serif;letter-spacing:.18em;font-size:17px;color:rgba(255,255,255,0.8)}
 .bc-card .bot{display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.1em}
+
+/* ===== Interactive cards (spotlight, glow border, reveal) ===== */
+.fx{position:relative;isolation:isolate;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s}
+.fx::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;opacity:0;transition:opacity .35s;
+ background:radial-gradient(380px circle at var(--mx,50%) var(--my,0%),color-mix(in srgb,var(--ic,#F27D26) 13%,transparent),transparent 45%)}
+.fx::after{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;pointer-events:none;opacity:0;transition:opacity .35s;
+ background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),var(--ic,#F27D26),transparent 60%);
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.fx:hover{transform:translateY(-5px);box-shadow:0 22px 50px -24px color-mix(in srgb,var(--ic,#F27D26) 45%,transparent),var(--shadow-sm)}
+.fx:hover::before,.fx:hover::after{opacity:1}
+html.js .rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease var(--d,0ms),transform .7s cubic-bezier(.2,.8,.2,1) var(--d,0ms)}
+html.js .rv.on{opacity:1;transform:none}
+html.js .rv.on.fx:hover{transform:translateY(-5px);transition-delay:0ms}
+.ind-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+ color:var(--ic,#F27D26);background:color-mix(in srgb,var(--ic,#F27D26) 12%,transparent);border:1px solid color-mix(in srgb,var(--ic,#F27D26) 22%,transparent);transition:all .35s cubic-bezier(.2,.8,.2,1)}
+.ind-ico svg{width:22px!important;height:22px!important;margin:0!important;color:inherit!important}
+.ind-ico.sm{width:36px;height:36px;border-radius:10px}.ind-ico.sm svg{width:18px!important;height:18px!important}
+.fx:hover .ind-ico{background:var(--ic,#F27D26);color:#fff;transform:rotate(-6deg) scale(1.06);box-shadow:0 8px 18px -6px var(--ic,#F27D26)}
+/* Industries */
+.ind{padding:22px;border-radius:18px;display:flex;flex-direction:column}
+.ind:hover{border-color:transparent}
+.ind h3{margin-top:16px}
+.ind p{flex:1}
+.ind .eg{border-top:0;padding:12px;border-radius:12px;background:var(--bg-alt);border:1px solid var(--border)}
+.eg-top{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-3);margin-bottom:3px}
+.eg-top em{font-style:normal;font-weight:700;color:var(--ic);opacity:0;transform:translateY(4px);transition:all .3s ease}
+.ind .eg b{display:block;font-size:13px;line-height:1.35}
+.stamps{display:flex;gap:4px;margin-top:9px}
+.stamps i{flex:1;height:6px;border-radius:99px;background:var(--border-2);position:relative;overflow:hidden}
+.stamps i::after{content:"";position:absolute;inset:0;background:var(--ic);transform:scaleX(0);transform-origin:left;transition:transform .18s ease calc(var(--i)*70ms)}
+.ind:hover .stamps i::after{transform:scaleX(1)}
+.ind:hover .eg-top em{opacity:1;transform:none;transition-delay:calc(var(--n,5)*70ms)}
+/* Platform */
+.pcard{border-radius:20px;display:flex;flex-direction:column}
+.pcard:hover{border-color:transparent}
+.pc-head{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.pc-head h3{margin:0}
+.pcard ul{flex:1}
+.pcard li::before{width:16px;height:16px;margin-top:3px;border-radius:50%;background:color-mix(in srgb,var(--ic) 14%,transparent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F27D26' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/10px no-repeat}
+.pv{margin-top:20px;border-radius:14px;background:var(--bg-alt);border:1px solid var(--border);padding:14px;font-size:12.5px;color:var(--text-2);position:relative;overflow:hidden;min-height:92px}
+.pv-row{display:flex;justify-content:space-between;gap:8px;font-weight:600;color:var(--text)}
+.pv-row.sm{font-weight:500;color:var(--text-3);font-size:11.5px;margin-top:8px}
+.pv .hl{color:var(--ic);font-weight:700}
+.pv-bar{height:8px;border-radius:99px;background:var(--border-2);margin-top:10px;overflow:hidden}
+.pv-bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--ic),color-mix(in srgb,var(--ic) 60%,#fff));transition:width 1.2s cubic-bezier(.2,.8,.2,1) .3s}
+.rv.on .pv-bar i{width:var(--w)}
+.pcard:hover .pv-bar i{width:100%}
+.bubble{background:var(--surface);border:1px solid var(--border);border-radius:14px 14px 14px 4px;padding:10px 12px;color:var(--text);font-size:13px;max-width:92%;box-shadow:var(--shadow-sm);transform-origin:left bottom;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.pcard:hover .bubble{transform:scale(1.03) rotate(-1deg)}
+.pv-map{background:radial-gradient(circle at 30% 40%,color-mix(in srgb,var(--ic) 10%,transparent),transparent 60%),repeating-linear-gradient(0deg,transparent 0 22px,var(--border) 22px 23px),repeating-linear-gradient(90deg,transparent 0 22px,var(--border) 22px 23px),var(--bg-alt)}
+.pin{position:absolute;width:12px;height:12px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--text-3);opacity:.6}
+.pin.p1{left:22%;top:26%}.pin.p2{left:68%;top:20%}
+.pin.me{left:46%;top:30%;width:16px;height:16px;background:var(--ic);opacity:1;animation:pinb 1.8s ease-in-out infinite}
+@keyframes pinb{0%,100%{transform:rotate(-45deg) translate(0,0)}50%{transform:rotate(-45deg) translate(3px,-3px)}}
+.pv-chip{position:absolute;left:12px;bottom:10px;font-size:11.5px;font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--border);padding:4px 10px;border-radius:999px;box-shadow:var(--shadow-sm)}
+.pv-chart{display:flex;align-items:flex-end;gap:6px;padding-bottom:44px;height:118px}
+.rv.on .pv-chart i{height:var(--h)}
+.pv-chart i{flex:1;height:0;border-radius:5px 5px 2px 2px;background:color-mix(in srgb,var(--ic) 30%,transparent);transition:height .8s cubic-bezier(.2,.8,.2,1) calc(var(--i)*80ms + .2s)}
+.pv-chart i:nth-child(7){background:var(--ic)}
+/* Add-ons */
+.addon{border:1px solid var(--border);background:var(--surface);border-radius:18px}
+.addon:hover{border-color:transparent}
+.ad-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.addon small{padding:4px 10px;border-radius:999px;font-size:10.5px}
+.addon small.t-or{color:#C2560E;background:rgba(242,125,38,.12)}
+.addon small.t-gr{color:#15803D;background:rgba(16,185,129,.12)}
+.addon small.t-bl{color:#1D4ED8;background:rgba(59,130,246,.12)}
+[data-theme="dark"] .addon small.t-or{color:#FDBA74}[data-theme="dark"] .addon small.t-gr{color:#6EE7B7}[data-theme="dark"] .addon small.t-bl{color:#93C5FD}
+/* Pricing */
+.bill-tog{position:relative;display:inline-flex;padding:4px;border-radius:999px;background:var(--bg-alt);border:1px solid var(--border);margin:-1.5rem 0 2rem}
+.bill-tog button{position:relative;z-index:1;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border:0;background:none;color:var(--text-2);cursor:pointer;border-radius:999px;transition:color .25s}
+.bill-tog button[aria-pressed="true"]{color:var(--text)}
+.bill-tog em{font-style:normal;font-size:11px;font-weight:700;color:#fff;background:var(--good);padding:2px 7px;border-radius:999px;margin-left:6px}
+.bt-pill{position:absolute;top:4px;bottom:4px;left:4px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-sm);transition:transform .35s cubic-bezier(.2,.8,.2,1),width .35s}
+.plan{border-radius:20px}
+.plan:not(.pop):hover{border-color:transparent}
+.plan .price{font-variant-numeric:tabular-nums}
+.bill{font-size:12.5px;font-weight:600;color:var(--good);height:0;opacity:0;overflow:hidden;transition:all .3s ease}
+.annual .bill{height:20px;opacity:1;margin-top:2px}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+.plan.pop{border-color:transparent;box-shadow:0 30px 60px -30px rgba(242,125,38,.55),var(--shadow-sm);background:linear-gradient(var(--surface),var(--surface)) padding-box,conic-gradient(from var(--ang),#F27D26,#FFC48A,#F27D26 40%,#C9560E,#F27D26) border-box;border:2px solid transparent;animation:spinb 6s linear infinite}
+@keyframes spinb{to{--ang:360deg}}
+.plan.pop{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}html.js .rv.on.plan.pop:hover,.plan.pop:hover{transform:translateY(-5px);box-shadow:0 40px 70px -30px rgba(242,125,38,.7),var(--shadow-sm)}
+.plan.pop::after{left:50%;transform:translateX(-50%);top:-12px;padding:4px 12px;box-shadow:0 6px 16px -6px rgba(242,125,38,.7)}
+@media (hover:none){.fx:hover{transform:none}}
+@media (prefers-reduced-motion:reduce){html.js .rv{opacity:1;transform:none;transition:none}.fx,.fx:hover{transform:none}.plan.pop{animation:none}.pin.me{animation:none}}
+
+/* ===== Problem (hover flips to the BarChata version) ===== */
+.prob{display:flex;flex-direction:column;cursor:pointer}
+.prob:hover{border-color:transparent}
+.prob .pv{margin:0 0 20px}
+.pv-flip{position:relative;height:112px;padding:0;overflow:hidden}
+.pf-a,.pf-b{position:absolute;inset:0;padding:14px;display:flex;flex-direction:column;justify-content:center;gap:10px;transition:opacity .45s ease,transform .45s cubic-bezier(.2,.8,.2,1)}
+.pf-b{opacity:0;transform:translateY(14px);background:linear-gradient(135deg,rgba(242,125,38,.10),transparent 70%)}
+.prob:hover .pf-a,.prob.flip .pf-a{opacity:0;transform:translateY(-14px)}
+.prob:hover .pf-b,.prob.flip .pf-b{opacity:1;transform:none}
+.prob:hover{--ic:#F27D26!important}
+.rc{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.rc b{display:block;font-size:13px;color:var(--text)}.rc small{font-size:11.5px;color:var(--text-3)}
+.rc .q{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--text-3);background:var(--bg-alt);border:1px dashed var(--border-2)}
+.rc .q.ok{color:#fff;background:linear-gradient(135deg,#F27D26,#C9560E);border:0}
+.rc-t{margin-left:auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;color:#B91C1C;background:rgba(239,68,68,.1)}
+.rc-t.ok{color:#C2560E;background:rgba(242,125,38,.14)}
+[data-theme="dark"] .rc-t{color:#FCA5A5}[data-theme="dark"] .rc-t.ok{color:#FDBA74}
+.wk{display:flex;align-items:flex-end;gap:6px;height:56px}
+.wk i{flex:1;height:var(--h);border-radius:4px 4px 2px 2px;background:var(--border-2);position:relative}
+.wk i:nth-child(2){background:rgba(239,68,68,.55)}
+.wk.up i{background:rgba(242,125,38,.35)}.wk.up i:nth-child(2){background:#F27D26}
+.wk em{position:absolute;bottom:-15px;left:0;right:0;text-align:center;font-style:normal;font-size:9.5px;color:var(--text-3)}
+.pf-cap{font-size:12px;font-weight:600;color:#DC2626;margin-top:10px}
+.pf-cap.ok{color:var(--orange)}
+.crowd{display:flex;gap:8px;justify-content:center}
+.crowd span{width:34px;height:34px;border-radius:50%;background:var(--border-2);position:relative;display:flex;align-items:center;justify-content:center}
+.crowd span::after{content:"";position:absolute;width:12px;height:12px;border-radius:50%;background:var(--surface);top:7px;opacity:.7}
+.crowd.vip span{opacity:.45}
+.crowd .star{opacity:1!important;background:linear-gradient(135deg,#F27D26,#FFB25B);color:#fff;font-size:15px;transform:scale(1.2);box-shadow:0 0 0 3px rgba(242,125,38,.25),0 8px 18px -6px rgba(242,125,38,.7)}
+.crowd .star::after{display:none}
+.pv-flip .pf-cap{text-align:center}
+.pf-hint{margin-top:1.25rem;font-size:13px;color:var(--text-3)}
+.pf-hint span{color:var(--orange);font-weight:600}
+@media (hover:none){.pf-hint span::after{content:" (tap)"}}
+/* ===== How it works ===== */
+.steps{position:relative}
+.step{display:flex;flex-direction:column}
+.step:hover{border-color:transparent}
+.st-n{order:1;width:34px;height:34px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'DM Sans',sans-serif;margin-bottom:18px;box-shadow:0 0 0 5px var(--orange-soft);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.step:hover .st-n{transform:scale(1.12)}
+.step .pv{order:2;margin:0 0 18px}
+.step h3{order:3}.step p{order:4}.step .meta{order:5}
+.step .meta{display:inline-flex;align-self:flex-start;align-items:center;gap:6px;font-weight:600;color:var(--text-2);background:var(--bg-alt);border:1px solid var(--border);padding:5px 11px;border-radius:999px}
+.st-arrow{position:absolute;top:40px;z-index:3;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);color:var(--orange);font-weight:700;box-shadow:var(--shadow-sm);transform:translateX(-50%)}
+.st-arrow.a1{left:calc((100% - 2.5rem)/3 + .625rem)}
+.st-arrow.a2{left:calc((100% - 2.5rem)/3*2 + 1.875rem)}
+.st-v{min-height:104px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.srch{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-2);border-radius:10px;padding:8px 10px;font-size:13px;color:var(--text)}
+.srch svg{width:15px;height:15px;color:var(--text-3)}
+.typed{white-space:nowrap;clip-path:inset(0 100% 0 0)}
+.rv.on .typed{animation:typ 1.4s steps(14) .4s forwards}
+@keyframes typ{to{clip-path:inset(0 0 0 0)}}
+.res{display:flex;align-items:center;gap:10px;font-size:12px}
+.res b{display:block;font-size:13px;color:var(--text)}.res small{color:var(--text-3)}
+.rl{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#F27D26,#8a3410);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ver{margin-left:auto;font-size:11px;font-weight:700;color:var(--good);background:var(--good-soft);padding:3px 9px;border-radius:999px;transform:scale(.6);opacity:0;transition:all .4s cubic-bezier(.3,1.6,.5,1) 1.9s}
+.rv.on .ver{transform:none;opacity:1}
+.step:hover .ver{transform:scale(1.08);transition-delay:0s}
+.st-qr{flex-direction:row;align-items:center;gap:14px}
+.qr-wrap{position:relative;width:78px;height:78px;padding:6px;background:#fff;border-radius:10px;border:1px solid var(--border);flex-shrink:0;overflow:hidden}
+.qr{width:100%;height:100%;color:#16150F;display:block}
+.scan{position:absolute;left:0;right:0;height:3px;top:0;background:linear-gradient(90deg,transparent,#F27D26,transparent);box-shadow:0 0 12px 2px rgba(242,125,38,.7);opacity:0}
+.step:hover .scan,.rv.on .scan{animation:scn 1.6s ease-in-out infinite}
+@keyframes scn{0%{top:4%;opacity:1}50%{top:92%;opacity:1}100%{top:4%;opacity:1}}
+.qr-side b{display:block;font-size:13px;color:var(--text)}.qr-side small{display:block;font-size:11.5px;color:var(--text-3);margin-bottom:8px}
+.earn{display:inline-block;font-size:12px;font-weight:700;color:#fff;background:var(--orange);padding:4px 10px;border-radius:999px;box-shadow:0 6px 14px -6px rgba(242,125,38,.8);animation:earn 2.4s ease-in-out infinite}
+@keyframes earn{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.st-msg .bubble{font-size:12.5px}
+.dlv{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ch{font-size:10.5px;font-weight:600;color:var(--text-2);background:var(--surface);border:1px solid var(--border);padding:2px 8px;border-radius:999px}
+.st-ok{margin-left:auto;font-size:11px;font-weight:700;color:var(--good)}
+@media(max-width:960px){.st-arrow{display:none}}
+@media (prefers-reduced-motion:reduce){.typed{clip-path:none;animation:none!important}.ver{opacity:1;transform:none}.scan,.earn{animation:none!important}}
+/* BarCard: realistic two-card stack (team tips card in front, business expense card behind) */
+.cc-stage{display:flex;flex-direction:column;align-items:center;perspective:1200px}
+.cc-stack{container-type:inline-size;position:relative;width:min(420px,100%);aspect-ratio:1.586;margin:36px 0 18px}
+.cc{position:absolute;inset:0;border-radius:4.3cqw;padding:6.5% 7%;color:#fff;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;font-family:'DM Sans',sans-serif;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.8,.2,1),box-shadow .6s}
+.cc-front{background:radial-gradient(120% 90% at 100% 0%,rgba(242,125,38,.28),transparent 55%),linear-gradient(135deg,#2a2a31 0%,#16161b 45%,#0c0c10 100%);
+ box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 0 0 1px rgba(255,255,255,.07) inset,0 30px 60px -18px rgba(0,0,0,.7),0 12px 24px -12px rgba(0,0,0,.5);
+ transform:rotateX(8deg) rotateY(-14deg) rotateZ(-2deg) translateZ(30px)}
+.cc-back{background:linear-gradient(135deg,#FF9A4D 0%,#F27D26 40%,#C9560E 100%);
+ box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 24px 50px -20px rgba(0,0,0,.6);
+ transform:rotateX(8deg) rotateY(-14deg) rotateZ(-9deg) translate(-9%,-15%) scale(.94);filter:saturate(1.05)}
+.cc-stage:hover .cc-front{transform:rotateX(4deg) rotateY(-6deg) rotateZ(-1deg) translateZ(30px) translateY(10px)}
+.cc-stage:hover .cc-back{transform:rotateX(4deg) rotateY(-6deg) rotateZ(-12deg) translate(-13%,-22%) scale(.94)}
+.cc-tex{position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:overlay;
+ background:repeating-linear-gradient(100deg,rgba(255,255,255,.05) 0 1px,transparent 1px 3px),repeating-linear-gradient(10deg,rgba(0,0,0,.06) 0 1px,transparent 1px 4px)}
+.cc-glare{position:absolute;inset:-40%;pointer-events:none;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.16) 47%,rgba(255,255,255,.04) 53%,transparent 60%);transform:translateX(-30%);transition:transform .9s ease}
+.cc-stage:hover .cc-glare{transform:translateX(25%)}
+.cc>*:not(.cc-tex):not(.cc-glare){position:relative}
+.cc-top{display:flex;justify-content:space-between;align-items:center}
+.cc-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:4.6cqw;letter-spacing:-.01em;white-space:nowrap}
+.cc-mark{width:1.45em;height:1.45em;background:#F27D26;-webkit-mask:url(/assets/barchata-mark-white.png) center/contain no-repeat;mask:url(/assets/barchata-mark-white.png) center/contain no-repeat}
+.cc-back .cc-mark{background:#fff}
+.cc-nfc{width:5.4cqw;height:5.4cqw;opacity:.75;transform:rotate(0)}
+.cc-mid{display:flex;align-items:center;justify-content:space-between}
+.cc-chip{width:12cqw;height:auto;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.cc-type{font-size:2.5cqw;letter-spacing:.18em;text-transform:uppercase;font-weight:700;padding:1cqw 2.2cqw;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18)}
+.cc-num{font-family:'DM Mono','SFMono-Regular',ui-monospace,Menlo,monospace;font-size:4.8cqw;letter-spacing:.14em;white-space:nowrap;color:rgba(255,255,255,.92);text-shadow:0 1px 0 rgba(0,0,0,.55),0 -1px 0 rgba(255,255,255,.18)}
+.cc-bot{display:flex;align-items:flex-end;gap:5cqw;white-space:nowrap}
+.cc-bot small{display:block;font-size:2.1cqw;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin-bottom:3px}
+.cc-bot span{font-size:3.1cqw;letter-spacing:.12em;text-transform:uppercase;font-weight:600;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+.cc-net{margin-left:auto;font-size:5cqw;font-style:italic;font-weight:800;letter-spacing:-.02em;line-height:1}
+.cc-front .cc-net{background:linear-gradient(90deg,#fff,#F7B37B);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cc-cap{font-size:12.5px;color:var(--text-3);margin-top:6px}
+@media(max-width:960px){.cc-stack{margin:48px 0 10px;width:min(380px,82%)}}
+@media (prefers-reduced-motion:reduce){.cc,.cc-glare{transition:none}}
 .bc-list{display:grid;gap:1.25rem;margin-top:1.75rem}
 .bc-list div h4{font-size:17px;margin-bottom:4px}
 .bc-list div p{font-size:15px;color:var(--text-2)}
@@ -205,6 +495,7 @@ section{padding:6.5rem 0}
 .plan ul{list-style:none;display:grid;gap:9px;margin-bottom:22px;flex:1}
 .plan li{font-size:14px;display:flex;gap:9px;color:var(--text-2)}
 .plan li svg{width:16px;height:16px;color:var(--good);flex-shrink:0;margin-top:3px}
+.plan li.li-bs{color:var(--text)}.plan li.li-bs svg{color:var(--orange)}
 .plan .btn{width:100%}
 .pr-foot{margin-top:1.5rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:14px;color:var(--text-2)}
 .pr-foot a{color:var(--orange);font-weight:600}
@@ -351,25 +642,35 @@ section{padding:4.5rem 0}
         <button data-k="retail" aria-pressed="false">Retail</button>
         <button data-k="auto" aria-pressed="false">Auto service</button>
       </div>
-      <div class="demo" aria-live="polite">
-        <div class="demo-top"><b id="d-biz">The Corner Tap</b><small>Your customers</small></div>
+      <div class="demo vp" id="vp" data-k="bar">
+        <div class="vp-cover">
+          <span class="bk b1"></span><span class="bk b2"></span><span class="bk b3"></span><span class="bk b4"></span><span class="bk b5"></span>
+          <svg class="vp-glyph" id="d-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 22h8M12 11v11M19 3l-7 8-7-8Z"/></svg>
+          <div class="vp-badges"><span class="vp-live"><i></i>Live</span><span class="vp-claim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>Claimed</span></div>
+          <div class="vp-id">
+            <div class="vp-logo" id="d-logo">CT</div>
+            <div><b id="d-biz">The Corner Tap</b><small><span id="d-cat">Bar · King St W</span> · <em>Open now</em></small></div>
+          </div>
+        </div>
+        <div class="vp-kpis">
+          <div><small>Check-ins today</small><b id="d-today">37</b></div>
+          <div><small>Regulars</small><b id="d-reg">214</b></div>
+          <div><small>Hearts this month</small><b id="d-hm">9,420</b></div>
+        </div>
+        <div class="vp-feed" aria-hidden="true"><div class="vp-item" id="d-feed"><span class="fa">JR</span><span class="ft"><b>Jay R.</b> checked in</span><span class="fh">+25 ♥</span></div></div>
         <div class="guest">
           <div class="avatar" id="d-init">SM</div>
           <div><h4 id="d-name">Sarah M.</h4><p id="d-last">Last visit 16 days ago · usually Fridays</p></div>
           <span class="tag" id="d-tag">Regular</span>
         </div>
-        <div class="demo-stats">
-          <div><small>Visits</small><b id="d-visits">9</b></div>
-          <div><small>Hearts</small><b id="d-hearts">420</b></div>
-          <div><small>Favourite</small><b id="d-fav">Trivia night</b></div>
-        </div>
+        <div class="g-chips"><span><b id="d-visits">9</b> visits</span><span><b id="d-hearts">420</b> Hearts</span><span>Loves <b id="d-fav">Trivia night</b></span></div>
         <div class="nudge">
           <small>Suggested next step</small>
           <p id="d-nudge">Sarah hasn't been in for two weeks. Invite her back with a free appetizer this Friday.</p>
-          <div class="row"><span>Send offer</span><span class="sec">Not now</span></div>
+          <div class="row"><button type="button" id="d-send">Send offer</button><button type="button" class="sec" id="d-skip">Not now</button></div>
         </div>
       </div>
-      <p class="demo-cap">Example customer — illustrative only</p>
+      <p class="demo-cap">Example business and customers — illustrative only</p>
     </div>
   </div>
 </header>
@@ -390,10 +691,20 @@ section{padding:4.5rem 0}
       <h2>You work hard to get customers in the door. Then they disappear.</h2>
     </div>
     <div class="problem-grid">
-      <div class="prob"><div class="n">01</div><h3>You don't know who came in</h3><p>Card payments and walk-ins leave no name, no history and no way to say thank you.</p></div>
-      <div class="prob"><div class="n">02</div><h3>You can't invite them back</h3><p>Without a way to reach past customers, every slow day starts from zero.</p></div>
-      <div class="prob"><div class="n">03</div><h3>Your best customers look like everyone else</h3><p>The person who visits every week gets the same treatment as a first-timer — until they stop coming.</p></div>
+      <div class="prob fx rv" style="--ic:#EF4444">
+        <div class="pv pv-flip"><div class="pf-a"><div class="rc"><span class="q">?</span><div><b>Visa •••• 4821</b><small>$42.50 · walk-in</small></div><span class="rc-t">Unknown</span></div></div>
+          <div class="pf-b"><div class="rc"><span class="q ok">SM</span><div><b>Sarah M.</b><small>9th visit · loves trivia night</small></div><span class="rc-t ok">Regular</span></div></div></div>
+        <div class="n">01</div><h3>You don't know who came in</h3><p>Card payments and walk-ins leave no name, no history and no way to say thank you.</p></div>
+      <div class="prob fx rv" style="--ic:#EF4444">
+        <div class="pv pv-flip"><div class="pf-a"><div class="wk"><i style="--h:30%"><em>M</em></i><i style="--h:22%"><em>T</em></i><i style="--h:28%"><em>W</em></i><i style="--h:40%"><em>T</em></i><i style="--h:85%"><em>F</em></i><i style="--h:90%"><em>S</em></i><i style="--h:45%"><em>S</em></i></div><span class="pf-cap">Tuesdays: 6 guests</span></div>
+          <div class="pf-b"><div class="wk up"><i style="--h:48%"><em>M</em></i><i style="--h:58%"><em>T</em></i><i style="--h:52%"><em>W</em></i><i style="--h:60%"><em>T</em></i><i style="--h:88%"><em>F</em></i><i style="--h:92%"><em>S</em></i><i style="--h:60%"><em>S</em></i></div><span class="pf-cap ok">+18 invited back on Tuesday</span></div></div>
+        <div class="n">02</div><h3>You can't invite them back</h3><p>Without a way to reach past customers, every slow day starts from zero.</p></div>
+      <div class="prob fx rv" style="--ic:#EF4444">
+        <div class="pv pv-flip"><div class="pf-a"><div class="crowd"><span></span><span></span><span></span><span></span><span></span><span></span></div><span class="pf-cap">Every guest looks the same</span></div>
+          <div class="pf-b"><div class="crowd vip"><span></span><span></span><span class="star">★</span><span></span><span></span><span></span></div><span class="pf-cap ok">Your top 5% — spotted and rewarded</span></div></div>
+        <div class="n">03</div><h3>Your best customers look like everyone else</h3><p>The person who visits every week gets the same treatment as a first-timer — until they stop coming.</p></div>
     </div>
+    <p class="pf-hint"><span>Hover a card</span> to see it with BarChata</p>
   </div>
 </section>
 
@@ -405,9 +716,16 @@ section{padding:4.5rem 0}
       <p class="lead">No hardware to buy. No cards to print. Your customers check in with their phone; you see who they are.</p>
     </div>
     <div class="steps">
-      <div class="step"><h3>Claim your business</h3><p>Find your business in the directory and claim it. We verify you run it, usually within one business day.</p><div class="meta">Free · about 2 minutes</div></div>
-      <div class="step"><h3>Customers check in and earn Hearts</h3><p>They scan your QR code at the counter and earn Hearts, BarChata's rewards, for every visit. You see each customer and their visit history.</p><div class="meta">Works with any phone</div></div>
-      <div class="step"><h3>Bring them back</h3><p>Send offers to people who haven't visited in a while, reward your regulars, and fill your slow days — by text, email or in-app.</p><div class="meta">Targets by visits, spend and timing</div></div>
+      <span class="st-arrow a1" aria-hidden="true">→</span><span class="st-arrow a2" aria-hidden="true">→</span>
+      <div class="step fx rv"><span class="st-n">1</span>
+        <div class="pv st-v"><div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="typed">The Corner Tap</span></div><div class="res"><span class="rl">CT</span><div><b>The Corner Tap</b><small>Bar · King St W</small></div><span class="ver">✓ Verified</span></div></div>
+        <h3>Claim your business</h3><p>Find your business in the directory and claim it. We verify you run it, usually within one business day.</p><div class="meta">Free · about 2 minutes</div></div>
+      <div class="step fx rv"><span class="st-n">2</span>
+        <div class="pv st-v st-qr"><div class="qr-wrap"><svg class="qr" viewBox="0 0 21 21" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 0h7v7h-7z M1 1v5h5v-5z M2 2h3v3h-3z" fill-rule="evenodd"/><path d="M14 0h7v7h-7z M15 1v5h5v-5z M16 2h3v3h-3z" fill-rule="evenodd"/><path d="M0 14h7v7h-7z M1 15v5h5v-5z M2 16h3v3h-3z" fill-rule="evenodd"/><path d="M8 0h1v1h-1zM9 0h1v1h-1zM11 0h1v1h-1zM8 1h1v1h-1zM9 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM8 2h1v1h-1zM9 2h1v1h-1zM10 2h1v1h-1zM12 2h1v1h-1zM8 3h1v1h-1zM12 3h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM12 4h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM9 6h1v1h-1zM11 6h1v1h-1zM12 6h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM0 8h1v1h-1zM1 8h1v1h-1zM4 8h1v1h-1zM9 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM15 8h1v1h-1zM16 8h1v1h-1zM0 9h1v1h-1zM4 9h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM14 9h1v1h-1zM15 9h1v1h-1zM17 9h1v1h-1zM18 9h1v1h-1zM19 9h1v1h-1zM20 9h1v1h-1zM0 10h1v1h-1zM2 10h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM13 10h1v1h-1zM14 10h1v1h-1zM17 10h1v1h-1zM18 10h1v1h-1zM19 10h1v1h-1zM20 10h1v1h-1zM0 11h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM12 11h1v1h-1zM17 11h1v1h-1zM18 11h1v1h-1zM19 11h1v1h-1zM0 12h1v1h-1zM1 12h1v1h-1zM2 12h1v1h-1zM3 12h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM8 12h1v1h-1zM9 12h1v1h-1zM10 12h1v1h-1zM13 12h1v1h-1zM14 12h1v1h-1zM15 12h1v1h-1zM16 12h1v1h-1zM17 12h1v1h-1zM20 12h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM14 13h1v1h-1zM15 13h1v1h-1zM18 13h1v1h-1zM20 13h1v1h-1zM12 14h1v1h-1zM13 14h1v1h-1zM14 14h1v1h-1zM18 14h1v1h-1zM19 14h1v1h-1zM13 15h1v1h-1zM15 15h1v1h-1zM16 15h1v1h-1zM17 15h1v1h-1zM18 15h1v1h-1zM19 15h1v1h-1zM9 16h1v1h-1zM13 16h1v1h-1zM14 16h1v1h-1zM15 16h1v1h-1zM16 16h1v1h-1zM17 16h1v1h-1zM8 17h1v1h-1zM11 17h1v1h-1zM16 17h1v1h-1zM17 17h1v1h-1zM19 17h1v1h-1zM9 18h1v1h-1zM10 18h1v1h-1zM13 18h1v1h-1zM14 18h1v1h-1zM15 18h1v1h-1zM18 18h1v1h-1zM9 19h1v1h-1zM11 19h1v1h-1zM12 19h1v1h-1zM17 19h1v1h-1zM20 19h1v1h-1zM8 20h1v1h-1zM9 20h1v1h-1zM10 20h1v1h-1zM12 20h1v1h-1zM13 20h1v1h-1zM14 20h1v1h-1zM16 20h1v1h-1zM17 20h1v1h-1zM20 20h1v1h-1z"/></svg><span class="scan"></span></div><div class="qr-side"><b>Scan to check in</b><small>No app download needed</small><span class="earn">+25 ♥ earned</span></div></div>
+        <h3>Customers check in and earn Hearts</h3><p>They scan your QR code at the counter and earn Hearts, BarChata's rewards, for every visit. You see each customer and their visit history.</p><div class="meta">Works with any phone</div></div>
+      <div class="step fx rv"><span class="st-n">3</span>
+        <div class="pv st-v st-msg"><div class="bubble">Hi Sarah — it's been a while! Free appetizer this Friday.</div><div class="dlv"><span class="ch">Text</span><span class="ch">Email</span><span class="ch">In-app</span><span class="st-ok">Delivered ✓✓</span></div></div>
+        <h3>Bring them back</h3><p>Send offers to people who haven't visited in a while, reward your regulars, and fill your slow days — by text, email or in-app.</p><div class="meta">Targets by visits, spend and timing</div></div>
     </div>
   </div>
 </section>
@@ -440,14 +758,46 @@ section{padding:4.5rem 0}
       <p class="lead">Hospitality is where BarChata started. Today, half the businesses in our directory are services and retail — and the rewards adapt to how you sell.</p>
     </div>
     <div class="ind-grid">
-      <div class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 22h8M12 15v7M5 3h14l-1 7a6 6 0 01-12 0L5 3z"/></svg><h3>Bars &amp; nightlife</h3><p>Turn one-night visitors into weekly regulars.</p><div class="eg">Reward: <b>free drink on the 5th visit</b></div></div>
-      <div class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 11h18M5 11a7 7 0 0114 0M12 4v0M4 15h16l-1 4H5l-1-4z"/></svg><h3>Restaurants &amp; cafés</h3><p>Fill quiet lunches and early weeknights.</p><div class="eg">Reward: <b>free dessert after 3 visits</b></div></div>
-      <div class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg><h3>Salons &amp; barbers</h3><p>Get clients rebooking before they wander.</p><div class="eg">Reward: <b>free add-on treatment</b></div></div>
-      <div class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg><h3>Gyms &amp; studios</h3><p>Keep members showing up past month two.</p><div class="eg">Reward: <b>free class after 10 check-ins</b></div></div>
-      <div class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg><h3>Retail &amp; boutiques</h3><p>Bring shoppers back for the next drop.</p><div class="eg">Reward: <b>10% off the next purchase</b></div></div>
-      <div class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.5-.5-.5-2.5 2.5-2.5z"/></svg><h3>Auto &amp; home services</h3><p>Be the first call when it's time again.</p><div class="eg">Reward: <b>$10 credit on the next service</b></div></div>
-      <div class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 22c4-3 7-6.5 7-11a7 7 0 00-14 0c0 4.5 3 8 7 11z"/><circle cx="12" cy="11" r="2.5"/></svg><h3>Spas &amp; wellness</h3><p>Turn a gift visit into a monthly habit.</p><div class="eg">Reward: <b>VIP early booking access</b></div></div>
-      <div class="ind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg><h3>Professional services</h3><p>Thank clients and earn the referral.</p><div class="eg">Reward: <b>refer a friend, both save</b></div></div>
+      <div class="ind fx rv" style="--ic:#F27D26;--d:0ms">
+        <div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8M12 15v7M5 3h14l-1 7a6 6 0 01-12 0L5 3z"/></svg></div>
+        <h3>Bars &amp; nightlife</h3><p>Turn one-night visitors into weekly regulars.</p>
+        <div class="eg"><div class="eg-top"><span>Reward</span><em>Unlocked ♥</em></div><b>Free drink on the 5th visit</b><div class="stamps" style="--n:5"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i></div></div>
+      </div>
+      <div class="ind fx rv" style="--ic:#F59E0B;--d:60ms">
+        <div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18M5 11a7 7 0 0114 0M4 15h16l-1 4H5l-1-4z"/></svg></div>
+        <h3>Restaurants &amp; cafés</h3><p>Fill quiet lunches and early weeknights.</p>
+        <div class="eg"><div class="eg-top"><span>Reward</span><em>Unlocked ♥</em></div><b>Free dessert after 3 visits</b><div class="stamps" style="--n:3"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div>
+      </div>
+      <div class="ind fx rv" style="--ic:#E86AA6;--d:120ms">
+        <div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg></div>
+        <h3>Salons &amp; barbers</h3><p>Get clients rebooking before they wander.</p>
+        <div class="eg"><div class="eg-top"><span>Reward</span><em>Unlocked ♥</em></div><b>Free add-on treatment</b><div class="stamps" style="--n:4"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i></div></div>
+      </div>
+      <div class="ind fx rv" style="--ic:#06B6D4;--d:180ms">
+        <div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg></div>
+        <h3>Gyms &amp; studios</h3><p>Keep members showing up past month two.</p>
+        <div class="eg"><div class="eg-top"><span>Reward</span><em>Unlocked ♥</em></div><b>Free class after 10 check-ins</b><div class="stamps" style="--n:10"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i></div></div>
+      </div>
+      <div class="ind fx rv" style="--ic:#8B5CF6;--d:240ms">
+        <div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg></div>
+        <h3>Retail &amp; boutiques</h3><p>Bring shoppers back for the next drop.</p>
+        <div class="eg"><div class="eg-top"><span>Reward</span><em>Unlocked ♥</em></div><b>10% off the next purchase</b><div class="stamps" style="--n:4"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i></div></div>
+      </div>
+      <div class="ind fx rv" style="--ic:#3B82F6;--d:300ms">
+        <div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.5-.5-.5-2.5 2.5-2.5z"/></svg></div>
+        <h3>Auto &amp; home services</h3><p>Be the first call when it's time again.</p>
+        <div class="eg"><div class="eg-top"><span>Reward</span><em>Unlocked ♥</em></div><b>$10 credit on the next service</b><div class="stamps" style="--n:3"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i></div></div>
+      </div>
+      <div class="ind fx rv" style="--ic:#10B981;--d:360ms">
+        <div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4-3 7-6.5 7-11a7 7 0 00-14 0c0 4.5 3 8 7 11z"/><circle cx="12" cy="11" r="2.5"/></svg></div>
+        <h3>Spas &amp; wellness</h3><p>Turn a gift visit into a monthly habit.</p>
+        <div class="eg"><div class="eg-top"><span>Reward</span><em>Unlocked ♥</em></div><b>VIP early booking access</b><div class="stamps" style="--n:4"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i></div></div>
+      </div>
+      <div class="ind fx rv" style="--ic:#64748B;--d:420ms">
+        <div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+        <h3>Professional services</h3><p>Thank clients and earn the referral.</p>
+        <div class="eg"><div class="eg-top"><span>Reward</span><em>Unlocked ♥</em></div><b>Refer a friend, both save</b><div class="stamps" style="--n:2"><i style="--i:0"></i><i style="--i:1"></i></div></div>
+      </div>
     </div>
     <p class="ind-note">Running something else? If customers come back to you, BarChata works for you.</p>
   </div>
@@ -460,15 +810,15 @@ section{padding:4.5rem 0}
       <h2>Everything you need to keep customers. Nothing you don't.</h2>
     </div>
     <div class="plat">
-      <div class="pcard"><h3>Loyalty that runs itself</h3><p>Customers earn Hearts on every visit and redeem them for rewards you choose.</p><ul><li>Ready-made rewards for your type of business</li><li>QR check-in at the counter, nothing to install</li><li>Every customer's visits in one place</li></ul></div>
-      <div class="pcard"><h3>Campaigns that bring people back</h3><p>Reach the right customers at the right time — with copy written for you.</p><ul><li>Text, email and in-app offers</li><li>Target by last visit, spend or favourite time</li><li>AI writes the message; you approve it</li></ul></div>
-      <div class="pcard"><h3>Get found by new customers</h3><p>Your listing appears in the BarChata directory and the BarChata Social app.</p><ul><li>Free listing with your hours, photos and offers</li><li>Real check-ins show you're busy and trusted</li><li>Events and specials shown to people nearby</li></ul></div>
-      <div class="pcard"><h3>Know what's working</h3><p>A short daily brief tells you what changed and what to do next.</p><ul><li>Best customers, busiest hours, quietest days</li><li>Which offers actually brought people back</li><li>Multi-location view on Elite</li></ul></div>
+      <div class="pcard fx rv" style="--ic:#F27D26"><div class="pc-head"><div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><h3>Loyalty that runs itself</h3></div><p>Customers earn Hearts on every visit and redeem them for rewards you choose.</p><ul><li>Ready-made rewards for your type of business</li><li>QR check-in at the counter, nothing to install</li><li>Every customer's visits in one place</li></ul><div class="pv pv-loy"><div class="pv-row"><span>Sarah M.</span><span>4 / 5 visits</span></div><div class="pv-bar"><i style="--w:80%"></i></div><div class="pv-row sm"><span>Next: free drink</span><span class="hl">+25 ♥ per visit</span></div></div></div>
+      <div class="pcard fx rv" style="--ic:#8B5CF6"><div class="pc-head"><div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></div><h3>Campaigns that bring people back</h3></div><p>Reach the right customers at the right time — with copy written for you.</p><ul><li>Text, email and in-app offers</li><li>Target by last visit, spend or favourite time</li><li>AI writes the message; you approve it</li></ul><div class="pv pv-msg"><div class="bubble">We miss you, Sarah! Free appetizer this Friday.</div><div class="pv-row sm"><span>AI-written · you approve</span><span class="hl">Sent to 128</span></div></div></div>
+      <div class="pcard fx rv" style="--ic:#10B981"><div class="pc-head"><div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div><h3>Get found by new customers</h3></div><p>Your listing appears in the BarChata directory and the BarChata Social app.</p><ul><li>Free listing with your hours, photos and offers</li><li>Real check-ins show you're busy and trusted</li><li>Events and specials shown to people nearby</li></ul><div class="pv pv-map"><span class="pin p1"></span><span class="pin p2"></span><span class="pin me"></span><div class="pv-chip">37 people nearby viewed you today</div></div></div>
+      <div class="pcard fx rv" style="--ic:#3B82F6"><div class="pc-head"><div class="ind-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div><h3>Know what's working</h3></div><p>A short daily brief tells you what changed and what to do next.</p><ul><li>Best customers, busiest hours, quietest days</li><li>Which offers actually brought people back</li><li>Multi-location view on Elite</li></ul><div class="pv pv-chart"><i style="--h:35%;--i:0"></i><i style="--h:50%;--i:1"></i><i style="--h:42%;--i:2"></i><i style="--h:64%;--i:3"></i><i style="--h:58%;--i:4"></i><i style="--h:80%;--i:5"></i><i style="--h:92%;--i:6"></i><div class="pv-chip">Fridays up 18% this month</div></div></div>
     </div>
     <div class="addons">
-      <div class="addon"><small>Add-on</small><h4>BarStock AI</h4><p>Photograph your shelves and AI counts your inventory. On every plan, including Freemium, from <span data-cat="barstock.from">$50</span>/mo with a <span data-cat="trial">30</span>-day free trial.</p></div>
-      <div class="addon"><small>Included</small><h4>Bookings &amp; appointments</h4><p>Reservations with deposits and automatic confirmations.</p></div>
-      <div class="addon"><small>Pro &amp; Elite</small><h4>BarCard</h4><p>Instant staff tips and business expense cards. <a href="#barcard">Learn more</a></p></div>
+      <div class="addon fx rv" style="--ic:#F27D26"><div class="ad-head"><div class="ind-ico sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div><small class="t-or">Add-on</small></div><h4>BarStock AI</h4><p>Photograph your shelves and AI counts your inventory. On every plan, including Freemium, from <span data-cat="barstock.from">$50</span>/mo with a <span data-cat="trial">30</span>-day free trial.</p></div>
+      <div class="addon fx rv" style="--ic:#10B981"><div class="ad-head"><div class="ind-ico sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/></svg></div><small class="t-gr">Included</small></div><h4>Bookings &amp; appointments</h4><p>Reservations with deposits and automatic confirmations.</p></div>
+      <div class="addon fx rv" style="--ic:#3B82F6"><div class="ad-head"><div class="ind-ico sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><small class="t-bl">Pro &amp; Elite</small></div><h4>BarCard</h4><p>Instant staff tips and business expense cards. <a href="#barcard">Learn more</a></p></div>
     </div>
   </div>
 </section>
@@ -476,11 +826,11 @@ section{padding:4.5rem 0}
 <section id="customers">
   <div class="wrap">
     <div class="cust">
+      <div class="cust-copy">
       <div>
         <span class="eyebrow">Your customers' side</span>
         <h2>Your customers already have a reason to use it.</h2>
         <p>BarChata Social is the free app where people discover places nearby, check in, earn Hearts and see what their friends are up to. Every check-in sends them back to you.</p>
-        <a class="btn btn-ghost" href="/app">Try it on the web</a>
       </div>
       <ul>
         <li><span>1</span>Discover businesses and events nearby</li>
@@ -488,16 +838,45 @@ section{padding:4.5rem 0}
         <li><span>3</span>Redeem rewards at places they love</li>
         <li><span>4</span>Share with friends who come along next time</li>
       </ul>
+      <a class="btn btn-ghost cust-cta" href="/app">Try it on the web</a>
+      </div>
+      <figure class="phone-wrap">
+        <div class="phone" aria-hidden="false">
+          <span class="ph-btn ph-act"></span><span class="ph-btn ph-vu"></span><span class="ph-btn ph-vd"></span><span class="ph-btn ph-pw"></span>
+          <div class="ph-screen">
+            <img src="/assets/app/app-home.webp" width="600" height="1300" loading="lazy" decoding="async"
+                 alt="BarChata Social home screen showing favourite places, events near you and check-ins">
+            <span class="ph-island"></span>
+          </div>
+        </div>
+        <span class="ph-chip ph-chip-a"><b>♥</b> Check in, earn Hearts</span>
+        <span class="ph-chip ph-chip-b">Events near you</span>
+        <figcaption>BarChata Social for iPhone and Android</figcaption>
+      </figure>
     </div>
   </div>
 </section>
 
 <section id="barcard" class="alt">
   <div class="wrap bc">
-    <div class="bc-card" aria-hidden="true">
-      <div class="top"><span>BarCard</span><div class="chip"></div></div>
-      <div class="num">•••• •••• •••• 2026</div>
-      <div class="bot"><span>Team member</span><span>BarChata</span></div>
+    <div class="cc-stage" aria-hidden="true">
+      <div class="cc-stack">
+        <div class="cc cc-back">
+          <span class="cc-tex"></span><span class="cc-glare"></span>
+          <div class="cc-top"><span class="cc-brand"><i class="cc-mark"></i>BarChata</span><svg class="cc-nfc" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 7.5a6 6 0 0 1 0 9M12 5a10 10 0 0 1 0 14M15.5 2.5a14 14 0 0 1 0 19M5 10a2.5 2.5 0 0 1 0 4"/></svg></div>
+          <div class="cc-mid"><svg class="cc-chip" viewBox="0 0 50 38" aria-hidden="true"><defs><linearGradient id="ccg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6E3A8"/><stop offset=".45" stop-color="#D6AE5C"/><stop offset=".7" stop-color="#F1D58D"/><stop offset="1" stop-color="#B8893A"/></linearGradient></defs><rect x=".5" y=".5" width="49" height="37" rx="6" fill="url(#ccg)" stroke="#9C7330" stroke-width=".8"/><g fill="none" stroke="#9C7330" stroke-width=".9" opacity=".85"><path d="M0 13h16M0 25h16M34 13h16M34 25h16M16 0v38M34 0v38"/><rect x="16" y="9" width="18" height="20" rx="4"/></g></svg><span class="cc-type">Business</span></div>
+          <div class="cc-num">•••• •••• •••• 2026</div>
+          <div class="cc-bot"><div><small>Card holder</small><span>Manager</span></div><div><small>Valid thru</small><span>12/29</span></div><b class="cc-net">BarCard</b></div>
+        </div>
+        <div class="cc cc-front">
+          <span class="cc-tex"></span><span class="cc-glare"></span>
+          <div class="cc-top"><span class="cc-brand"><i class="cc-mark"></i>BarChata</span><svg class="cc-nfc" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 7.5a6 6 0 0 1 0 9M12 5a10 10 0 0 1 0 14M15.5 2.5a14 14 0 0 1 0 19M5 10a2.5 2.5 0 0 1 0 4"/></svg></div>
+          <div class="cc-mid"><svg class="cc-chip" viewBox="0 0 50 38" aria-hidden="true"><defs><linearGradient id="ccg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6E3A8"/><stop offset=".45" stop-color="#D6AE5C"/><stop offset=".7" stop-color="#F1D58D"/><stop offset="1" stop-color="#B8893A"/></linearGradient></defs><rect x=".5" y=".5" width="49" height="37" rx="6" fill="url(#ccg)" stroke="#9C7330" stroke-width=".8"/><g fill="none" stroke="#9C7330" stroke-width=".9" opacity=".85"><path d="M0 13h16M0 25h16M34 13h16M34 25h16M16 0v38M34 0v38"/><rect x="16" y="9" width="18" height="20" rx="4"/></g></svg><span class="cc-type">Tips</span></div>
+          <div class="cc-num">•••• •••• •••• 2026</div>
+          <div class="cc-bot"><div><small>Card holder</small><span>Team member</span></div><div><small>Valid thru</small><span>12/29</span></div><b class="cc-net">BarCard</b></div>
+        </div>
+      </div>
+      <p class="cc-cap">Illustrative card design</p>
     </div>
     <div>
       <span class="eyebrow">BarCard</span>
@@ -518,8 +897,9 @@ section{padding:4.5rem 0}
       <h2>Start free. Upgrade when it pays for itself.</h2>
       <p class="lead">Every paid plan includes Hearts to fund your rewards each month. Save <span data-cat="annual">15</span>% with annual billing.</p>
     </div>
+    <div class="bill-tog" role="group" aria-label="Billing period"><span class="bt-pill"></span><button type="button" data-b="m" aria-pressed="true">Monthly</button><button type="button" data-b="y" aria-pressed="false">Annually <em>Save <span data-cat="annual">15</span>%</em></button></div>
     <div class="pr-grid">
-      <div class="plan">
+      <div class="plan fx rv">
         <h3>Freemium</h3><div class="out">Get found</div>
         <div class="price">Free</div>
         <div class="sub">Optional: add <span data-cat="pack.hearts">5,000</span> Hearts for <span data-cat="pack.price">$100</span> to launch rewards right away.</div>
@@ -528,24 +908,25 @@ section{padding:4.5rem 0}
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Check-in tracking</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Core dashboard</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span>Up to <span data-cat="freemium.customers">50</span> customers</span></li>
+          <li class="li-bs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span>BarStock AI add-on +<span data-cat="bs.freemium.price">$50</span>/mo · <span data-cat="bs.freemium.scans">15</span> scans</span></li>
         </ul>
         <a class="btn btn-ghost" href="#claim">Claim free</a>
       </div>
-      <div class="plan">
+      <div class="plan fx rv">
         <h3>Starter</h3><div class="out">Turn visitors into regulars</div>
-        <div class="price"><span data-cat="starter.price">$150</span><small>/mo</small></div>
+        <div class="price"><span data-cat="starter.price" data-pp="starter">$150</span><small>/mo</small></div><div class="bill" data-plan="starter"></div>
         <div class="sub"><span data-cat="starter.setup">$150</span> one-time setup</div>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span><span data-cat="starter.hearts">2,500</span> Hearts every month</span></li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Campaign builder</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Customer insights</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>BarStock AI eligible</li>
+          <li class="li-bs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span>BarStock AI add-on +<span data-cat="bs.starter.price">$50</span>/mo · <span data-cat="bs.starter.scans">30</span> scans</span></li>
         </ul>
         <a class="btn btn-ghost" href="https://biz.barchata.com/signup">Start Starter</a>
       </div>
-      <div class="plan pop">
+      <div class="plan pop rv">
         <h3>Pro</h3><div class="out">Fill your slow days</div>
-        <div class="price"><span data-cat="pro.price">$300</span><small>/mo</small></div>
+        <div class="price"><span data-cat="pro.price" data-pp="pro">$300</span><small>/mo</small></div><div class="bill" data-plan="pro"></div>
         <div class="sub"><span data-cat="pro.setup">$200</span> one-time setup</div>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span><span data-cat="pro.hearts">5,000</span> Hearts every month</span></li>
@@ -553,12 +934,13 @@ section{padding:4.5rem 0}
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>POS integrations</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>AI analytics</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>BarCard access</li>
+          <li class="li-bs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span>BarStock AI add-on +<span data-cat="bs.pro.price">$100</span>/mo · <span data-cat="bs.pro.scans">60</span> scans</span></li>
         </ul>
         <a class="btn btn-primary" href="https://biz.barchata.com/signup">Start Pro</a>
       </div>
-      <div class="plan">
+      <div class="plan fx rv">
         <h3>Elite</h3><div class="out">Lead your neighbourhood</div>
-        <div class="price"><span data-cat="elite.price">$500</span><small>/mo</small></div>
+        <div class="price"><span data-cat="elite.price" data-pp="elite">$500</span><small>/mo</small></div><div class="bill" data-plan="elite"></div>
         <div class="sub"><span data-cat="elite.setup">$250</span> one-time setup</div>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span><span data-cat="elite.hearts">7,500</span> Hearts every month</span></li>
@@ -566,11 +948,12 @@ section{padding:4.5rem 0}
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Advanced reporting</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Priority support</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>BarCard access</li>
+          <li class="li-bs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span>BarStock AI add-on +<span data-cat="bs.elite.price">$200</span>/mo · <span data-cat="bs.elite.scans">150</span> scans</span></li>
         </ul>
         <a class="btn btn-ghost" href="https://biz.barchata.com/signup">Start Elite</a>
       </div>
     </div>
-    <div class="pr-foot"><span>Enterprise and franchise pricing available.</span><a href="mailto:hello@barchata.com">Talk to us →</a></div>
+    <div class="pr-foot"><span>BarStock AI add-on on every plan: snap a photo and AI counts your inventory. <span data-cat="trial">30</span>-day free trial; extra scans <span data-cat="overage">$2</span> each. Enterprise and franchise pricing available.</span><a href="mailto:hello@barchata.com?subject=Pricing%20question">Talk to us →</a></div>
 
     <div class="calc">
       <div class="calc-in">
@@ -712,18 +1095,60 @@ document.documentElement.setAttribute('data-theme',p);updI(p)}();
 
 // Hero example: one customer card that changes with the type of business.
 var EX={
- bar:{biz:"The Corner Tap",init:"SM",name:"Sarah M.",last:"Last visit 16 days ago · usually Fridays",tag:"Regular",visits:"9",hearts:"420",fav:"Trivia night",nudge:"Sarah hasn't been in for two weeks. Invite her back with a free appetizer this Friday."},
- salon:{biz:"Lumen Hair Studio",init:"PK",name:"Priya K.",last:"Last cut 7 weeks ago · every 6 weeks",tag:"Due now",visits:"11",hearts:"610",fav:"Colour + cut",nudge:"Priya is a week past her usual rebooking. Offer a free deep-conditioning add-on if she books this week."},
- gym:{biz:"Northside Strength",init:"DL",name:"Daniel L.",last:"Last check-in 9 days ago · was 3× a week",tag:"At risk",visits:"38",hearts:"1,150",fav:"6 am classes",nudge:"Daniel's visits dropped off. Send a 'we miss you' note with a free guest pass for a friend."},
- cafe:{biz:"Maple & Main Coffee",init:"AR",name:"Alex R.",last:"Last visit 5 days ago · weekday mornings",tag:"Regular",visits:"24",hearts:"780",fav:"Oat flat white",nudge:"Alex comes in most weekdays. Surprise them with a free pastry on their 25th visit."},
- retail:{biz:"Silk & Thread Boutique",init:"JT",name:"Jordan T.",last:"Last purchase 6 weeks ago",tag:"VIP",visits:"7",hearts:"530",fav:"New arrivals",nudge:"Jordan buys from every new collection. Give early access to Friday's drop before it goes public."},
- auto:{biz:"Eastside Auto Care",init:"MC",name:"Maria C.",last:"Last service 5 months ago",tag:"Due soon",visits:"4",hearts:"300",fav:"Oil change",nudge:"Maria is due for her next oil change. Send a reminder with $10 off if she books this month."}
+ bar:{biz:"The Corner Tap",logo:"CT",cat:"Bar · King St W",today:37,reg:214,hm:9420,glyph:'<path d="M8 22h8M12 11v11M19 3l-7 8-7-8Z"/>',
+  init:"SM",name:"Sarah M.",last:"Last visit 16 days ago · usually Fridays",tag:"Regular",visits:"9",hearts:"420",fav:"Trivia night",nudge:"Sarah hasn't been in for two weeks. Invite her back with a free appetizer this Friday.",
+  feed:[["JR","Jay R.","checked in","+25 ♥",1],["AN","Ana N.","checked in with 3 friends","+40 ♥",1],["PK","Priya K.","redeemed a free appetizer",""],["ML","Mike L.","became a regular","5th visit"]]},
+ salon:{biz:"Lumen Hair Studio",logo:"LH",cat:"Salon · Queen St",today:18,reg:162,hm:6150,glyph:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/>',
+  init:"PK",name:"Priya K.",last:"Last cut 7 weeks ago · every 6 weeks",tag:"Due now",visits:"11",hearts:"610",fav:"Colour + cut",nudge:"Priya is a week past her usual rebooking. Offer a free deep-conditioning add-on if she books this week.",
+  feed:[["EM","Emma M.","checked in","+25 ♥",1],["TS","Tara S.","rebooked for 6 weeks",""],["NB","Nina B.","redeemed a free blow-dry",""],["CJ","Chloe J.","referred a friend","+50 ♥"]]},
+ gym:{biz:"Northside Strength",logo:"NS",cat:"Gym · Dundas St",today:96,reg:388,hm:14200,glyph:'<path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/>',
+  init:"DL",name:"Daniel L.",last:"Last check-in 9 days ago · was 3× a week",tag:"At risk",visits:"38",hearts:"1,150",fav:"6 am classes",nudge:"Daniel's visits dropped off. Send a 'we miss you' note with a free guest pass for a friend.",
+  feed:[["KO","Kofi O.","checked in · 6 am class","+25 ♥",1],["RS","Rina S.","hit a 10-visit streak","+100 ♥"],["LB","Leo B.","checked in","+25 ♥",1],["AM","Ava M.","brought a guest","+40 ♥"]]},
+ cafe:{biz:"Maple & Main Coffee",logo:"MM",cat:"Café · Main St",today:142,reg:520,hm:18900,glyph:'<path d="M10 2v2M14 2v2M6 2v2M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/>',
+  init:"AR",name:"Alex R.",last:"Last visit 5 days ago · weekday mornings",tag:"Regular",visits:"24",hearts:"780",fav:"Oat flat white",nudge:"Alex comes in most weekdays. Surprise them with a free pastry on their 25th visit.",
+  feed:[["SK","Sam K.","checked in","+10 ♥",1],["JW","Jess W.","redeemed a free latte",""],["OT","Omar T.","checked in","+10 ♥",1],["HL","Hana L.","10th visit this month","+50 ♥"]]},
+ retail:{biz:"Silk & Thread Boutique",logo:"ST",cat:"Boutique · Ossington Ave",today:29,reg:131,hm:5400,glyph:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/>',
+  init:"JT",name:"Jordan T.",last:"Last purchase 6 weeks ago",tag:"VIP",visits:"7",hearts:"530",fav:"New arrivals",nudge:"Jordan buys from every new collection. Give early access to Friday's drop before it goes public.",
+  feed:[["MV","Mia V.","checked in","+25 ♥",1],["DG","Dev G.","shared the new collection",""],["IR","Isla R.","redeemed $10 off",""],["BC","Ben C.","checked in","+25 ♥",1]]},
+ auto:{biz:"Eastside Auto Care",logo:"EA",cat:"Auto service · Eastern Ave",today:22,reg:176,hm:4800,glyph:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  init:"MC",name:"Maria C.",last:"Last service 5 months ago",tag:"Due soon",visits:"4",hearts:"300",fav:"Oil change",nudge:"Maria is due for her next oil change. Send a reminder with $10 off if she books this month.",
+  feed:[["TP","Tom P.","checked in for a tire swap","+25 ♥",1],["RA","Raj A.","booked a winter check",""],["LN","Lisa N.","redeemed a free wash",""],["GF","Gus F.","checked in","+25 ♥",1]]}
 };
-document.querySelectorAll('.biz-picker button').forEach(function(b){b.addEventListener('click',function(){
- var e=EX[b.dataset.k];if(!e)return;if(window.bcTrack)bcTrack('example_business',{type:b.dataset.k});
- document.querySelectorAll('.biz-picker button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
- ['biz','init','name','last','tag','visits','hearts','fav','nudge'].forEach(function(k){document.getElementById('d-'+k).textContent=e[k]});
-})});
+(function(){
+ var vp=document.getElementById('vp');if(!vp)return;
+ var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+ var $=function(id){return document.getElementById(id)};
+ var cur='bar',fi=0,today=0,feedT=null,cycleT=null,userPicked=false,visible=true,hovering=false;
+ function fmt(n){return Math.round(n).toLocaleString('en-US')}
+ function countTo(el,to){if(RM){el.textContent=fmt(to);return}var from=0,t0=null;function step(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/900);el.textContent=fmt(from+(to-from)*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(step)}requestAnimationFrame(step)}
+ function pop(txt){if(RM||!txt)return;var b=document.createElement('span');b.className='vp-pop';b.textContent=txt;vp.appendChild(b);setTimeout(function(){b.remove()},1700)}
+ function showFeed(){var e=EX[cur],it=e.feed[fi%e.feed.length];fi++;
+  var el=$('d-feed');el.classList.remove('in');void el.offsetWidth;
+  el.innerHTML='<span class="fa"></span><span class="ft"><b></b> <span></span></span><span class="fh"></span>';
+  el.children[0].textContent=it[0];el.querySelector('.ft b').textContent=it[1];el.querySelector('.ft span').textContent=it[2];el.children[2].textContent=it[3];
+  if(!RM)el.classList.add('in');
+  if(it[4]){today++;$('d-today').textContent=fmt(today);pop(it[3])}}
+ function show(k,track){var e=EX[k];if(!e)return;cur=k;fi=0;vp.dataset.k=k;
+  document.querySelectorAll('.biz-picker button').forEach(function(x){x.setAttribute('aria-pressed',x.dataset.k===k?'true':'false')});
+  ['biz','logo','cat','init','name','last','tag','visits','hearts','fav','nudge'].forEach(function(f){$('d-'+f).textContent=e[f]});
+  $('d-glyph').innerHTML=e.glyph;today=e.today;countTo($('d-today'),e.today);countTo($('d-reg'),e.reg);countTo($('d-hm'),e.hm);
+  var s=$('d-send');s.textContent='Send offer';s.classList.remove('sent');s.disabled=false;
+  showFeed();}
+ function tick(){if(visible&&!document.hidden)showFeed()}
+ function cycle(){if(userPicked||hovering||!visible||document.hidden)return;var ks=Object.keys(EX);show(ks[(ks.indexOf(cur)+1)%ks.length])}
+ document.querySelectorAll('.biz-picker button').forEach(function(b){b.addEventListener('click',function(){
+  userPicked=true;clearInterval(cycleT);if(window.bcTrack)bcTrack('example_business',{type:b.dataset.k});show(b.dataset.k)})});
+ $('d-send').addEventListener('click',function(){var e=EX[cur];this.textContent='Offer sent ✓';this.classList.add('sent');this.disabled=true;
+  var el=$('d-feed');el.classList.remove('in');void el.offsetWidth;el.innerHTML='<span class="fa"></span><span class="ft"><b>Offer sent</b> to <span></span></span><span class="fh">Delivered</span>';
+  el.children[0].textContent=e.init;el.querySelector('.ft span').textContent=e.name;if(!RM)el.classList.add('in');
+  if(window.bcTrack)bcTrack('demo_send_offer',{type:cur})});
+ $('d-skip').addEventListener('click',function(){var ks=Object.keys(EX);userPicked=true;clearInterval(cycleT);show(ks[(ks.indexOf(cur)+1)%ks.length])});
+ vp.addEventListener('mouseenter',function(){hovering=true});vp.addEventListener('mouseleave',function(){hovering=false});
+ if('IntersectionObserver' in window){new IntersectionObserver(function(en){visible=en[0].isIntersecting}).observe(vp)}
+ show('bar');
+ feedT=setInterval(tick,2800);
+ if(!RM)cycleT=setInterval(cycle,9000);
+})();
 
 // Video: a still image until clicked, then the privacy-enhanced YouTube player.
 (function(){var b=document.getElementById('vid-play');if(!b)return;b.addEventListener('click',function(){
@@ -862,11 +1287,111 @@ calc();
       if (pack) { if (pack.price_one_time != null) v['pack.price'] = money(pack.price_one_time); if (pack.hearts_one_time != null) v['pack.hearts'] = num(pack.hearts_one_time); }
       if (by['policy.annual_discount'] && by['policy.annual_discount'].value != null) v['annual'] = num(by['policy.annual_discount'].value);
       if (by['policy.barstock_trial_days'] && by['policy.barstock_trial_days'].value != null) v['trial'] = num(by['policy.barstock_trial_days'].value);
+      if (by['policy.barstock_overage'] && by['policy.barstock_overage'].value != null) v['overage'] = money(by['policy.barstock_overage'].value);
+      ['freemium', 'starter', 'pro', 'elite'].forEach(function (p) {
+        var b = by['addon.barstock.' + p]; if (!b) return;
+        if (b.price_monthly != null) v['bs.' + p + '.price'] = money(b.price_monthly);
+        if (b.scans_monthly != null) v['bs.' + p + '.scans'] = num(b.scans_monthly);
+      });
       var bs = ['freemium', 'starter', 'pro', 'elite'].map(function (p) { var i = by['addon.barstock.' + p]; return i && i.price_monthly != null ? Number(i.price_monthly) : null; }).filter(function (x) { return x != null; });
       if (bs.length) v['barstock.from'] = money(Math.min.apply(null, bs));
       document.querySelectorAll('[data-cat]').forEach(function (el) { var k = el.getAttribute('data-cat'); if (v[k] != null) el.textContent = v[k]; });
+      var bp = {}; ['starter', 'pro', 'elite'].forEach(function (p) { var i = by['plan.' + p]; if (i && i.price_monthly != null) bp[p] = Number(i.price_monthly); });
+      if (by['policy.annual_discount'] && by['policy.annual_discount'].value != null) bp.disc = Number(by['policy.annual_discount'].value);
+      window.bcPrices = bp; document.dispatchEvent(new Event('bc:catalog'));
     })
     .catch(function () {});
+})();
+</script>
+<script>
+/* Card interactions: spotlight follows the cursor, cards fade up on scroll, monthly/annual price toggle */
+(function(){
+ var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+ document.documentElement.classList.add('js');
+ document.querySelectorAll('.fx').forEach(function(c){c.addEventListener('pointermove',function(e){var r=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px')})});
+ var rv=document.querySelectorAll('.rv');
+ if(RM||!('IntersectionObserver' in window)){rv.forEach(function(el){el.classList.add('on')})}
+ else{var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('on');io.unobserve(en.target)}})},{rootMargin:'0px 0px -8% 0px'});rv.forEach(function(el){io.observe(el)});
+  setTimeout(function(){rv.forEach(function(el){if(el.getBoundingClientRect().top<innerHeight)el.classList.add('on')})},50)}
+ // stagger cards inside each grid
+ ['.plat','.addons','.pr-grid','.problem-grid','.steps'].forEach(function(g){document.querySelectorAll(g+' .rv').forEach(function(el,i){el.style.setProperty('--d',(i*80)+'ms')})});
+ document.querySelectorAll('.prob').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flip')})});
+ // billing toggle
+ var tog=document.querySelector('.bill-tog');if(!tog)return;
+ var pill=tog.querySelector('.bt-pill'),btns=tog.querySelectorAll('button'),grid=document.querySelector('.pr-grid'),mode='m';
+ var P=function(){var b=window.bcPrices||{};return{starter:b.starter!=null?b.starter:150,pro:b.pro!=null?b.pro:300,elite:b.elite!=null?b.elite:500,disc:b.disc!=null?b.disc:15}};
+ var money=function(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})};
+ function tween(el,from,to){if(RM||from===to){el.textContent=money(to);return}var t0=null;(function st(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/500),e=1-Math.pow(1-p,3),v=from+(to-from)*e;el.textContent=money(p<1?Math.round(v):to);if(p<1)requestAnimationFrame(st)})(performance.now())}
+ function place(){var b=tog.querySelector('[aria-pressed="true"]');pill.style.width=b.offsetWidth+'px';pill.style.transform='translateX('+(b.offsetLeft-4)+'px)'}
+ function render(animate){var p=P();grid.classList.toggle('annual',mode==='y');
+  ['starter','pro','elite'].forEach(function(k){var el=document.querySelector('[data-pp="'+k+'"]'),m=p[k],y=Math.round(m*(1-p.disc/100)*100)/100,to=mode==='y'?y:m,from=parseFloat((el.textContent||'').replace(/[^0-9.]/g,''))||m;
+   if(animate)tween(el,from,to);else el.textContent=money(to);
+   var bl=document.querySelector('.bill[data-plan="'+k+'"]');if(bl)bl.textContent='Billed '+money(Math.round(y*12*100)/100)+' yearly · save '+money(Math.round((m-y)*12*100)/100)})}
+ btns.forEach(function(b){b.addEventListener('click',function(){mode=b.dataset.b;btns.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});place();render(true);if(window.bcTrack)bcTrack('pricing_toggle',{billing:mode==='y'?'annual':'monthly'})})});
+ document.addEventListener('bc:catalog',function(){render(false)});
+ addEventListener('resize',place);place();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(place);
+})();
+</script>
+<!-- Contact popover: mailto links open a small card (copy email, Gmail, Outlook, Mail app),
+     because a bare mailto does nothing useful when the visitor has no mail app set up. -->
+<style>
+.ct-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.ct-ov.on{display:flex}
+.ct-card{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:16px;max-width:380px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.ct-card h3{margin:0 0 4px;font-size:18px}
+.ct-card p{margin:0 0 14px;color:var(--text-2);font-size:14px}
+.ct-mail{display:flex;gap:8px;align-items:center;background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-weight:600}
+.ct-mail span{flex:1;overflow:hidden;text-overflow:ellipsis}
+.ct-mail button,.ct-row a,.ct-x{font:inherit;cursor:pointer}
+.ct-mail button{background:var(--orange);color:#fff;border:0;border-radius:8px;padding:6px 12px;font-size:13px}
+.ct-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.ct-row a{text-align:center;text-decoration:none;color:var(--text);border:1px solid var(--border-2);border-radius:10px;padding:9px 6px;font-size:13px}
+.ct-row a:hover{border-color:var(--orange);color:var(--orange)}
+.ct-x{display:block;margin:14px auto 0;background:none;border:0;color:var(--text-3);font-size:13px}
+</style>
+<div class="ct-ov" id="ct-ov" role="dialog" aria-modal="true" aria-labelledby="ct-h">
+  <div class="ct-card">
+    <h3 id="ct-h">Talk to us</h3>
+    <p>Email our team and we'll reply within one business day.</p>
+    <div class="ct-mail"><span id="ct-addr">hello@barchata.com</span><button type="button" id="ct-copy">Copy</button></div>
+    <div class="ct-row">
+      <a id="ct-gmail" target="_blank" rel="noopener">Gmail</a>
+      <a id="ct-outlook" target="_blank" rel="noopener">Outlook</a>
+      <a id="ct-app">Mail app</a>
+    </div>
+    <button type="button" class="ct-x" id="ct-close">Close</button>
+  </div>
+</div>
+<script>
+(function(){
+ var ov=document.getElementById('ct-ov');if(!ov)return;
+ function open(addr,subj){
+  var su=encodeURIComponent(subj||'BarChata enquiry');
+  document.getElementById('ct-addr').textContent=addr;
+  document.getElementById('ct-gmail').href='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(addr)+'&su='+su;
+  document.getElementById('ct-outlook').href='https://outlook.live.com/mail/0/deeplink/compose?to='+encodeURIComponent(addr)+'&subject='+su;
+  document.getElementById('ct-app').href='mailto:'+addr+'?subject='+su;
+  document.getElementById('ct-copy').textContent='Copy';
+  ov.classList.add('on');
+ }
+ function close(){ov.classList.remove('on')}
+ document.addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('a[href^="mailto:"]');
+  if(!a||a.id==='ct-app')return;
+  e.preventDefault();
+  var m=a.getAttribute('href').slice(7).split('?');
+  var q=new URLSearchParams(m[1]||'');
+  open(decodeURIComponent(m[0]),q.get('subject')||a.getAttribute('data-subject'));
+ });
+ document.getElementById('ct-close').onclick=close;
+ ov.addEventListener('click',function(e){if(e.target===ov)close()});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')close()});
+ document.getElementById('ct-copy').onclick=function(){
+  var b=this,t=document.getElementById('ct-addr').textContent;
+  function done(){b.textContent='Copied'}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){prompt('Copy this email:',t)})}
+  else{prompt('Copy this email:',t)}
+ };
 })();
 </script>
 </body>
