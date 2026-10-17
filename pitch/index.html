@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BarChata — Business Presentation</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--o:#F27D26;--o2:#FFB25B;--o3:#C9560E;--bg:#0A0A0D;--bg2:#111116;--card:#16161C;--card2:#1C1C24;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+--t:#F3F2EC;--t2:#A9A7A0;--t3:#6E6D68;--good:#22C55E;--fill:rgba(255,255,255,.04);--bar:rgba(255,255,255,.12);--chipbg:rgba(22,22,28,.85)}
+html[data-theme="light"]{--bg:#FBFAF7;--bg2:#F3F1EB;--card:#FFFFFF;--card2:#F7F5F0;--line:rgba(22,21,15,.09);--line2:rgba(22,21,15,.16);--t:#16150F;--t2:#5E5C55;--t3:#8F8D85;--good:#16A34A;--fill:rgba(22,21,15,.03);--bar:rgba(22,21,15,.10);--chipbg:rgba(255,255,255,.92)}
+html[data-theme="light"] .card{box-shadow:0 1px 2px rgba(22,21,15,.04),0 14px 34px -20px rgba(22,21,15,.22)}
+html[data-theme="light"] .tg{color:#B91C1C;background:rgba(239,68,68,.10)}html[data-theme="light"] .tg.ok{color:#C2560E}
+html[data-theme="light"] .cap{color:#DC2626}html[data-theme="light"] .cap.ok{color:var(--o)}
+html[data-theme="light"] .phone{box-shadow:inset 0 0 0 calc(var(--w)*.003) rgba(255,255,255,.35),inset 0 0 0 calc(var(--w)*.007) #1a1a1d,0 50px 90px -30px rgba(60,30,10,.45),0 0 100px -30px rgba(242,125,38,.45)}
+html[data-theme="light"] .slide::before{background:radial-gradient(60% 60% at var(--gx,80%) var(--gy,30%),rgba(242,125,38,.13),transparent 70%)}
+html[data-theme="light"] .hub svg.ring circle:first-child{stroke:rgba(22,21,15,.08)}
+html{transition:background .3s}body{transition:background .3s,color .3s}
+html,body{height:100%;background:var(--bg);color:var(--t);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+h1,h2,h3,h4,b.d{font-family:'DM Sans',sans-serif;letter-spacing:-.02em}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer}
+/* stage */
+.deck{position:fixed;inset:0}
+.slide{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding:clamp(20px,4vw,64px) clamp(20px,5vw,80px) 96px;opacity:0;visibility:hidden;transform:scale(.985);transition:opacity .55s ease,transform .7s cubic-bezier(.2,.8,.2,1),visibility 0s .55s;overflow-y:auto}
+.slide.on{opacity:1;visibility:visible;transform:none;transition:opacity .55s ease,transform .7s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.slide::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 60% at var(--gx,80%) var(--gy,30%),rgba(242,125,38,.16),transparent 70%),radial-gradient(40% 50% at 10% 90%,rgba(242,125,38,.06),transparent 70%)}
+.in{width:100%;max-width:1200px;margin:auto 0}
+.eb{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--o);margin-bottom:14px}
+h1{font-size:clamp(40px,6.4vw,84px);line-height:1;font-weight:700;letter-spacing:-.045em}
+h1 em,h2 em{font-style:normal;color:var(--o)}
+h2{font-size:clamp(30px,4.2vw,56px);line-height:1.05;font-weight:700;letter-spacing:-.035em;margin-bottom:14px}
+.lead{font-size:clamp(16px,1.45vw,20px);color:var(--t2);line-height:1.55;max-width:620px}
+/* entrance animation for children marked .a */
+.a{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .8s cubic-bezier(.2,.8,.2,1)}
+.slide.on .a{opacity:1;transform:none;transition-delay:calc(var(--d,0) * 90ms + 120ms)}
+/* chrome */
+.bar{position:fixed;left:0;right:0;bottom:0;height:72px;display:flex;align-items:center;gap:14px;padding:0 clamp(16px,3vw,36px);z-index:20;background:linear-gradient(0deg,var(--bg) 35%,transparent)}
+.brand{display:flex;align-items:center;gap:10px;font-family:'DM Sans',system-ui,sans-serif;font-weight:700;font-size:19px;letter-spacing:-.02em}.brand img{width:30px;height:30px;display:block}
+.dots{flex:1;display:flex;justify-content:center;gap:6px}
+.dots button{width:8px;height:8px;border-radius:99px;border:0;background:var(--line2);transition:all .35s}
+.dots button.on{width:26px;background:var(--o)}
+.nav{display:flex;gap:8px;align-items:center}
+.nav button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line2);background:var(--fill);display:flex;align-items:center;justify-content:center;transition:all .2s}
+.nav button:hover{border-color:var(--o);color:var(--o)}
+.nav svg{width:18px;height:18px}
+.cnt{font-size:12.5px;color:var(--t3);font-variant-numeric:tabular-nums;min-width:44px;text-align:right}
+.prog{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--o3),var(--o),var(--o2));z-index:30;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+@media(max-width:640px){.brand span{display:none}.cnt{display:none}.dots button{width:6px;height:6px}.dots button.on{width:16px}}
+/* shared components */
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:9px 14px;border-radius:999px;background:var(--chipbg);border:1px solid var(--line2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 14px 30px -12px rgba(0,0,0,.6);white-space:nowrap}
+.chip b{color:var(--o)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;position:relative;isolation:isolate;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s,box-shadow .35s}
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;opacity:0;transition:opacity .3s;background:radial-gradient(340px circle at var(--mx,50%) var(--my,0),color-mix(in srgb,var(--ic,#F27D26) 16%,transparent),transparent 50%)}
+.card:hover{transform:translateY(-5px);border-color:color-mix(in srgb,var(--ic,#F27D26) 45%,transparent);box-shadow:0 26px 50px -26px color-mix(in srgb,var(--ic,#F27D26) 60%,transparent)}
+.card:hover::before{opacity:1}
+.ico{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:var(--ic,#F27D26);background:color-mix(in srgb,var(--ic,#F27D26) 14%,transparent);border:1px solid color-mix(in srgb,var(--ic,#F27D26) 26%,transparent);transition:all .35s}
+.ico svg{width:22px;height:22px}
+.card:hover .ico{background:var(--ic,#F27D26);color:#fff;transform:rotate(-6deg) scale(1.06)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;border-radius:14px;font-weight:600;font-size:15px;border:1px solid var(--line2);background:var(--fill);transition:all .2s}
+.btn.p{background:var(--o);border-color:var(--o);color:#fff;box-shadow:0 14px 30px -12px rgba(242,125,38,.8)}
+.btn.p:hover{background:#FF8C3A;transform:translateY(-2px)}
+.btn:not(.p):hover{border-color:var(--o);color:var(--o)}
+.note{font-size:12px;color:var(--t3);margin-top:14px}
+/* phone */
+.phone{--w:var(--pw,300px);position:relative;width:var(--w);aspect-ratio:78/163.4;border-radius:calc(var(--w)*.175);padding:calc(var(--w)*.009);
+ background:linear-gradient(135deg,#6b6b72 0%,#2a2a2f 22%,#45454c 50%,#222226 78%,#5a5a61 100%);
+ box-shadow:inset 0 0 0 calc(var(--w)*.003) rgba(255,255,255,.35),inset 0 0 0 calc(var(--w)*.007) #1a1a1d,0 50px 100px -35px rgba(0,0,0,.75),0 20px 40px -20px rgba(0,0,0,.5)}
+.phone .sc{position:relative;width:100%;height:100%;border:calc(var(--w)*.0237) solid #030303;border-radius:calc(var(--w)*.166);overflow:hidden;background:#000;box-sizing:border-box}
+.phone .sc img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.phone .isl{position:absolute;top:calc(var(--w)*.022);left:50%;transform:translateX(-50%);width:calc(var(--w)*.2676);height:calc(var(--w)*.0786);background:#000;border-radius:999px;z-index:2}
+.phone .bt{position:absolute;width:calc(var(--w)*.013);min-width:2px;background:linear-gradient(90deg,#2a2a2f,#55555c);border-radius:2px}
+.phone .bt.act{left:calc(var(--w)*-.01);top:19%;height:3.6%}.phone .bt.vu{left:calc(var(--w)*-.01);top:27%;height:6%}.phone .bt.vd{left:calc(var(--w)*-.01);top:35.5%;height:6%}.phone .bt.pw{right:calc(var(--w)*-.01);top:29%;height:9.5%}.phone .bt.cc{right:calc(var(--w)*-.006);top:55.5%;height:6.5%;background:linear-gradient(90deg,#3a3a40,#1c1c20)}
+.float{animation:flt 6s ease-in-out infinite}
+@keyframes flt{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+/* S1 title */
+.s1{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(24px,5vw,80px);align-items:center}
+.s1 .vis{position:relative;display:flex;justify-content:center;--pw:min(300px,26vw,calc((100vh - 230px) * .46))}
+.s1 .c1{position:absolute;left:-6%;top:58%}.s1 .c2{position:absolute;right:-8%;top:20%}.s1 .c3{position:absolute;right:-2%;bottom:8%}
+.s1 .c1,.s1 .c2,.s1 .c3{animation:flt2 5s ease-in-out infinite}.s1 .c2{animation-delay:-1.5s}.s1 .c3{animation-delay:-3s}
+@keyframes flt2{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.s1 .row{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+.hint{margin-top:26px;font-size:13px;color:var(--t3);display:flex;align-items:center;gap:8px}
+.hint kbd{font:inherit;font-size:11.5px;padding:2px 7px;border:1px solid var(--line2);border-radius:6px;color:var(--t2)}
+@media(max-width:820px){.s1{grid-template-columns:1fr}.s1 .vis{--pw:190px;order:-1;margin-top:10px}.s1 .c1{left:0}.s1 .c2{right:0}}
+
+/* S2 problem flip */
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px}
+@media(max-width:860px){.g3{grid-template-columns:1fr}}
+.pb{padding:24px;cursor:pointer;--ic:#EF4444}
+.pb.flip,.pb:hover{--ic:#F27D26}
+.pb h3{font-size:20px;margin:16px 0 6px}.pb p{font-size:14.5px;color:var(--t2);line-height:1.5}
+.pb .n{font-family:'DM Sans',system-ui,sans-serif;font-size:12px;font-weight:700;color:var(--o);margin-top:18px}
+.flipv{position:relative;height:118px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);overflow:hidden}
+.fa,.fb{position:absolute;inset:0;padding:14px;display:flex;flex-direction:column;justify-content:center;gap:10px;transition:opacity .45s,transform .45s cubic-bezier(.2,.8,.2,1)}
+.fb{opacity:0;transform:translateY(14px);background:linear-gradient(135deg,rgba(242,125,38,.12),transparent 70%)}
+.pb:hover .fa,.pb.flip .fa{opacity:0;transform:translateY(-14px)}
+.pb:hover .fb,.pb.flip .fb{opacity:1;transform:none}
+.rc{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.rc b{display:block;font-size:13px}.rc small{font-size:11.5px;color:var(--t3)}
+.rc .q{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--t3);border:1px dashed var(--line2);flex-shrink:0}
+.rc .q.ok{color:#fff;background:linear-gradient(135deg,var(--o),var(--o3));border:0}
+.tg{margin-left:auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;color:#FCA5A5;background:rgba(239,68,68,.14)}
+.tg.ok{color:#FDBA74;background:rgba(242,125,38,.16)}
+.wk{display:flex;align-items:flex-end;gap:6px;height:58px}
+.wk i{flex:1;height:var(--h);border-radius:4px 4px 2px 2px;background:var(--bar)}
+.wk i:nth-child(2){background:rgba(239,68,68,.6)}
+.wk.up i{background:rgba(242,125,38,.35)}.wk.up i:nth-child(2){background:var(--o)}
+.cap{font-size:12px;font-weight:600;color:#F87171;text-align:center}.cap.ok{color:var(--o)}
+.crowd{display:flex;gap:8px;justify-content:center}
+.crowd span{width:34px;height:34px;border-radius:50%;background:var(--bar);display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px}
+.crowd.v span{opacity:.4}.crowd .st{opacity:1!important;background:linear-gradient(135deg,var(--o),var(--o2));transform:scale(1.2);box-shadow:0 0 0 3px rgba(242,125,38,.25),0 8px 18px -6px rgba(242,125,38,.7)}
+.tap{margin-top:16px;font-size:13px;color:var(--t3)}.tap b{color:var(--o)}
+
+/* S3 loop */
+.loop{display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(16px,3vw,48px);align-items:center;margin-top:36px}
+.side{padding:26px}
+.side h3{font-size:22px;margin:16px 0 6px}.side p{color:var(--t2);font-size:14.5px;line-height:1.5}
+.side ul{list-style:none;margin-top:14px;display:grid;gap:9px}
+.side li{display:flex;gap:10px;font-size:14.5px}
+.side li::before{content:"✓";width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--ic);background:color-mix(in srgb,var(--ic) 16%,transparent)}
+.hub{position:relative;width:min(220px,22vw);aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+.hub svg.ring{position:absolute;inset:0;width:100%;height:100%;animation:spin 18s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hub .core{width:46%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 30% 30%,var(--o2),var(--o) 55%,var(--o3));display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 0 0 10px rgba(242,125,38,.12),0 0 60px rgba(242,125,38,.55);animation:pulse 2.6s ease-in-out infinite}
+.hub .core b{font-size:26px;line-height:1}.hub .core small{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.9}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 10px rgba(242,125,38,.12),0 0 50px rgba(242,125,38,.45)}50%{box-shadow:0 0 0 18px rgba(242,125,38,.06),0 0 80px rgba(242,125,38,.7)}}
+@media(max-width:860px){.loop{grid-template-columns:1fr}.hub{margin:0 auto;width:160px}}
+
+/* S4 steps */
+.st{padding:24px;display:flex;flex-direction:column}
+.st .num{width:36px;height:36px;border-radius:50%;background:var(--o);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',system-ui,sans-serif;box-shadow:0 0 0 6px rgba(242,125,38,.14);margin-bottom:16px}
+.st h3{font-size:20px;margin:18px 0 6px}.st p{font-size:14.5px;color:var(--t2);line-height:1.5}
+.st .pill{margin-top:14px;align-self:flex-start;font-size:12.5px;font-weight:600;color:var(--t2);background:var(--bg2);border:1px solid var(--line);padding:5px 11px;border-radius:99px}
+.mv{border-radius:14px;background:var(--bg2);border:1px solid var(--line);padding:14px;min-height:108px;display:flex;flex-direction:column;justify-content:center;gap:10px;font-size:12.5px}
+.srch{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;font-size:13px}
+.srch svg{width:15px;height:15px;color:var(--t3)}
+.typed{white-space:nowrap;clip-path:inset(0 100% 0 0)}
+.slide.on .typed{animation:typ 1.4s steps(14) .6s forwards}
+@keyframes typ{to{clip-path:inset(0 0 0 0)}}
+.res{display:flex;align-items:center;gap:10px}.res b{display:block;font-size:13px}.res small{color:var(--t3)}
+.rl{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--o),#8a3410);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ver{margin-left:auto;font-size:11px;font-weight:700;color:var(--good);background:rgba(34,197,94,.14);padding:3px 9px;border-radius:99px;opacity:0;transform:scale(.6);transition:all .4s cubic-bezier(.3,1.6,.5,1)}
+.slide.on .ver{opacity:1;transform:none;transition-delay:2.2s}
+.qrrow{flex-direction:row;align-items:center;gap:14px}
+.qrbox{position:relative;width:80px;height:80px;padding:7px;background:#fff;border-radius:10px;color:#111;flex-shrink:0;overflow:hidden}
+.qrbox svg{width:100%;height:100%;display:block}
+.scan{position:absolute;left:0;right:0;height:3px;top:0;background:linear-gradient(90deg,transparent,var(--o),transparent);box-shadow:0 0 12px 2px rgba(242,125,38,.7);animation:scn 1.8s ease-in-out infinite}
+@keyframes scn{0%,100%{top:4%}50%{top:92%}}
+.earn{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;color:#fff;background:var(--o);padding:4px 10px;border-radius:99px;animation:flt2 2.4s ease-in-out infinite}
+.bub{background:var(--card2);border:1px solid var(--line2);border-radius:14px 14px 14px 4px;padding:10px 12px;font-size:12.5px;max-width:94%}
+.dl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dl span{font-size:10.5px;font-weight:600;color:var(--t2);background:var(--card2);border:1px solid var(--line);padding:2px 8px;border-radius:99px}
+.dl em{margin-left:auto;font-style:normal;font-size:11px;font-weight:700;color:var(--good)}
+
+/* S5 scan now */
+.scanwrap{display:grid;grid-template-columns:1fr auto;gap:clamp(24px,5vw,80px);align-items:center}
+.bigqr{position:relative;width:min(340px,34vw);aspect-ratio:1;padding:22px;border-radius:28px;background:#fff;color:#0A0A0D;box-shadow:0 0 0 10px rgba(242,125,38,.18),0 40px 90px -30px rgba(242,125,38,.75)}
+.bigqr svg{width:100%;height:100%;display:block}
+.bigqr::after{content:"";position:absolute;inset:-18px;border-radius:38px;border:2px solid rgba(242,125,38,.55);animation:ping 2.2s ease-out infinite}
+@keyframes ping{0%{opacity:.9;transform:scale(.96)}100%{opacity:0;transform:scale(1.08)}}
+.bigqr .logo{position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;transform:translate(-50%,-50%);background:#fff;border-radius:22%;display:flex;align-items:center;justify-content:center}
+.bigqr .logo img{width:84%;height:84%;display:block}
+.steps3{display:grid;gap:12px;margin-top:26px;max-width:520px}
+.steps3 div{display:flex;gap:12px;align-items:center;font-size:16px}
+.steps3 span{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--o);background:rgba(242,125,38,.14);border:1px solid rgba(242,125,38,.3)}
+@media(max-width:820px){.scanwrap{grid-template-columns:1fr}.bigqr{width:240px;margin:0 auto}}
+
+/* S6 app tour */
+.tour{position:relative;display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(16px,3vw,48px);align-items:center;margin-top:20px}
+.tour .ph{--pw:min(290px,24vw,calc((100vh - 320px) * .46))}
+.co{display:grid;gap:18px}
+.co .card{padding:16px 18px;display:flex;gap:14px;align-items:flex-start}
+.co .card h4{font-size:16px;margin-bottom:3px}.co .card p{font-size:13.5px;color:var(--t2);line-height:1.45}
+.co .ico{width:40px;height:40px;border-radius:11px;flex-shrink:0}.co .ico svg{width:19px;height:19px}
+.co.l .card{flex-direction:row-reverse;text-align:right}
+@media(max-width:900px){.tour{grid-template-columns:1fr}.tour .ph{--pw:230px;justify-self:center;order:-1}.co.l .card{flex-direction:row;text-align:left}}
+
+/* S7 venue profile */
+.vpwrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(24px,5vw,72px);align-items:center}
+.pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.pick button{font-size:14px;font-weight:600;padding:9px 15px;border-radius:999px;border:1px solid var(--line2);background:var(--fill);color:var(--t2);transition:all .2s}
+.pick button[aria-pressed="true"]{background:var(--t);color:var(--bg);border-color:var(--t)}
+@property --c0{syntax:'<color>';inherits:true;initial-value:#140b06}
+@property --c1{syntax:'<color>';inherits:true;initial-value:#F27D26}
+@property --c2{syntax:'<color>';inherits:true;initial-value:#FFB25B}
+@property --c3{syntax:'<color>';inherits:true;initial-value:#8a3410}
+.vp{background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden;position:relative;box-shadow:0 50px 100px -40px rgba(0,0,0,.8),0 0 100px -40px var(--c1);transition:--c0 .8s,--c1 .8s,--c2 .8s,--c3 .8s}
+.vp[data-k=bar]{--c0:#140b06;--c1:#F27D26;--c2:#FFB25B;--c3:#8a3410}
+.vp[data-k=salon]{--c0:#1a0b14;--c1:#E86AA6;--c2:#F7B5D2;--c3:#7B2D5B}
+.vp[data-k=gym]{--c0:#06121a;--c1:#22D3EE;--c2:#3B82F6;--c3:#0E7490}
+.vp[data-k=cafe]{--c0:#160d07;--c1:#C8894D;--c2:#F2D3A6;--c3:#6B3F1D}
+.vp[data-k=retail]{--c0:#110a1c;--c1:#8B5CF6;--c2:#F0ABFC;--c3:#4C1D95}
+.vp[data-k=auto]{--c0:#0a0f16;--c1:#60A5FA;--c2:#F27D26;--c3:#1E3A5F}
+.cov{position:relative;height:180px;overflow:hidden;background:radial-gradient(120% 140% at 0 0,var(--c3),var(--c0) 70%)}
+.cov::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(0,0,0,.7))}
+.bk{position:absolute;border-radius:50%;filter:blur(18px);opacity:.75;mix-blend-mode:screen;animation:bkf 14s ease-in-out infinite alternate}
+.b1{width:160px;height:160px;left:-30px;top:-40px;background:var(--c1)}.b2{width:90px;height:90px;left:40%;top:10px;background:var(--c2);opacity:.55;animation-duration:11s;animation-delay:-3s}
+.b3{width:130px;height:130px;right:-20px;top:30px;background:var(--c1);opacity:.5;animation-duration:17s;animation-delay:-6s}.b4{width:40px;height:40px;left:62%;top:80px;background:var(--c2);filter:blur(6px);opacity:.8;animation-duration:9s}
+@keyframes bkf{0%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,10px) scale(1.12)}100%{transform:translate(-14px,16px) scale(.92)}}
+.glyph{position:absolute;right:20px;top:18px;width:100px;height:100px;color:rgba(255,255,255,.2)}
+.bdg{position:absolute;left:18px;top:16px;display:flex;gap:6px;z-index:2}
+.bdg span{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 9px;border-radius:99px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(6px)}
+.live i{width:7px;height:7px;border-radius:50%;background:#22C55E;animation:lp 1.8s infinite}
+@keyframes lp{0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.vid{position:absolute;left:18px;right:18px;bottom:16px;display:flex;align-items:center;gap:12px;z-index:2}
+.vlogo{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',system-ui,sans-serif;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c3));box-shadow:0 0 0 2px rgba(255,255,255,.85),0 8px 20px rgba(0,0,0,.4)}
+.vid b{display:block;font-family:'DM Sans',system-ui,sans-serif;font-size:21px}.vid small{font-size:12.5px;color:rgba(255,255,255,.78)}.vid em{font-style:normal;color:#4ADE80;font-weight:600}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.kp div{padding:13px 16px}.kp div+div{border-left:1px solid var(--line)}
+.kp small{display:block;font-size:11px;color:var(--t3)}.kp b{font-family:'DM Sans',system-ui,sans-serif;font-size:21px;font-variant-numeric:tabular-nums}
+.feed{height:54px;overflow:hidden;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(242,125,38,.1),transparent 70%)}
+.fi{display:flex;align-items:center;gap:10px;height:54px;padding:0 16px;font-size:13.5px;color:var(--t2)}
+.fi b{color:var(--t)}.fi.in{animation:fin .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes fin{from{transform:translateY(100%);opacity:0}to{transform:none;opacity:1}}
+.fav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c3));flex-shrink:0}
+.ft{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fh{font-size:12px;font-weight:700;color:var(--o)}
+.gst{display:flex;align-items:center;gap:12px;padding:16px}
+.gav{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--c1);background:color-mix(in srgb,var(--c1) 16%,transparent)}
+.gst h4{font-size:16px}.gst p{font-size:13px;color:var(--t2)}
+.gtag{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--o);background:rgba(242,125,38,.12);border:1px solid rgba(242,125,38,.3);padding:4px 10px;border-radius:99px}
+.nud{margin:0 16px 16px;border-radius:14px;background:var(--bg2);padding:14px}
+.nud small{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}.nud p{font-size:14px;margin:6px 0 12px}
+.nud .r{display:flex;gap:8px}.nud button{flex:1;padding:10px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid var(--o);background:var(--o);color:#fff;transition:all .2s}
+.nud button.s{background:transparent;border-color:var(--line2);color:var(--t2)}.nud button.sent{background:var(--good);border-color:var(--good)}
+.vpop{position:absolute;right:16px;top:162px;z-index:3;font-size:12px;font-weight:700;color:#fff;background:var(--o);padding:5px 10px;border-radius:99px;animation:pp 1.6s ease forwards}
+@keyframes pp{0%{opacity:0;transform:translateY(8px) scale(.9)}15%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
+@media(max-width:900px){.vpwrap{grid-template-columns:1fr}}
+
+/* S8 industries */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}
+@media(max-width:980px){.g4{grid-template-columns:repeat(2,1fr)}}
+.ind{padding:18px;display:flex;flex-direction:column}
+.ind h3{font-size:16px;margin:14px 0 4px}.ind p{font-size:13px;color:var(--t2);flex:1;line-height:1.45}
+.tk{margin-top:12px;padding:11px;border-radius:12px;background:var(--bg2);border:1px solid var(--line)}
+.tk .top{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+.tk .top em{font-style:normal;font-weight:700;color:var(--ic);opacity:0;transition:opacity .3s}
+.tk b{display:block;font-size:13px;margin-top:3px}
+.stp{display:flex;gap:4px;margin-top:8px}
+.stp i{flex:1;height:6px;border-radius:99px;background:var(--bar);position:relative;overflow:hidden}
+.stp i::after{content:"";position:absolute;inset:0;background:var(--ic);transform:scaleX(0);transform-origin:left;transition:transform .18s ease calc(var(--i)*70ms)}
+.ind:hover .stp i::after,.ind.hov .stp i::after{transform:scaleX(1)}.ind:hover .tk .top em,.ind.hov .tk .top em{opacity:1;transition-delay:.5s}
+
+/* S9 add-ons */
+.addg{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:18px;margin-top:30px}
+@media(max-width:980px){.addg{grid-template-columns:1fr}}
+.ad{padding:24px;display:flex;flex-direction:column}
+.ad .tag{position:absolute;right:20px;top:22px;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:99px;color:var(--ic);background:color-mix(in srgb,var(--ic) 14%,transparent)}
+.ad h3{font-size:21px;margin:16px 0 6px}.ad p{font-size:14px;color:var(--t2);line-height:1.5}
+.shelf{margin-top:18px;position:relative;border-radius:14px;background:linear-gradient(180deg,#1d140c,#0f0b07);border:1px solid var(--line);padding:16px 14px 10px;overflow:hidden}
+.bots{display:flex;align-items:flex-end;gap:7px;height:86px;border-bottom:3px solid #3a2a1a;padding:0 2px}
+.bots i{flex:1;border-radius:6px 6px 2px 2px;position:relative;height:var(--h);background:linear-gradient(90deg,var(--bc),color-mix(in srgb,var(--bc) 55%,#000))}
+.bots i::before{content:"";position:absolute;left:30%;right:30%;top:-12px;height:14px;background:color-mix(in srgb,var(--bc) 70%,#000);border-radius:3px 3px 0 0}
+.bots i::after{content:attr(data-n);position:absolute;left:50%;top:-30px;transform:translateX(-50%) scale(.5);opacity:0;font-size:10px;font-weight:800;color:#fff;background:var(--o);padding:2px 6px;border-radius:99px;transition:all .3s cubic-bezier(.3,1.6,.5,1) calc(var(--i)*120ms + .9s)}
+.slide.on .bots i::after{opacity:1;transform:translateX(-50%)}
+.beam{position:absolute;top:0;bottom:0;width:40px;left:-40px;background:linear-gradient(90deg,transparent,rgba(242,125,38,.45),transparent);animation:beam 3s ease-in-out infinite}
+@keyframes beam{0%{left:-40px}60%,100%{left:100%}}
+.shelf .sum{display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-top:9px}.shelf .sum b{color:var(--o)}
+/* BarCard: realistic two-card stack (team tips card in front, business expense card behind) */
+.cc-stage{display:flex;flex-direction:column;align-items:center;perspective:1200px}
+.cc-stack{container-type:inline-size;position:relative;width:min(330px,86%);aspect-ratio:1.586;margin:56px auto 10px;left:5%}
+.cc{position:absolute;inset:0;border-radius:4.3cqw;padding:6.5% 7%;color:#fff;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;font-family:'DM Sans',sans-serif;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.8,.2,1),box-shadow .6s}
+.cc-front{background:radial-gradient(120% 90% at 100% 0%,rgba(242,125,38,.28),transparent 55%),linear-gradient(135deg,#2a2a31 0%,#16161b 45%,#0c0c10 100%);
+ box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 0 0 1px rgba(255,255,255,.07) inset,0 30px 60px -18px rgba(0,0,0,.7),0 12px 24px -12px rgba(0,0,0,.5);
+ transform:rotateX(8deg) rotateY(-14deg) rotateZ(-2deg) translateZ(30px)}
+.cc-back{background:linear-gradient(135deg,#FF9A4D 0%,#F27D26 40%,#C9560E 100%);
+ box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 24px 50px -20px rgba(0,0,0,.6);
+ transform:rotateX(8deg) rotateY(-14deg) rotateZ(-9deg) translate(-9%,-15%) scale(.94);filter:saturate(1.05)}
+.ad:hover .cc-front{transform:rotateX(4deg) rotateY(-6deg) rotateZ(-1deg) translateZ(30px) translateY(10px)}
+.ad:hover .cc-back{transform:rotateX(4deg) rotateY(-6deg) rotateZ(-12deg) translate(-13%,-22%) scale(.94)}
+.cc-tex{position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:overlay;
+ background:repeating-linear-gradient(100deg,rgba(255,255,255,.05) 0 1px,transparent 1px 3px),repeating-linear-gradient(10deg,rgba(0,0,0,.06) 0 1px,transparent 1px 4px)}
+.cc-glare{position:absolute;inset:-40%;pointer-events:none;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.16) 47%,rgba(255,255,255,.04) 53%,transparent 60%);transform:translateX(-30%);transition:transform .9s ease}
+.ad:hover .cc-glare{transform:translateX(25%)}
+.cc>*:not(.cc-tex):not(.cc-glare){position:relative}
+.cc-top{display:flex;justify-content:space-between;align-items:center}
+.cc-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:4.6cqw;letter-spacing:-.01em;white-space:nowrap}
+.cc-mark{width:1.45em;height:1.45em;display:block}
+.cc-nfc{width:5.4cqw;height:5.4cqw;opacity:.75;transform:rotate(0)}
+.cc-mid{display:flex;align-items:center;justify-content:space-between}
+.cc-chip{width:12cqw;height:auto;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.cc-type{font-size:2.5cqw;letter-spacing:.18em;text-transform:uppercase;font-weight:700;padding:1cqw 2.2cqw;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18)}
+.cc-num{font-family:'DM Mono','SFMono-Regular',ui-monospace,Menlo,monospace;font-size:4.8cqw;letter-spacing:.14em;white-space:nowrap;color:rgba(255,255,255,.92);text-shadow:0 1px 0 rgba(0,0,0,.55),0 -1px 0 rgba(255,255,255,.18)}
+.cc-bot{display:flex;align-items:flex-end;gap:5cqw;white-space:nowrap}
+.cc-bot small{display:block;font-size:2.1cqw;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin-bottom:3px}
+.cc-bot span{font-size:3.1cqw;letter-spacing:.12em;text-transform:uppercase;font-weight:600;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+.cc-net{margin-left:auto;font-size:5cqw;font-style:italic;font-weight:800;letter-spacing:-.02em;line-height:1}
+.cc-front .cc-net{background:linear-gradient(90deg,#fff,#F7B37B);-webkit-background-clip:text;background-clip:text;color:transparent}
+@media (prefers-reduced-motion:reduce){.cc,.cc-glare{transition:none}}
+.cal{margin-top:20px;display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal span{aspect-ratio:1;border-radius:7px;background:var(--bg2);border:1px solid var(--line);font-size:10.5px;color:var(--t3);display:flex;align-items:center;justify-content:center}
+.cal span.bk1{background:color-mix(in srgb,var(--ic) 22%,transparent);color:#fff;border-color:transparent}
+.cal span.bk2{background:var(--ic);color:#fff;border-color:transparent;box-shadow:0 6px 14px -6px var(--ic);animation:flt2 2.4s ease-in-out infinite}
+.adpr{margin-top:auto;padding-top:16px;font-size:13px;color:var(--t2)}.adpr b{color:var(--t)}
+
+/* S10 ROI */
+.roi{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:24px;overflow:hidden;border:1px solid var(--line);margin-top:28px}
+.roi .l{padding:30px;background:var(--card)}.roi .r{padding:30px;background:linear-gradient(135deg,#1a110a,#0c0c10);display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+.roi .r::before{content:"";position:absolute;width:300px;height:300px;right:-80px;top:-80px;border-radius:50%;background:radial-gradient(closest-side,rgba(242,125,38,.35),transparent)}
+.fld{margin-bottom:22px}.fld .lb{display:flex;justify-content:space-between;font-size:15px;font-weight:600;margin-bottom:10px}.fld .lb b{color:var(--o);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--o) var(--p,30%),var(--bar) var(--p,30%));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;border:4px solid var(--o);box-shadow:0 4px 12px rgba(242,125,38,.5);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:4px solid var(--o);cursor:pointer}
+.seg{display:flex;gap:8px}.seg button{flex:1;padding:11px;border-radius:12px;border:1px solid var(--line2);background:transparent;font-weight:600;color:var(--t2);transition:all .2s}
+.seg button[aria-pressed="true"]{border-color:var(--o);color:var(--o);background:rgba(242,125,38,.1)}
+.big{font-family:'DM Sans',system-ui,sans-serif;font-size:clamp(70px,9vw,120px);font-weight:700;line-height:1;color:var(--o);letter-spacing:-.05em;font-variant-numeric:tabular-nums;position:relative}
+.roi .r small{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);position:relative}
+.roi .r p{font-size:17px;color:var(--t2);margin-top:12px;position:relative;line-height:1.5}
+.roi .r .fine{font-size:12px;color:var(--t3);margin-top:16px}
+@media(max-width:860px){.roi{grid-template-columns:1fr}}
+
+/* S11 pricing */
+.tog{position:relative;display:inline-flex;padding:4px;border-radius:99px;background:var(--bg2);border:1px solid var(--line);margin:18px 0 22px}
+.tog button{position:relative;z-index:1;padding:9px 18px;border:0;background:none;font-weight:600;font-size:14px;color:var(--t2);border-radius:99px;transition:color .25s}
+.tog button[aria-pressed="true"]{color:var(--t)}
+.tog em{font-style:normal;font-size:11px;font-weight:700;color:#fff;background:var(--good);padding:2px 7px;border-radius:99px;margin-left:6px}
+.tog .pl{position:absolute;top:4px;bottom:4px;left:4px;border-radius:99px;background:var(--card2);border:1px solid var(--line2);transition:transform .35s cubic-bezier(.2,.8,.2,1),width .35s}
+.pg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:980px){.pg{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.pg{grid-template-columns:1fr}}
+.pc{padding:22px;display:flex;flex-direction:column}
+.pc h3{font-size:18px}.pc .o{font-size:13.5px;color:var(--o);font-weight:600;margin:3px 0 14px}
+.pc .pr{font-family:'DM Sans',system-ui,sans-serif;font-size:40px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}.pc .pr small{font-size:15px;color:var(--t3);font-weight:500}
+.pc .bl{font-size:12.5px;font-weight:600;color:var(--good);height:0;opacity:0;overflow:hidden;transition:all .3s}
+.annual .pc .bl{height:20px;opacity:1}
+.pc .su{font-size:12.5px;color:var(--t3);margin:4px 0 14px;min-height:34px}
+.pc ul{list-style:none;display:grid;gap:8px;font-size:13.5px;color:var(--t2)}
+.pc li{position:relative;padding-left:22px}.pc li::before{content:"✓";position:absolute;left:0;color:var(--good);font-weight:800}
+.pc li.bs{color:var(--t)}.pc li.bs::before{color:var(--o)}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+.pc.pop{border:2px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,conic-gradient(from var(--ang),#F27D26,#FFC48A,#F27D26 40%,#C9560E,#F27D26) border-box;animation:sp 6s linear infinite;box-shadow:0 30px 60px -30px rgba(242,125,38,.7)}
+@keyframes sp{to{--ang:360deg}}
+.pc.pop::after{content:"Most popular";position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:#fff;background:var(--o);padding:4px 12px;border-radius:99px}
+.pfoot{margin-top:16px;font-size:13px;color:var(--t2)}
+
+
+/* video */
+.vhead{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap}
+.vhead .lead{max-width:440px}
+.vbox{position:relative;width:min(100%,calc((100vh - 380px) * 16 / 9));aspect-ratio:16/9;margin:26px auto 0;border-radius:22px;overflow:hidden;border:1px solid var(--line);background:#000;box-shadow:0 40px 90px -40px rgba(0,0,0,.7)}
+.vposter{position:absolute;inset:0;border:0;padding:0;background:#000;cursor:pointer}
+.vposter img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s ease}
+.vposter:hover img{transform:scale(1.03)}
+.vshade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.45))}
+.vbtn{position:absolute;left:50%;top:50%;width:88px;height:88px;margin:-44px 0 0 -44px;border-radius:50%;background:var(--o);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 0 rgba(242,125,38,.6);animation:vring 2s infinite}
+.vbtn svg{width:34px;height:34px;margin-left:4px}
+@keyframes vring{0%{box-shadow:0 0 0 0 rgba(242,125,38,.55)}80%{box-shadow:0 0 0 26px rgba(242,125,38,0)}100%{box-shadow:0 0 0 0 rgba(242,125,38,0)}}
+.vlen{position:absolute;right:14px;bottom:12px;font-size:12.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:7px}
+.vbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+/* S12 close */
+.close{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(24px,5vw,72px);align-items:center}
+.rep{margin-top:26px;padding:20px;display:flex;gap:16px;align-items:center;max-width:520px}
+.rep .av{width:56px;height:56px;border-radius:16px;background:var(--card2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',system-ui,sans-serif;font-weight:700;font-size:20px;color:#fff;flex-shrink:0}
+.rep .av img{width:34px;height:34px}.rep .av.ini{background:linear-gradient(135deg,var(--o),var(--o3));border:0}
+.rep b{display:block;font-size:17px}.rep small{display:block;font-size:13.5px;color:var(--t2)}
+.qrc{text-align:center}.qrc .bigqr{width:min(280px,28vw);margin:0 auto}
+.qrc p{margin-top:24px;font-size:14px;color:var(--t2)}.qrc p b{color:var(--t)}
+.conf{position:fixed;inset:0;pointer-events:none;z-index:40}
+@media(max-width:860px){.close{grid-template-columns:1fr}.qrc .bigqr{width:220px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition-duration:.01ms!important}.a{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="prog" id="prog"></div>
+<main class="deck" id="deck">
+
+<!-- 1 TITLE -->
+<section class="slide" data-gx="78%" data-gy="40%">
+ <div class="in s1">
+  <div>
+   <span class="eb a" style="--d:0">BarChata for business</span>
+   <h1 class="a" style="--d:1">Know your regulars.<br><em>Bring them back.</em></h1>
+   <p class="lead a" style="--d:2;margin-top:22px">BarChata turns every visit into a customer you can recognise, reward and invite back — no new hardware, and nothing new for your staff to learn.</p>
+   <div class="row a" style="--d:3"><button class="btn p" data-go="next">See how it works →</button><button class="btn" data-go="5">Try it live</button></div>
+   <div class="hint a" style="--d:4"><kbd>←</kbd><kbd>→</kbd> or swipe to move · <kbd>F</kbd> full screen</div>
+  </div>
+  <div class="vis a" style="--d:2">
+   <div class="phone float"><span class="bt act"></span><span class="bt vu"></span><span class="bt vd"></span><span class="bt pw"></span><span class="bt cc"></span><div class="sc"><img src="/pitch/app-home.webp" alt="BarChata Social app home screen"><span class="isl"></span></div></div>
+   <span class="chip c2"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#F27D26" stroke-width="2.2" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Events near you</span>
+   <span class="chip c1"><b>♥</b> +25 Hearts earned</span>
+   <span class="chip c3"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#F27D26" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>Reward unlocked</span>
+  </div>
+ </div>
+</section>
+
+<!-- 2 PROBLEM -->
+<section class="slide" data-gx="20%" data-gy="20%">
+ <div class="in">
+  <span class="eb a">The challenge</span>
+  <h2 class="a" style="--d:1">You work hard to win new customers.<br><em>Most never come back.</em></h2>
+  <div class="g3">
+   <div class="card pb a" style="--d:2"><div class="flipv"><div class="fa"><div class="rc"><span class="q">?</span><div><b>Visa •••• 4821</b><small>$42.50 · walk-in</small></div><span class="tg">Unknown</span></div></div><div class="fb"><div class="rc"><span class="q ok">SM</span><div><b>Sarah M.</b><small>9th visit · loves trivia night</small></div><span class="tg ok">Regular</span></div></div></div>
+    <div class="n">01</div><h3>You don't know who came in</h3><p>Card payments and walk-ins leave no name, no history and no way to say thank you.</p></div>
+   <div class="card pb a" style="--d:3"><div class="flipv"><div class="fa"><div class="wk"><i style="--h:30%"></i><i style="--h:22%"></i><i style="--h:28%"></i><i style="--h:40%"></i><i style="--h:85%"></i><i style="--h:92%"></i><i style="--h:45%"></i></div><div class="cap">Tuesdays: 6 guests</div></div><div class="fb"><div class="wk up"><i style="--h:48%"></i><i style="--h:60%"></i><i style="--h:52%"></i><i style="--h:60%"></i><i style="--h:88%"></i><i style="--h:94%"></i><i style="--h:60%"></i></div><div class="cap ok">+18 invited back on Tuesday</div></div></div>
+    <div class="n">02</div><h3>You can't invite them back</h3><p>Without a way to reach past customers, every slow day starts from zero.</p></div>
+   <div class="card pb a" style="--d:4"><div class="flipv"><div class="fa"><div class="crowd"><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="cap">Every guest looks the same</div></div><div class="fb"><div class="crowd v"><span></span><span></span><span class="st">★</span><span></span><span></span><span></span></div><div class="cap ok">Your best guests — spotted and rewarded</div></div></div>
+    <div class="n">03</div><h3>Your best customers look like everyone else</h3><p>The person who visits every week gets the same treatment as a first-timer — until they stop coming.</p></div>
+  </div>
+  <p class="tap a" style="--d:5"><b>Tap any card</b> to see how BarChata solves it.</p>
+ </div>
+</section>
+
+<!-- 3 LOOP -->
+<section class="slide" data-gx="50%" data-gy="55%">
+ <div class="in">
+  <span class="eb a">The platform</span>
+  <h2 class="a" style="--d:1">Two apps. <em>One loop</em> that brings customers back.</h2>
+  <div class="loop">
+   <div class="card side a" style="--d:2;--ic:#22D3EE">
+    <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></div>
+    <h3>BarChata Social</h3><p>The free app your customers use.</p>
+    <ul><li>Discover places and events nearby</li><li>Check in with one tap, earn Hearts</li><li>Redeem rewards you choose</li></ul>
+   </div>
+   <div class="hub a" style="--d:3">
+    <svg class="ring" viewBox="0 0 200 200"><defs><linearGradient id="rg" x1="0" x2="1"><stop offset="0" stop-color="#F27D26"/><stop offset="1" stop-color="#F27D26" stop-opacity="0"/></linearGradient></defs><circle cx="100" cy="100" r="88" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2"/><circle cx="100" cy="100" r="88" fill="none" stroke="url(#rg)" stroke-width="3" stroke-dasharray="180 400" stroke-linecap="round"/><circle cx="188" cy="100" r="6" fill="#F27D26"/><circle cx="12" cy="100" r="4" fill="#22D3EE"/></svg>
+    <div class="core"><b>♥</b><small>Hearts</small></div>
+   </div>
+   <div class="card side a" style="--d:4;--ic:#F27D26">
+    <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+    <h3>BarChata Biz</h3><p>The owner dashboard — on web, tablet or phone.</p>
+    <ul><li>See every customer and their visits</li><li>Send offers that bring them back</li><li>Know what's working, every day</li></ul>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- VIDEO -->
+<section class="slide" data-gx="50%" data-gy="20%">
+ <div class="in">
+  <div class="vhead"><div><span class="eb a">See it in action</span><h2 class="a" style="--d:1">BarChata in <em>under two minutes.</em></h2></div><p class="lead a" style="--d:2">How customers earn and redeem rewards — and how your business turns first visits into regulars.</p></div>
+  <div class="vbox a" style="--d:3" id="vbox"><button class="vposter" id="vplay" type="button" aria-label="Play video, 1 minute 46 seconds"><img src="https://i.ytimg.com/vi/MaIcGmHlFBs/maxresdefault.jpg" alt="" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/MaIcGmHlFBs/hqdefault.jpg'"><span class="vshade"></span><span class="vbtn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 001.5.86l10.6-6.5a1 1 0 000-1.72L9.5 4.64A1 1 0 008 5.5z"/></svg></span><span class="vlen">1:46</span></button></div>
+ </div>
+</section>
+
+<!-- 4 HOW -->
+<section class="slide" data-gx="80%" data-gy="25%">
+ <div class="in">
+  <span class="eb a">How it works</span>
+  <h2 class="a" style="--d:1">Live in a day. <em>Customers back in a week.</em></h2>
+  <p class="lead a" style="--d:2">No hardware to buy. No cards to print. Customers check in with the phone they already have.</p>
+  <div class="g3">
+   <div class="card st a" style="--d:3"><span class="num">1</span><div class="mv"><div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="typed">Your business</span></div><div class="res"><span class="rl">YB</span><div><b>Your business</b><small>Already in the directory</small></div><span class="ver">✓ Verified</span></div></div><h3>Claim your business</h3><p>Find it in the directory and claim it. We verify you run it, usually within one business day.</p><span class="pill">Free · about 2 minutes</span></div>
+   <div class="card st a" style="--d:4"><span class="num">2</span><div class="mv qrrow"><div class="qrbox"><svg viewBox="0 0 29 29" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M0 0h1v1h-1zM1 0h1v1h-1zM2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM6 0h1v1h-1zM9 0h1v1h-1zM11 0h1v1h-1zM15 0h1v1h-1zM19 0h1v1h-1zM22 0h1v1h-1zM23 0h1v1h-1zM24 0h1v1h-1zM25 0h1v1h-1zM26 0h1v1h-1zM27 0h1v1h-1zM28 0h1v1h-1zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h1v1h-1zM10 1h1v1h-1zM13 1h1v1h-1zM15 1h1v1h-1zM16 1h1v1h-1zM17 1h1v1h-1zM19 1h1v1h-1zM20 1h1v1h-1zM22 1h1v1h-1zM28 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM6 2h1v1h-1zM9 2h1v1h-1zM11 2h1v1h-1zM14 2h1v1h-1zM18 2h1v1h-1zM20 2h1v1h-1zM22 2h1v1h-1zM24 2h1v1h-1zM25 2h1v1h-1zM26 2h1v1h-1zM28 2h1v1h-1zM0 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM6 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM14 3h1v1h-1zM16 3h1v1h-1zM18 3h1v1h-1zM19 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM25 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM0 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM6 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM13 4h1v1h-1zM14 4h1v1h-1zM15 4h1v1h-1zM16 4h1v1h-1zM19 4h1v1h-1zM22 4h1v1h-1zM24 4h1v1h-1zM25 4h1v1h-1zM26 4h1v1h-1zM28 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM13 5h1v1h-1zM15 5h1v1h-1zM16 5h1v1h-1zM17 5h1v1h-1zM19 5h1v1h-1zM20 5h1v1h-1zM22 5h1v1h-1zM28 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h1v1h-1zM23 6h1v1h-1zM24 6h1v1h-1zM25 6h1v1h-1zM26 6h1v1h-1zM27 6h1v1h-1zM28 6h1v1h-1zM13 7h1v1h-1zM14 7h1v1h-1zM15 7h1v1h-1zM16 7h1v1h-1zM17 7h1v1h-1zM20 7h1v1h-1zM0 8h1v1h-1zM2 8h1v1h-1zM4 8h1v1h-1zM6 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM16 8h1v1h-1zM17 8h1v1h-1zM18 8h1v1h-1zM19 8h1v1h-1zM20 8h1v1h-1zM24 8h1v1h-1zM27 8h1v1h-1zM0 9h1v1h-1zM1 9h1v1h-1zM2 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM11 9h1v1h-1zM13 9h1v1h-1zM14 9h1v1h-1zM16 9h1v1h-1zM18 9h1v1h-1zM21 9h1v1h-1zM22 9h1v1h-1zM25 9h1v1h-1zM28 9h1v1h-1zM3 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM11 10h1v1h-1zM17 10h1v1h-1zM23 10h1v1h-1zM26 10h1v1h-1zM27 10h1v1h-1zM28 10h1v1h-1zM1 11h1v1h-1zM11 11h1v1h-1zM13 11h1v1h-1zM17 11h1v1h-1zM18 11h1v1h-1zM19 11h1v1h-1zM20 11h1v1h-1zM21 11h1v1h-1zM23 11h1v1h-1zM27 11h1v1h-1zM0 12h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1zM16 12h1v1h-1zM17 12h1v1h-1zM19 12h1v1h-1zM20 12h1v1h-1zM21 12h1v1h-1zM22 12h1v1h-1zM25 12h1v1h-1zM27 12h1v1h-1zM28 12h1v1h-1zM0 13h1v1h-1zM1 13h1v1h-1zM4 13h1v1h-1zM7 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1zM16 13h1v1h-1zM17 13h1v1h-1zM18 13h1v1h-1zM20 13h1v1h-1zM21 13h1v1h-1zM22 13h1v1h-1zM25 13h1v1h-1zM28 13h1v1h-1zM0 14h1v1h-1zM3 14h1v1h-1zM4 14h1v1h-1zM5 14h1v1h-1zM6 14h1v1h-1zM9 14h1v1h-1zM10 14h1v1h-1zM11 14h1v1h-1zM13 14h1v1h-1zM14 14h1v1h-1zM16 14h1v1h-1zM22 14h1v1h-1zM25 14h1v1h-1zM27 14h1v1h-1zM28 14h1v1h-1zM5 15h1v1h-1zM7 15h1v1h-1zM11 15h1v1h-1zM13 15h1v1h-1zM14 15h1v1h-1zM17 15h1v1h-1zM18 15h1v1h-1zM20 15h1v1h-1zM23 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM0 16h1v1h-1zM3 16h1v1h-1zM4 16h1v1h-1zM5 16h1v1h-1zM6 16h1v1h-1zM8 16h1v1h-1zM10 16h1v1h-1zM11 16h1v1h-1zM13 16h1v1h-1zM17 16h1v1h-1zM19 16h1v1h-1zM20 16h1v1h-1zM21 16h1v1h-1zM22 16h1v1h-1zM23 16h1v1h-1zM25 16h1v1h-1zM27 16h1v1h-1zM28 16h1v1h-1zM3 17h1v1h-1zM4 17h1v1h-1zM5 17h1v1h-1zM7 17h1v1h-1zM10 17h1v1h-1zM11 17h1v1h-1zM12 17h1v1h-1zM16 17h1v1h-1zM17 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM22 17h1v1h-1zM25 17h1v1h-1zM26 17h1v1h-1zM28 17h1v1h-1zM0 18h1v1h-1zM4 18h1v1h-1zM5 18h1v1h-1zM6 18h1v1h-1zM8 18h1v1h-1zM9 18h1v1h-1zM10 18h1v1h-1zM11 18h1v1h-1zM12 18h1v1h-1zM14 18h1v1h-1zM21 18h1v1h-1zM22 18h1v1h-1zM23 18h1v1h-1zM24 18h1v1h-1zM27 18h1v1h-1zM28 18h1v1h-1zM1 19h1v1h-1zM3 19h1v1h-1zM4 19h1v1h-1zM5 19h1v1h-1zM10 19h1v1h-1zM11 19h1v1h-1zM13 19h1v1h-1zM15 19h1v1h-1zM16 19h1v1h-1zM17 19h1v1h-1zM21 19h1v1h-1zM23 19h1v1h-1zM25 19h1v1h-1zM27 19h1v1h-1zM0 20h1v1h-1zM5 20h1v1h-1zM6 20h1v1h-1zM12 20h1v1h-1zM14 20h1v1h-1zM17 20h1v1h-1zM20 20h1v1h-1zM21 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM24 20h1v1h-1zM8 21h1v1h-1zM10 21h1v1h-1zM11 21h1v1h-1zM16 21h1v1h-1zM19 21h1v1h-1zM20 21h1v1h-1zM24 21h1v1h-1zM26 21h1v1h-1zM27 21h1v1h-1zM28 21h1v1h-1zM0 22h1v1h-1zM1 22h1v1h-1zM2 22h1v1h-1zM3 22h1v1h-1zM4 22h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM11 22h1v1h-1zM12 22h1v1h-1zM13 22h1v1h-1zM19 22h1v1h-1zM20 22h1v1h-1zM22 22h1v1h-1zM24 22h1v1h-1zM25 22h1v1h-1zM27 22h1v1h-1zM28 22h1v1h-1zM0 23h1v1h-1zM6 23h1v1h-1zM9 23h1v1h-1zM11 23h1v1h-1zM16 23h1v1h-1zM17 23h1v1h-1zM18 23h1v1h-1zM20 23h1v1h-1zM24 23h1v1h-1zM25 23h1v1h-1zM0 24h1v1h-1zM2 24h1v1h-1zM3 24h1v1h-1zM4 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM9 24h1v1h-1zM11 24h1v1h-1zM15 24h1v1h-1zM16 24h1v1h-1zM20 24h1v1h-1zM21 24h1v1h-1zM22 24h1v1h-1zM23 24h1v1h-1zM24 24h1v1h-1zM0 25h1v1h-1zM2 25h1v1h-1zM3 25h1v1h-1zM4 25h1v1h-1zM6 25h1v1h-1zM10 25h1v1h-1zM11 25h1v1h-1zM12 25h1v1h-1zM13 25h1v1h-1zM16 25h1v1h-1zM18 25h1v1h-1zM19 25h1v1h-1zM20 25h1v1h-1zM23 25h1v1h-1zM24 25h1v1h-1zM26 25h1v1h-1zM27 25h1v1h-1zM28 25h1v1h-1zM0 26h1v1h-1zM2 26h1v1h-1zM3 26h1v1h-1zM4 26h1v1h-1zM6 26h1v1h-1zM8 26h1v1h-1zM9 26h1v1h-1zM12 26h1v1h-1zM13 26h1v1h-1zM14 26h1v1h-1zM17 26h1v1h-1zM19 26h1v1h-1zM23 26h1v1h-1zM24 26h1v1h-1zM25 26h1v1h-1zM28 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM9 27h1v1h-1zM11 27h1v1h-1zM17 27h1v1h-1zM18 27h1v1h-1zM19 27h1v1h-1zM20 27h1v1h-1zM21 27h1v1h-1zM23 27h1v1h-1zM24 27h1v1h-1zM27 27h1v1h-1zM0 28h1v1h-1zM1 28h1v1h-1zM2 28h1v1h-1zM3 28h1v1h-1zM4 28h1v1h-1zM5 28h1v1h-1zM6 28h1v1h-1zM8 28h1v1h-1zM9 28h1v1h-1zM12 28h1v1h-1zM13 28h1v1h-1zM17 28h1v1h-1zM20 28h1v1h-1zM21 28h1v1h-1zM22 28h1v1h-1zM24 28h1v1h-1zM27 28h1v1h-1zM28 28h1v1h-1z"/></svg><span class="scan"></span></div><div><b style="font-size:13px">Scan to check in</b><div style="font-size:11.5px;color:var(--t3)">No app download needed</div><span class="earn">+25 ♥ earned</span></div></div><h3>Customers check in</h3><p>They scan your QR code at the counter and earn Hearts every visit. You see who they are.</p><span class="pill">Works with any phone</span></div>
+   <div class="card st a" style="--d:5"><span class="num">3</span><div class="mv"><div class="bub">Hi Sarah — it's been a while! Free appetizer this Friday.</div><div class="dl"><span>Text</span><span>Email</span><span>In-app</span><em>Delivered ✓✓</em></div></div><h3>Bring them back</h3><p>Reward regulars and fill slow days with offers our AI writes for you. You approve; we send.</p><span class="pill">Targets by visits, spend and timing</span></div>
+  </div>
+ </div>
+</section>
+
+<!-- 5 SCAN NOW -->
+<section class="slide" data-gx="75%" data-gy="50%">
+ <div class="in scanwrap">
+  <div>
+   <span class="eb a">Try it right now</span>
+   <h2 class="a" style="--d:1">Pick up your phone.<br><em>Scan this code.</em></h2>
+   <p class="lead a" style="--d:2">This is exactly what your customers do at your counter — no app download, no sign-up form.</p>
+   <div class="steps3 a" style="--d:3"><div><span>1</span>Open your phone's camera</div><div><span>2</span>Point it at the code</div><div><span>3</span>Tap the link — you're in BarChata</div></div>
+  </div>
+  <div class="a" style="--d:2"><div class="bigqr"><svg viewBox="0 0 29 29" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M0 0h1v1h-1zM1 0h1v1h-1zM2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM6 0h1v1h-1zM9 0h1v1h-1zM11 0h1v1h-1zM15 0h1v1h-1zM19 0h1v1h-1zM22 0h1v1h-1zM23 0h1v1h-1zM24 0h1v1h-1zM25 0h1v1h-1zM26 0h1v1h-1zM27 0h1v1h-1zM28 0h1v1h-1zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h1v1h-1zM10 1h1v1h-1zM13 1h1v1h-1zM15 1h1v1h-1zM16 1h1v1h-1zM17 1h1v1h-1zM19 1h1v1h-1zM20 1h1v1h-1zM22 1h1v1h-1zM28 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM6 2h1v1h-1zM9 2h1v1h-1zM11 2h1v1h-1zM14 2h1v1h-1zM18 2h1v1h-1zM20 2h1v1h-1zM22 2h1v1h-1zM24 2h1v1h-1zM25 2h1v1h-1zM26 2h1v1h-1zM28 2h1v1h-1zM0 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM6 3h1v1h-1zM9 3h1v1h-1zM10 3h1v1h-1zM14 3h1v1h-1zM16 3h1v1h-1zM18 3h1v1h-1zM19 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM25 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM0 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM6 4h1v1h-1zM8 4h1v1h-1zM9 4h1v1h-1zM10 4h1v1h-1zM13 4h1v1h-1zM14 4h1v1h-1zM15 4h1v1h-1zM16 4h1v1h-1zM19 4h1v1h-1zM22 4h1v1h-1zM24 4h1v1h-1zM25 4h1v1h-1zM26 4h1v1h-1zM28 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM13 5h1v1h-1zM15 5h1v1h-1zM16 5h1v1h-1zM17 5h1v1h-1zM19 5h1v1h-1zM20 5h1v1h-1zM22 5h1v1h-1zM28 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h1v1h-1zM23 6h1v1h-1zM24 6h1v1h-1zM25 6h1v1h-1zM26 6h1v1h-1zM27 6h1v1h-1zM28 6h1v1h-1zM13 7h1v1h-1zM14 7h1v1h-1zM15 7h1v1h-1zM16 7h1v1h-1zM17 7h1v1h-1zM20 7h1v1h-1zM0 8h1v1h-1zM2 8h1v1h-1zM4 8h1v1h-1zM6 8h1v1h-1zM9 8h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM16 8h1v1h-1zM17 8h1v1h-1zM18 8h1v1h-1zM19 8h1v1h-1zM20 8h1v1h-1zM24 8h1v1h-1zM27 8h1v1h-1zM0 9h1v1h-1zM1 9h1v1h-1zM2 9h1v1h-1zM4 9h1v1h-1zM5 9h1v1h-1zM11 9h1v1h-1zM13 9h1v1h-1zM14 9h1v1h-1zM16 9h1v1h-1zM18 9h1v1h-1zM21 9h1v1h-1zM22 9h1v1h-1zM25 9h1v1h-1zM28 9h1v1h-1zM3 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM11 10h1v1h-1zM17 10h1v1h-1zM23 10h1v1h-1zM26 10h1v1h-1zM27 10h1v1h-1zM28 10h1v1h-1zM1 11h1v1h-1zM11 11h1v1h-1zM13 11h1v1h-1zM17 11h1v1h-1zM18 11h1v1h-1zM19 11h1v1h-1zM20 11h1v1h-1zM21 11h1v1h-1zM23 11h1v1h-1zM27 11h1v1h-1zM0 12h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM11 12h1v1h-1zM12 12h1v1h-1zM13 12h1v1h-1zM16 12h1v1h-1zM17 12h1v1h-1zM19 12h1v1h-1zM20 12h1v1h-1zM21 12h1v1h-1zM22 12h1v1h-1zM25 12h1v1h-1zM27 12h1v1h-1zM28 12h1v1h-1zM0 13h1v1h-1zM1 13h1v1h-1zM4 13h1v1h-1zM7 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1zM16 13h1v1h-1zM17 13h1v1h-1zM18 13h1v1h-1zM20 13h1v1h-1zM21 13h1v1h-1zM22 13h1v1h-1zM25 13h1v1h-1zM28 13h1v1h-1zM0 14h1v1h-1zM3 14h1v1h-1zM4 14h1v1h-1zM5 14h1v1h-1zM6 14h1v1h-1zM9 14h1v1h-1zM10 14h1v1h-1zM11 14h1v1h-1zM13 14h1v1h-1zM14 14h1v1h-1zM16 14h1v1h-1zM22 14h1v1h-1zM25 14h1v1h-1zM27 14h1v1h-1zM28 14h1v1h-1zM5 15h1v1h-1zM7 15h1v1h-1zM11 15h1v1h-1zM13 15h1v1h-1zM14 15h1v1h-1zM17 15h1v1h-1zM18 15h1v1h-1zM20 15h1v1h-1zM23 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM0 16h1v1h-1zM3 16h1v1h-1zM4 16h1v1h-1zM5 16h1v1h-1zM6 16h1v1h-1zM8 16h1v1h-1zM10 16h1v1h-1zM11 16h1v1h-1zM13 16h1v1h-1zM17 16h1v1h-1zM19 16h1v1h-1zM20 16h1v1h-1zM21 16h1v1h-1zM22 16h1v1h-1zM23 16h1v1h-1zM25 16h1v1h-1zM27 16h1v1h-1zM28 16h1v1h-1zM3 17h1v1h-1zM4 17h1v1h-1zM5 17h1v1h-1zM7 17h1v1h-1zM10 17h1v1h-1zM11 17h1v1h-1zM12 17h1v1h-1zM16 17h1v1h-1zM17 17h1v1h-1zM18 17h1v1h-1zM20 17h1v1h-1zM22 17h1v1h-1zM25 17h1v1h-1zM26 17h1v1h-1zM28 17h1v1h-1zM0 18h1v1h-1zM4 18h1v1h-1zM5 18h1v1h-1zM6 18h1v1h-1zM8 18h1v1h-1zM9 18h1v1h-1zM10 18h1v1h-1zM11 18h1v1h-1zM12 18h1v1h-1zM14 18h1v1h-1zM21 18h1v1h-1zM22 18h1v1h-1zM23 18h1v1h-1zM24 18h1v1h-1zM27 18h1v1h-1zM28 18h1v1h-1zM1 19h1v1h-1zM3 19h1v1h-1zM4 19h1v1h-1zM5 19h1v1h-1zM10 19h1v1h-1zM11 19h1v1h-1zM13 19h1v1h-1zM15 19h1v1h-1zM16 19h1v1h-1zM17 19h1v1h-1zM21 19h1v1h-1zM23 19h1v1h-1zM25 19h1v1h-1zM27 19h1v1h-1zM0 20h1v1h-1zM5 20h1v1h-1zM6 20h1v1h-1zM12 20h1v1h-1zM14 20h1v1h-1zM17 20h1v1h-1zM20 20h1v1h-1zM21 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM24 20h1v1h-1zM8 21h1v1h-1zM10 21h1v1h-1zM11 21h1v1h-1zM16 21h1v1h-1zM19 21h1v1h-1zM20 21h1v1h-1zM24 21h1v1h-1zM26 21h1v1h-1zM27 21h1v1h-1zM28 21h1v1h-1zM0 22h1v1h-1zM1 22h1v1h-1zM2 22h1v1h-1zM3 22h1v1h-1zM4 22h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM11 22h1v1h-1zM12 22h1v1h-1zM13 22h1v1h-1zM19 22h1v1h-1zM20 22h1v1h-1zM22 22h1v1h-1zM24 22h1v1h-1zM25 22h1v1h-1zM27 22h1v1h-1zM28 22h1v1h-1zM0 23h1v1h-1zM6 23h1v1h-1zM9 23h1v1h-1zM11 23h1v1h-1zM16 23h1v1h-1zM17 23h1v1h-1zM18 23h1v1h-1zM20 23h1v1h-1zM24 23h1v1h-1zM25 23h1v1h-1zM0 24h1v1h-1zM2 24h1v1h-1zM3 24h1v1h-1zM4 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM9 24h1v1h-1zM11 24h1v1h-1zM15 24h1v1h-1zM16 24h1v1h-1zM20 24h1v1h-1zM21 24h1v1h-1zM22 24h1v1h-1zM23 24h1v1h-1zM24 24h1v1h-1zM0 25h1v1h-1zM2 25h1v1h-1zM3 25h1v1h-1zM4 25h1v1h-1zM6 25h1v1h-1zM10 25h1v1h-1zM11 25h1v1h-1zM12 25h1v1h-1zM13 25h1v1h-1zM16 25h1v1h-1zM18 25h1v1h-1zM19 25h1v1h-1zM20 25h1v1h-1zM23 25h1v1h-1zM24 25h1v1h-1zM26 25h1v1h-1zM27 25h1v1h-1zM28 25h1v1h-1zM0 26h1v1h-1zM2 26h1v1h-1zM3 26h1v1h-1zM4 26h1v1h-1zM6 26h1v1h-1zM8 26h1v1h-1zM9 26h1v1h-1zM12 26h1v1h-1zM13 26h1v1h-1zM14 26h1v1h-1zM17 26h1v1h-1zM19 26h1v1h-1zM23 26h1v1h-1zM24 26h1v1h-1zM25 26h1v1h-1zM28 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM9 27h1v1h-1zM11 27h1v1h-1zM17 27h1v1h-1zM18 27h1v1h-1zM19 27h1v1h-1zM20 27h1v1h-1zM21 27h1v1h-1zM23 27h1v1h-1zM24 27h1v1h-1zM27 27h1v1h-1zM0 28h1v1h-1zM1 28h1v1h-1zM2 28h1v1h-1zM3 28h1v1h-1zM4 28h1v1h-1zM5 28h1v1h-1zM6 28h1v1h-1zM8 28h1v1h-1zM9 28h1v1h-1zM12 28h1v1h-1zM13 28h1v1h-1zM17 28h1v1h-1zM20 28h1v1h-1zM21 28h1v1h-1zM22 28h1v1h-1zM24 28h1v1h-1zM27 28h1v1h-1zM28 28h1v1h-1z"/></svg><span class="logo"><img src="/pitch/logo.png" alt=""></span></div><p class="note" style="text-align:center;margin-top:30px">Opens barchata.com/app</p></div>
+ </div>
+</section>
+
+<!-- 6 APP TOUR -->
+<section class="slide" data-gx="50%" data-gy="45%">
+ <div class="in">
+  <div style="text-align:center"><span class="eb a">What your customers see</span><h2 class="a" style="--d:1">Your business, <em>in their pocket.</em></h2></div>
+  <div class="tour">
+   <div class="co l">
+    <div class="card a" style="--d:2;--ic:#22D3EE"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div><div><h4>Found nearby</h4><p>Your events and specials show to people close to you, right now.</p></div></div>
+    <div class="card a" style="--d:3;--ic:#F27D26"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></div><div><h4>Your offers in their feed</h4><p>Promotions appear where they already scroll, with one-tap "View offer".</p></div></div>
+   </div>
+   <div class="ph a" style="--d:2"><div class="phone float"><span class="bt act"></span><span class="bt vu"></span><span class="bt vd"></span><span class="bt pw"></span><span class="bt cc"></span><div class="sc"><img src="/pitch/app-home.webp" alt="BarChata Social app"><span class="isl"></span></div></div></div>
+   <div class="co">
+    <div class="card a" style="--d:4;--ic:#E86AA6"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div><h4>Hearts on every visit</h4><p>Check in at your counter, earn Hearts, watch rewards get closer.</p></div></div>
+    <div class="card a" style="--d:5;--ic:#10B981"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></div><div><h4>Rewards they can spend</h4><p>The rewards you set — plus Hearts they can use at any participating business.</p></div></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- 7 VENUE PROFILE -->
+<section class="slide" data-gx="70%" data-gy="40%">
+ <div class="in vpwrap">
+  <div>
+   <span class="eb a">What you see</span>
+   <h2 class="a" style="--d:1">Every customer.<br><em>Every visit. Live.</em></h2>
+   <p class="lead a" style="--d:2">Your dashboard shows who's in today, who your regulars are, and exactly who to invite back — with the message already written.</p>
+   <div class="pick a" style="--d:3" id="pick"><button data-k="bar" aria-pressed="true">Bar</button><button data-k="salon" aria-pressed="false">Salon</button><button data-k="gym" aria-pressed="false">Gym</button><button data-k="cafe" aria-pressed="false">Café</button><button data-k="retail" aria-pressed="false">Retail</button><button data-k="auto" aria-pressed="false">Auto</button></div>
+   <p class="note a" style="--d:4">Choose your client's type of business. Example data for illustration.</p>
+  </div>
+  <div class="a" style="--d:2">
+   <div class="vp" id="vp" data-k="bar">
+    <div class="cov"><span class="bk b1"></span><span class="bk b2"></span><span class="bk b3"></span><span class="bk b4"></span>
+     <svg class="glyph" id="v-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></svg>
+     <div class="bdg"><span class="live"><i></i>Live</span><span>✓ Claimed</span></div>
+     <div class="vid"><div class="vlogo" id="v-logo">CT</div><div><b id="v-biz">The Corner Tap</b><small><span id="v-cat">Bar · King St W</span> · <em>Open now</em></small></div></div>
+    </div>
+    <div class="kp"><div><small>Check-ins today</small><b id="v-today">37</b></div><div><small>Regulars</small><b id="v-reg">214</b></div><div><small>Hearts this month</small><b id="v-hm">9,420</b></div></div>
+    <div class="feed"><div class="fi" id="v-feed"></div></div>
+    <div class="gst"><div class="gav" id="v-init">SM</div><div><h4 id="v-name">Sarah M.</h4><p id="v-last">Last visit 16 days ago · usually Fridays</p></div><span class="gtag" id="v-tag">Regular</span></div>
+    <div class="nud"><small>Suggested next step</small><p id="v-nudge"></p><div class="r"><button id="v-send">Send offer</button><button class="s" id="v-skip">Next example</button></div></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- 8 INDUSTRIES -->
+<section class="slide" data-gx="30%" data-gy="30%">
+ <div class="in">
+  <span class="eb a">Industries</span>
+  <h2 class="a" style="--d:1">Rewards that fit <em>how you sell.</em></h2>
+  <div class="g4" id="inds"></div>
+ </div>
+</section>
+
+<!-- 9 ADD-ONS -->
+<section class="slide" data-gx="60%" data-gy="20%">
+ <div class="in">
+  <span class="eb a">Add-ons</span>
+  <h2 class="a" style="--d:1">Add more when <em>you're ready.</em></h2>
+  <div class="addg">
+   <div class="card ad a" style="--d:2;--ic:#F27D26"><span class="tag">Add-on · every plan</span>
+    <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>
+    <h3>BarStock AI</h3><p>Snap a photo of your shelf. AI counts every bottle and item in seconds — no clipboard, no spreadsheet.</p>
+    <div class="shelf"><div class="bots"><i style="--h:70%;--bc:#3F7D3A;--i:0" data-n="6"></i><i style="--h:82%;--bc:#7A3B1E;--i:1" data-n="4"></i><i style="--h:62%;--bc:#C9A227;--i:2" data-n="9"></i><i style="--h:90%;--bc:#2B4C7E;--i:3" data-n="3"></i><i style="--h:74%;--bc:#8E2B2B;--i:4" data-n="7"></i><i style="--h:66%;--bc:#D9D4C7;--i:5" data-n="5"></i><i style="--h:86%;--bc:#5B3A1A;--i:6" data-n="8"></i></div><span class="beam"></span><div class="sum"><span>Shelf scanned</span><span><b>42 items</b> counted</span></div></div>
+    <div class="adpr">From <b data-cat="barstock.from">$50</b>/mo · <b data-cat="trial">30</b>-day free trial</div>
+   </div>
+   <div class="card ad a" style="--d:3;--ic:#3B82F6"><span class="tag">Pro &amp; Elite</span>
+    <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+    <h3>BarCard</h3><p>Instant tips for your team and expense cards for managers, with spend limits.</p>
+    <div class="cc-stage" aria-hidden="true">
+      <div class="cc-stack">
+        <div class="cc cc-back">
+          <span class="cc-tex"></span><span class="cc-glare"></span>
+          <div class="cc-top"><span class="cc-brand"><img class="cc-mark" src="/pitch/mark.png" alt="">BarChata</span><svg class="cc-nfc" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 7.5a6 6 0 0 1 0 9M12 5a10 10 0 0 1 0 14M15.5 2.5a14 14 0 0 1 0 19M5 10a2.5 2.5 0 0 1 0 4"/></svg></div>
+          <div class="cc-mid"><svg class="cc-chip" viewBox="0 0 50 38" aria-hidden="true"><defs><linearGradient id="ccg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6E3A8"/><stop offset=".45" stop-color="#D6AE5C"/><stop offset=".7" stop-color="#F1D58D"/><stop offset="1" stop-color="#B8893A"/></linearGradient></defs><rect x=".5" y=".5" width="49" height="37" rx="6" fill="url(#ccg1)" stroke="#9C7330" stroke-width=".8"/><g fill="none" stroke="#9C7330" stroke-width=".9" opacity=".85"><path d="M0 13h16M0 25h16M34 13h16M34 25h16M16 0v38M34 0v38"/><rect x="16" y="9" width="18" height="20" rx="4"/></g></svg><span class="cc-type">Business</span></div>
+          <div class="cc-num">•••• •••• •••• 2026</div>
+          <div class="cc-bot"><div><small>Card holder</small><span>Manager</span></div><div><small>Valid thru</small><span>12/29</span></div><b class="cc-net">BarCard</b></div>
+        </div>
+        <div class="cc cc-front">
+          <span class="cc-tex"></span><span class="cc-glare"></span>
+          <div class="cc-top"><span class="cc-brand"><img class="cc-mark" src="/pitch/logo.png" alt="">BarChata</span><svg class="cc-nfc" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 7.5a6 6 0 0 1 0 9M12 5a10 10 0 0 1 0 14M15.5 2.5a14 14 0 0 1 0 19M5 10a2.5 2.5 0 0 1 0 4"/></svg></div>
+          <div class="cc-mid"><svg class="cc-chip" viewBox="0 0 50 38" aria-hidden="true"><defs><linearGradient id="ccg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6E3A8"/><stop offset=".45" stop-color="#D6AE5C"/><stop offset=".7" stop-color="#F1D58D"/><stop offset="1" stop-color="#B8893A"/></linearGradient></defs><rect x=".5" y=".5" width="49" height="37" rx="6" fill="url(#ccg)" stroke="#9C7330" stroke-width=".8"/><g fill="none" stroke="#9C7330" stroke-width=".9" opacity=".85"><path d="M0 13h16M0 25h16M34 13h16M34 25h16M16 0v38M34 0v38"/><rect x="16" y="9" width="18" height="20" rx="4"/></g></svg><span class="cc-type">Tips</span></div>
+          <div class="cc-num">•••• •••• •••• 2026</div>
+          <div class="cc-bot"><div><small>Card holder</small><span>Team member</span></div><div><small>Valid thru</small><span>12/29</span></div><b class="cc-net">BarCard</b></div>
+        </div>
+      </div>
+      </div>
+   </div>
+   <div class="card ad a" style="--d:4;--ic:#10B981"><span class="tag">Included</span>
+    <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+    <h3>Bookings</h3><p>Reservations and appointments with deposits and automatic confirmations.</p>
+    <div class="cal"><span>1</span><span>2</span><span class="bk1">3</span><span>4</span><span class="bk1">5</span><span class="bk2">6</span><span class="bk1">7</span><span>8</span><span class="bk1">9</span><span>10</span><span>11</span><span class="bk1">12</span><span class="bk1">13</span><span>14</span></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- 10 ROI -->
+<section class="slide" data-gx="80%" data-gy="60%">
+ <div class="in">
+  <span class="eb a">Return on investment</span>
+  <h2 class="a" style="--d:1">Will it <em>pay for itself?</em></h2>
+  <div class="roi a" style="--d:2">
+   <div class="l">
+    <div class="fld"><div class="lb">Average spend per visit <b id="o-spend">$40</b></div><input type="range" id="c-spend" min="5" max="200" step="5" value="40"></div>
+    <div class="fld"><div class="lb">Profit on each sale <b id="o-margin">30%</b></div><input type="range" id="c-margin" min="5" max="90" step="5" value="30"></div>
+    <div class="fld" style="margin-bottom:0"><div class="lb">Plan</div><div class="seg" id="c-plan"><button data-p="starter" aria-pressed="true">Starter</button><button data-p="pro" aria-pressed="false">Pro</button><button data-p="elite" aria-pressed="false">Elite</button></div></div>
+   </div>
+   <div class="r"><small>Extra visits needed each month</small><div class="big" id="c-out">13</div><p id="c-txt">About 3 extra visits a week covers the plan. Everything after that is profit.</p><p class="fine">Estimate based on the monthly plan price and the numbers entered. Setup fees and taxes not included.</p></div>
+  </div>
+ </div>
+</section>
+
+<!-- 11 PRICING -->
+<section class="slide" data-gx="50%" data-gy="15%">
+ <div class="in">
+  <span class="eb a">Pricing</span>
+  <h2 class="a" style="--d:1">Start free. <em>Upgrade when it pays.</em></h2>
+  <div class="tog a" style="--d:2" id="tog"><span class="pl"></span><button data-b="m" aria-pressed="true">Monthly</button><button data-b="y" aria-pressed="false">Annually <em>Save <span data-cat="annual">15</span>%</em></button></div>
+  <div class="pg" id="pg">
+   <div class="card pc a" style="--d:3;--ic:#6B7280"><h3>Freemium</h3><div class="o">Get found</div><div class="pr">Free</div><div class="su">Optional: <span data-cat="pack.hearts">5,000</span> Hearts for <span data-cat="pack.price">$100</span> to launch rewards</div><ul><li>Claimed directory listing</li><li>Check-in tracking</li><li>Up to <span data-cat="freemium.customers">50</span> customers</li><li class="bs">BarStock AI +<span data-cat="bs.freemium.price">$50</span>/mo</li></ul></div>
+   <div class="card pc a" style="--d:4;--ic:#22C55E"><h3>Starter</h3><div class="o">Turn visitors into regulars</div><div class="pr"><span data-pp="starter">$150</span><small>/mo</small></div><div class="bl" data-bl="starter"></div><div class="su"><span data-cat="starter.setup">$150</span> one-time setup</div><ul><li><span data-cat="starter.hearts">2,500</span> Hearts every month</li><li>Campaign builder</li><li>Customer insights</li><li class="bs">BarStock AI +<span data-cat="bs.starter.price">$50</span>/mo</li></ul></div>
+   <div class="card pc pop a" style="--d:5"><h3>Pro</h3><div class="o">Fill your slow days</div><div class="pr"><span data-pp="pro">$300</span><small>/mo</small></div><div class="bl" data-bl="pro"></div><div class="su"><span data-cat="pro.setup">$200</span> one-time setup</div><ul><li><span data-cat="pro.hearts">5,000</span> Hearts every month</li><li>SMS campaigns · POS integrations</li><li>AI analytics · BarCard</li><li class="bs">BarStock AI +<span data-cat="bs.pro.price">$100</span>/mo</li></ul></div>
+   <div class="card pc a" style="--d:6;--ic:#3B82F6"><h3>Elite</h3><div class="o">Lead your neighbourhood</div><div class="pr"><span data-pp="elite">$500</span><small>/mo</small></div><div class="bl" data-bl="elite"></div><div class="su"><span data-cat="elite.setup">$250</span> one-time setup</div><ul><li><span data-cat="elite.hearts">7,500</span> Hearts every month</li><li>Multi-location tools</li><li>Advanced reporting · Priority support</li><li class="bs">BarStock AI +<span data-cat="bs.elite.price">$200</span>/mo</li></ul></div>
+  </div>
+  <p class="pfoot a" style="--d:7">Enterprise and franchise pricing available. BarStock AI <span data-cat="trial">30</span>-day free trial; extra scans <span data-cat="overage">$2</span> each.</p>
+ </div>
+</section>
+
+<!-- 12 CLOSE -->
+<section class="slide" data-gx="75%" data-gy="45%">
+ <div class="in close">
+  <div>
+   <span class="eb a">Let's get you started</span>
+   <h1 class="a" style="--d:1">Your regulars are<br><em>waiting.</em></h1>
+   <p class="lead a" style="--d:2;margin-top:18px">Claim your business free today. Your QR code and first reward can be live within one business day.</p>
+   <div class="card rep a" style="--d:3"><div class="av" id="r-av"><img src="/pitch/logo.png" alt=""></div><div><b id="r-name">BarChata Sales Team</b><small id="r-line">hello@barchata.com</small><small id="r-phone"></small></div></div>
+   <div class="row a" style="--d:4;display:flex;gap:12px;margin-top:22px;flex-wrap:wrap"><a class="btn p" id="r-claim" href="https://biz.barchata.com/signup?utm_source=pitch" target="_blank" rel="noopener">Claim your business — free</a><button class="btn" data-go="0">Start over</button></div>
+  </div>
+  <div class="qrc a" style="--d:2"><div class="bigqr"><svg viewBox="0 0 33 33" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M0 0h1v1h-1zM1 0h1v1h-1zM2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM6 0h1v1h-1zM9 0h1v1h-1zM10 0h1v1h-1zM12 0h1v1h-1zM13 0h1v1h-1zM14 0h1v1h-1zM16 0h1v1h-1zM17 0h1v1h-1zM18 0h1v1h-1zM19 0h1v1h-1zM20 0h1v1h-1zM23 0h1v1h-1zM26 0h1v1h-1zM27 0h1v1h-1zM28 0h1v1h-1zM29 0h1v1h-1zM30 0h1v1h-1zM31 0h1v1h-1zM32 0h1v1h-1zM0 1h1v1h-1zM6 1h1v1h-1zM11 1h1v1h-1zM12 1h1v1h-1zM13 1h1v1h-1zM14 1h1v1h-1zM15 1h1v1h-1zM17 1h1v1h-1zM21 1h1v1h-1zM24 1h1v1h-1zM26 1h1v1h-1zM32 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM6 2h1v1h-1zM8 2h1v1h-1zM10 2h1v1h-1zM13 2h1v1h-1zM16 2h1v1h-1zM17 2h1v1h-1zM18 2h1v1h-1zM19 2h1v1h-1zM20 2h1v1h-1zM21 2h1v1h-1zM22 2h1v1h-1zM23 2h1v1h-1zM24 2h1v1h-1zM26 2h1v1h-1zM28 2h1v1h-1zM29 2h1v1h-1zM30 2h1v1h-1zM32 2h1v1h-1zM0 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM6 3h1v1h-1zM8 3h1v1h-1zM10 3h1v1h-1zM14 3h1v1h-1zM16 3h1v1h-1zM19 3h1v1h-1zM20 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM29 3h1v1h-1zM30 3h1v1h-1zM32 3h1v1h-1zM0 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM6 4h1v1h-1zM8 4h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM15 4h1v1h-1zM18 4h1v1h-1zM21 4h1v1h-1zM22 4h1v1h-1zM23 4h1v1h-1zM26 4h1v1h-1zM28 4h1v1h-1zM29 4h1v1h-1zM30 4h1v1h-1zM32 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM12 5h1v1h-1zM14 5h1v1h-1zM15 5h1v1h-1zM16 5h1v1h-1zM17 5h1v1h-1zM18 5h1v1h-1zM20 5h1v1h-1zM21 5h1v1h-1zM24 5h1v1h-1zM26 5h1v1h-1zM32 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h1v1h-1zM24 6h1v1h-1zM26 6h1v1h-1zM27 6h1v1h-1zM28 6h1v1h-1zM29 6h1v1h-1zM30 6h1v1h-1zM31 6h1v1h-1zM32 6h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM14 7h1v1h-1zM15 7h1v1h-1zM21 7h1v1h-1zM22 7h1v1h-1zM24 7h1v1h-1zM0 8h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM4 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM13 8h1v1h-1zM14 8h1v1h-1zM15 8h1v1h-1zM17 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM27 8h1v1h-1zM28 8h1v1h-1zM29 8h1v1h-1zM30 8h1v1h-1zM0 9h1v1h-1zM1 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM9 9h1v1h-1zM10 9h1v1h-1zM14 9h1v1h-1zM16 9h1v1h-1zM18 9h1v1h-1zM19 9h1v1h-1zM21 9h1v1h-1zM22 9h1v1h-1zM23 9h1v1h-1zM26 9h1v1h-1zM27 9h1v1h-1zM29 9h1v1h-1zM30 9h1v1h-1zM31 9h1v1h-1zM32 9h1v1h-1zM0 10h1v1h-1zM1 10h1v1h-1zM2 10h1v1h-1zM3 10h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1zM9 10h1v1h-1zM10 10h1v1h-1zM11 10h1v1h-1zM12 10h1v1h-1zM15 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM21 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM25 10h1v1h-1zM28 10h1v1h-1zM30 10h1v1h-1zM31 10h1v1h-1zM0 11h1v1h-1zM2 11h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM8 11h1v1h-1zM9 11h1v1h-1zM11 11h1v1h-1zM12 11h1v1h-1zM14 11h1v1h-1zM16 11h1v1h-1zM21 11h1v1h-1zM23 11h1v1h-1zM25 11h1v1h-1zM28 11h1v1h-1zM29 11h1v1h-1zM30 11h1v1h-1zM31 11h1v1h-1zM0 12h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM4 12h1v1h-1zM5 12h1v1h-1zM6 12h1v1h-1zM10 12h1v1h-1zM11 12h1v1h-1zM15 12h1v1h-1zM18 12h1v1h-1zM22 12h1v1h-1zM23 12h1v1h-1zM25 12h1v1h-1zM28 12h1v1h-1zM29 12h1v1h-1zM31 12h1v1h-1zM1 13h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM7 13h1v1h-1zM11 13h1v1h-1zM12 13h1v1h-1zM13 13h1v1h-1zM14 13h1v1h-1zM15 13h1v1h-1zM16 13h1v1h-1zM17 13h1v1h-1zM20 13h1v1h-1zM21 13h1v1h-1zM23 13h1v1h-1zM25 13h1v1h-1zM26 13h1v1h-1zM29 13h1v1h-1zM30 13h1v1h-1zM31 13h1v1h-1zM32 13h1v1h-1zM0 14h1v1h-1zM2 14h1v1h-1zM4 14h1v1h-1zM6 14h1v1h-1zM14 14h1v1h-1zM17 14h1v1h-1zM19 14h1v1h-1zM25 14h1v1h-1zM26 14h1v1h-1zM28 14h1v1h-1zM30 14h1v1h-1zM31 14h1v1h-1zM0 15h1v1h-1zM2 15h1v1h-1zM3 15h1v1h-1zM9 15h1v1h-1zM11 15h1v1h-1zM13 15h1v1h-1zM14 15h1v1h-1zM16 15h1v1h-1zM19 15h1v1h-1zM20 15h1v1h-1zM21 15h1v1h-1zM25 15h1v1h-1zM26 15h1v1h-1zM28 15h1v1h-1zM29 15h1v1h-1zM30 15h1v1h-1zM5 16h1v1h-1zM6 16h1v1h-1zM8 16h1v1h-1zM11 16h1v1h-1zM12 16h1v1h-1zM14 16h1v1h-1zM17 16h1v1h-1zM19 16h1v1h-1zM22 16h1v1h-1zM23 16h1v1h-1zM24 16h1v1h-1zM25 16h1v1h-1zM27 16h1v1h-1zM28 16h1v1h-1zM32 16h1v1h-1zM0 17h1v1h-1zM1 17h1v1h-1zM3 17h1v1h-1zM5 17h1v1h-1zM7 17h1v1h-1zM9 17h1v1h-1zM11 17h1v1h-1zM12 17h1v1h-1zM14 17h1v1h-1zM16 17h1v1h-1zM17 17h1v1h-1zM18 17h1v1h-1zM19 17h1v1h-1zM20 17h1v1h-1zM21 17h1v1h-1zM23 17h1v1h-1zM24 17h1v1h-1zM26 17h1v1h-1zM27 17h1v1h-1zM29 17h1v1h-1zM30 17h1v1h-1zM31 17h1v1h-1zM32 17h1v1h-1zM0 18h1v1h-1zM3 18h1v1h-1zM4 18h1v1h-1zM5 18h1v1h-1zM6 18h1v1h-1zM7 18h1v1h-1zM9 18h1v1h-1zM10 18h1v1h-1zM12 18h1v1h-1zM13 18h1v1h-1zM15 18h1v1h-1zM16 18h1v1h-1zM17 18h1v1h-1zM24 18h1v1h-1zM27 18h1v1h-1zM28 18h1v1h-1zM30 18h1v1h-1zM31 18h1v1h-1zM0 19h1v1h-1zM5 19h1v1h-1zM7 19h1v1h-1zM9 19h1v1h-1zM10 19h1v1h-1zM11 19h1v1h-1zM12 19h1v1h-1zM13 19h1v1h-1zM15 19h1v1h-1zM17 19h1v1h-1zM18 19h1v1h-1zM20 19h1v1h-1zM21 19h1v1h-1zM22 19h1v1h-1zM23 19h1v1h-1zM24 19h1v1h-1zM26 19h1v1h-1zM27 19h1v1h-1zM28 19h1v1h-1zM29 19h1v1h-1zM30 19h1v1h-1zM31 19h1v1h-1zM32 19h1v1h-1zM1 20h1v1h-1zM3 20h1v1h-1zM4 20h1v1h-1zM6 20h1v1h-1zM9 20h1v1h-1zM16 20h1v1h-1zM20 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM25 20h1v1h-1zM27 20h1v1h-1zM28 20h1v1h-1zM29 20h1v1h-1zM31 20h1v1h-1zM32 20h1v1h-1zM0 21h1v1h-1zM1 21h1v1h-1zM2 21h1v1h-1zM4 21h1v1h-1zM5 21h1v1h-1zM10 21h1v1h-1zM12 21h1v1h-1zM15 21h1v1h-1zM17 21h1v1h-1zM18 21h1v1h-1zM21 21h1v1h-1zM23 21h1v1h-1zM24 21h1v1h-1zM26 21h1v1h-1zM29 21h1v1h-1zM32 21h1v1h-1zM0 22h1v1h-1zM4 22h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM8 22h1v1h-1zM9 22h1v1h-1zM11 22h1v1h-1zM15 22h1v1h-1zM16 22h1v1h-1zM20 22h1v1h-1zM28 22h1v1h-1zM29 22h1v1h-1zM30 22h1v1h-1zM31 22h1v1h-1zM0 23h1v1h-1zM4 23h1v1h-1zM5 23h1v1h-1zM9 23h1v1h-1zM15 23h1v1h-1zM21 23h1v1h-1zM22 23h1v1h-1zM26 23h1v1h-1zM27 23h1v1h-1zM29 23h1v1h-1zM30 23h1v1h-1zM0 24h1v1h-1zM4 24h1v1h-1zM6 24h1v1h-1zM8 24h1v1h-1zM11 24h1v1h-1zM12 24h1v1h-1zM14 24h1v1h-1zM15 24h1v1h-1zM17 24h1v1h-1zM18 24h1v1h-1zM20 24h1v1h-1zM22 24h1v1h-1zM24 24h1v1h-1zM25 24h1v1h-1zM26 24h1v1h-1zM27 24h1v1h-1zM28 24h1v1h-1zM29 24h1v1h-1zM30 24h1v1h-1zM8 25h1v1h-1zM9 25h1v1h-1zM11 25h1v1h-1zM12 25h1v1h-1zM16 25h1v1h-1zM18 25h1v1h-1zM19 25h1v1h-1zM20 25h1v1h-1zM23 25h1v1h-1zM24 25h1v1h-1zM28 25h1v1h-1zM30 25h1v1h-1zM31 25h1v1h-1zM32 25h1v1h-1zM0 26h1v1h-1zM1 26h1v1h-1zM2 26h1v1h-1zM3 26h1v1h-1zM4 26h1v1h-1zM5 26h1v1h-1zM6 26h1v1h-1zM12 26h1v1h-1zM13 26h1v1h-1zM15 26h1v1h-1zM16 26h1v1h-1zM18 26h1v1h-1zM20 26h1v1h-1zM21 26h1v1h-1zM23 26h1v1h-1zM24 26h1v1h-1zM26 26h1v1h-1zM28 26h1v1h-1zM30 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM8 27h1v1h-1zM9 27h1v1h-1zM10 27h1v1h-1zM13 27h1v1h-1zM21 27h1v1h-1zM23 27h1v1h-1zM24 27h1v1h-1zM28 27h1v1h-1zM29 27h1v1h-1zM30 27h1v1h-1zM0 28h1v1h-1zM2 28h1v1h-1zM3 28h1v1h-1zM4 28h1v1h-1zM6 28h1v1h-1zM8 28h1v1h-1zM10 28h1v1h-1zM11 28h1v1h-1zM13 28h1v1h-1zM15 28h1v1h-1zM18 28h1v1h-1zM21 28h1v1h-1zM24 28h1v1h-1zM25 28h1v1h-1zM26 28h1v1h-1zM27 28h1v1h-1zM28 28h1v1h-1zM29 28h1v1h-1zM0 29h1v1h-1zM2 29h1v1h-1zM3 29h1v1h-1zM4 29h1v1h-1zM6 29h1v1h-1zM8 29h1v1h-1zM9 29h1v1h-1zM11 29h1v1h-1zM13 29h1v1h-1zM14 29h1v1h-1zM15 29h1v1h-1zM16 29h1v1h-1zM17 29h1v1h-1zM20 29h1v1h-1zM23 29h1v1h-1zM24 29h1v1h-1zM25 29h1v1h-1zM28 29h1v1h-1zM29 29h1v1h-1zM31 29h1v1h-1zM32 29h1v1h-1zM0 30h1v1h-1zM2 30h1v1h-1zM3 30h1v1h-1zM4 30h1v1h-1zM6 30h1v1h-1zM8 30h1v1h-1zM10 30h1v1h-1zM14 30h1v1h-1zM17 30h1v1h-1zM19 30h1v1h-1zM21 30h1v1h-1zM26 30h1v1h-1zM27 30h1v1h-1zM29 30h1v1h-1zM0 31h1v1h-1zM6 31h1v1h-1zM9 31h1v1h-1zM11 31h1v1h-1zM13 31h1v1h-1zM16 31h1v1h-1zM19 31h1v1h-1zM20 31h1v1h-1zM21 31h1v1h-1zM28 31h1v1h-1zM29 31h1v1h-1zM30 31h1v1h-1zM0 32h1v1h-1zM1 32h1v1h-1zM2 32h1v1h-1zM3 32h1v1h-1zM4 32h1v1h-1zM5 32h1v1h-1zM6 32h1v1h-1zM8 32h1v1h-1zM9 32h1v1h-1zM10 32h1v1h-1zM13 32h1v1h-1zM16 32h1v1h-1zM17 32h1v1h-1zM19 32h1v1h-1zM22 32h1v1h-1zM23 32h1v1h-1zM24 32h1v1h-1zM25 32h1v1h-1zM26 32h1v1h-1zM27 32h1v1h-1zM29 32h1v1h-1zM31 32h1v1h-1z"/></svg><span class="logo"><img src="/pitch/logo.png" alt=""></span></div><p><b>Scan to claim your business</b><br>Takes about 2 minutes</p></div>
+ </div>
+</section>
+
+</main>
+
+<nav class="bar" aria-label="Slides">
+ <div class="brand"><img src="/pitch/logo.png" alt="BarChata"><span>BarChata</span></div>
+ <div class="dots" id="dots"></div>
+ <div class="nav">
+  <span class="cnt" id="cnt">1 / 12</span>
+  <button id="prev" aria-label="Previous slide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
+  <button id="next" aria-label="Next slide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg></button>
+  <button id="th" aria-label="Switch light or dark mode"><svg id="th-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></svg></button>
+  <button id="fs" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+ </div>
+</nav>
+
+<script>
+(function(){
+ var RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ var S=[].slice.call(document.querySelectorAll('.slide')),N=S.length,cur=-1,vp=document.getElementById('vp'),tog=document.getElementById('tog');
+ var dots=document.getElementById('dots');
+ S.forEach(function(_,i){var b=document.createElement('button');b.setAttribute('aria-label','Slide '+(i+1));b.onclick=function(){go(i)};dots.appendChild(b)});
+ function go(i){i=Math.max(0,Math.min(N-1,i));if(i===cur)return;
+  if(cur>=0)S[cur].classList.remove('on');cur=i;var s=S[i];s.classList.add('on');s.scrollTop=0;
+  document.documentElement.style.setProperty('--gx',s.dataset.gx||'80%');
+  S.forEach(function(x){x.style.setProperty('--gx',s.dataset.gx);x.style.setProperty('--gy',s.dataset.gy)});
+  [].forEach.call(dots.children,function(d,k){d.classList.toggle('on',k===i)});
+  document.getElementById('cnt').textContent=(i+1)+' / '+N;
+  document.getElementById('prog').style.width=((i+1)/N*100)+'%';
+  history.replaceState(null,'','#'+(i+1));
+  if(s.contains(vp))vpStart();else vpStop();
+  if(s.contains(tog))placePill();
+  if(!s.contains(vbox))stopVideo();
+ }
+ window.bcGo=go;
+ // theme: ?theme=light|dark, then saved choice, then device setting
+ var TH=document.documentElement,thI=document.getElementById('th-i');
+ var SUN='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',MOON='<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+ function setTheme(t,save){TH.setAttribute('data-theme',t);thI.innerHTML=t==='dark'?MOON:SUN;if(save){try{localStorage.setItem('bc-pitch-theme',t)}catch(e){}}}
+ var qt=new URLSearchParams(location.search).get('theme'),st=null;try{st=localStorage.getItem('bc-pitch-theme')}catch(e){}
+ setTheme(qt==='light'||qt==='dark'?qt:(st||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')),false);
+ document.getElementById('th').onclick=function(){setTheme(TH.getAttribute('data-theme')==='dark'?'light':'dark',true)};
+ // video: poster until clicked, then the privacy-enhanced YouTube player
+ var vbox=document.getElementById('vbox'),vposter=document.getElementById('vplay');
+ vposter.onclick=function(){var f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/MaIcGmHlFBs?autoplay=1&rel=0&modestbranding=1&playsinline=1';f.title='BarChata in under two minutes';f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';f.allowFullscreen=true;f.setAttribute('referrerpolicy','strict-origin-when-cross-origin');vposter.style.display='none';vbox.appendChild(f)};
+ function stopVideo(){var f=vbox.querySelector('iframe');if(f){f.remove();vposter.style.display=''}}
+ document.getElementById('prev').onclick=function(){go(cur-1)};
+ document.getElementById('next').onclick=function(){go(cur+1)};
+ document.querySelectorAll('[data-go]').forEach(function(b){b.addEventListener('click',function(){var g=b.dataset.go;go(g==='next'?cur+1:+g)})});
+ document.getElementById('fs').onclick=fs;
+ function fs(){var d=document.documentElement;if(!document.fullscreenElement){(d.requestFullscreen||d.webkitRequestFullscreen||function(){}).call(d)}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}}
+ addEventListener('keydown',function(e){if(e.target.tagName==='INPUT')return;
+  if(['ArrowRight','PageDown',' '].indexOf(e.key)>-1){e.preventDefault();go(cur+1)}
+  else if(['ArrowLeft','PageUp'].indexOf(e.key)>-1){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home')go(0);else if(e.key==='End')go(N-1);else if(e.key==='f'||e.key==='F')fs()});
+ var tx=null,ty=null;
+ addEventListener('touchstart',function(e){if(e.target.closest('input,.vp,.seg,.tog'))return;tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+ addEventListener('touchend',function(e){if(tx==null)return;var dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.4)go(cur+(dx<0?1:-1));tx=null},{passive:true});
+ // card spotlight + problem flip
+ document.querySelectorAll('.card').forEach(function(c){c.addEventListener('pointermove',function(e){var r=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px')})});
+ document.querySelectorAll('.pb').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flip')})});
+
+ // rep personalisation: ?rep=Name&phone=...&email=...
+ var q=new URLSearchParams(location.search),rep=(q.get('rep')||'').slice(0,60),ph=(q.get('phone')||'').slice(0,30),em=(q.get('email')||'').slice(0,80);
+ if(rep){document.getElementById('r-name').textContent=rep;var av=document.getElementById('r-av');av.textContent=rep.split(/\s+/).map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();av.classList.add('ini');document.getElementById('r-line').textContent=em||'hello@barchata.com';document.getElementById('r-phone').textContent=ph}
+ var refc=(q.get('ref')||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,40);
+ if(refc){var a=document.getElementById('r-claim');a.href+='&ref='+encodeURIComponent(refc)}
+
+ // industries
+ var IND=[['#F27D26',5,'<path d="M8 22h8M12 15v7M5 3h14l-1 7a6 6 0 01-12 0L5 3z"/>','Bars & nightlife','Turn one-night visitors into weekly regulars.','Free drink on the 5th visit'],
+ ['#F59E0B',3,'<path d="M3 11h18M5 11a7 7 0 0114 0M4 15h16l-1 4H5l-1-4z"/>','Restaurants & cafés','Fill quiet lunches and early weeknights.','Free dessert after 3 visits'],
+ ['#E86AA6',4,'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/>','Salons & barbers','Get clients rebooking before they wander.','Free add-on treatment'],
+ ['#06B6D4',10,'<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>','Gyms & studios','Keep members showing up past month two.','Free class after 10 check-ins'],
+ ['#8B5CF6',4,'<path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/>','Retail & boutiques','Bring shoppers back for the next drop.','10% off the next purchase'],
+ ['#3B82F6',3,'<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.5-.5-.5-2.5 2.5-2.5z"/>','Auto & home services',"Be the first call when it's time again.",'$10 credit on the next service'],
+ ['#10B981',4,'<path d="M12 22c4-3 7-6.5 7-11a7 7 0 00-14 0c0 4.5 3 8 7 11z"/><circle cx="12" cy="11" r="2.5"/>','Spas & wellness','Turn a gift visit into a monthly habit.','VIP early booking access'],
+ ['#94A3B8',2,'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>','Professional services','Thank clients and earn the referral.','Refer a friend, both save']];
+ var ig=document.getElementById('inds');
+ IND.forEach(function(d,k){var el=document.createElement('div');el.className='card ind a';el.style.cssText='--ic:'+d[0]+';--d:'+(k+2);
+  var st='';for(var x=0;x<d[1];x++)st+='<i style="--i:'+x+'"></i>';
+  el.innerHTML='<div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+d[2]+'</svg></div><h3></h3><p></p><div class="tk"><div class="top"><span>Reward</span><em>Unlocked ♥</em></div><b></b><div class="stp">'+st+'</div></div>';
+  el.querySelector('h3').textContent=d[3];el.querySelector('p').textContent=d[4];el.querySelector('b').textContent=d[5];
+  el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();el.style.setProperty('--mx',(e.clientX-r.left)+'px');el.style.setProperty('--my',(e.clientY-r.top)+'px')});
+  el.addEventListener('click',function(){el.classList.toggle('hov')});ig.appendChild(el)});
+
+ // venue profile
+ var EX={
+ bar:{biz:"The Corner Tap",logo:"CT",cat:"Bar · King St W",today:37,reg:214,hm:9420,g:'<path d="M8 22h8M12 11v11M19 3l-7 8-7-8Z"/>',init:"SM",name:"Sarah M.",last:"Last visit 16 days ago · usually Fridays",tag:"Regular",nudge:"Sarah hasn't been in for two weeks. Invite her back with a free appetizer this Friday.",feed:[["JR","Jay R.","checked in","+25 ♥",1],["AN","Ana N.","checked in with 3 friends","+40 ♥",1],["PK","Priya K.","redeemed a free appetizer",""],["ML","Mike L.","became a regular","5th visit"]]},
+ salon:{biz:"Lumen Hair Studio",logo:"LH",cat:"Salon · Queen St",today:18,reg:162,hm:6150,g:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/>',init:"PK",name:"Priya K.",last:"Last cut 7 weeks ago · every 6 weeks",tag:"Due now",nudge:"Priya is a week past her usual rebooking. Offer a free deep-conditioning add-on if she books this week.",feed:[["EM","Emma M.","checked in","+25 ♥",1],["TS","Tara S.","rebooked for 6 weeks",""],["NB","Nina B.","redeemed a free blow-dry",""],["CJ","Chloe J.","referred a friend","+50 ♥"]]},
+ gym:{biz:"Northside Strength",logo:"NS",cat:"Gym · Dundas St",today:96,reg:388,hm:14200,g:'<path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/>',init:"DL",name:"Daniel L.",last:"Last check-in 9 days ago · was 3× a week",tag:"At risk",nudge:"Daniel's visits dropped off. Send a 'we miss you' note with a free guest pass for a friend.",feed:[["KO","Kofi O.","checked in · 6 am class","+25 ♥",1],["RS","Rina S.","hit a 10-visit streak","+100 ♥"],["LB","Leo B.","checked in","+25 ♥",1],["AM","Ava M.","brought a guest","+40 ♥"]]},
+ cafe:{biz:"Maple & Main Coffee",logo:"MM",cat:"Café · Main St",today:142,reg:520,hm:18900,g:'<path d="M10 2v2M14 2v2M6 2v2M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/>',init:"AR",name:"Alex R.",last:"Last visit 5 days ago · weekday mornings",tag:"Regular",nudge:"Alex comes in most weekdays. Surprise them with a free pastry on their 25th visit.",feed:[["SK","Sam K.","checked in","+10 ♥",1],["JW","Jess W.","redeemed a free latte",""],["OT","Omar T.","checked in","+10 ♥",1],["HL","Hana L.","10th visit this month","+50 ♥"]]},
+ retail:{biz:"Silk & Thread Boutique",logo:"ST",cat:"Boutique · Ossington Ave",today:29,reg:131,hm:5400,g:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/>',init:"JT",name:"Jordan T.",last:"Last purchase 6 weeks ago",tag:"VIP",nudge:"Jordan buys from every new collection. Give early access to Friday's drop before it goes public.",feed:[["MV","Mia V.","checked in","+25 ♥",1],["DG","Dev G.","shared the new collection",""],["IR","Isla R.","redeemed $10 off",""],["BC","Ben C.","checked in","+25 ♥",1]]},
+ auto:{biz:"Eastside Auto Care",logo:"EA",cat:"Auto service · Eastern Ave",today:22,reg:176,hm:4800,g:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',init:"MC",name:"Maria C.",last:"Last service 5 months ago",tag:"Due soon",nudge:"Maria is due for her next oil change. Send a reminder with $10 off if she books this month.",feed:[["TP","Tom P.","checked in for a tire swap","+25 ♥",1],["RA","Raj A.","booked a winter check",""],["LN","Lisa N.","redeemed a free wash",""],["GF","Gus F.","checked in","+25 ♥",1]]}};
+ var $=function(i){return document.getElementById(i)},vk='bar',fi=0,today=0,ft=null;
+ var fmt=function(n){return Math.round(n).toLocaleString('en-US')};
+ function countTo(el,to){if(RM){el.textContent=fmt(to);return}var t0=null;(function st(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/900);el.textContent=fmt(to*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(st)})(performance.now())}
+ function feed(){var e=EX[vk],it=e.feed[fi++%e.feed.length],el=$('v-feed');el.classList.remove('in');void el.offsetWidth;
+  el.innerHTML='<span class="fav"></span><span class="ft"><b></b> <span></span></span><span class="fh"></span>';el.children[0].textContent=it[0];el.querySelector('.ft b').textContent=it[1];el.querySelector('.ft span').textContent=it[2];el.children[2].textContent=it[3];el.classList.add('in');
+  if(it[4]){today++;$('v-today').textContent=fmt(today);if(!RM){var p=document.createElement('span');p.className='vpop';p.textContent=it[3];vp.appendChild(p);setTimeout(function(){p.remove()},1700)}}}
+ function show(k){var e=EX[k];vk=k;fi=0;vp.dataset.k=k;
+  document.querySelectorAll('#pick button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.k===k?'true':'false')});
+  ['biz','logo','cat','init','name','last','tag','nudge'].forEach(function(f){$('v-'+f).textContent=e[f]});$('v-glyph').innerHTML=e.g;
+  today=e.today;countTo($('v-today'),e.today);countTo($('v-reg'),e.reg);countTo($('v-hm'),e.hm);var s=$('v-send');s.textContent='Send offer';s.classList.remove('sent');feed()}
+ function vpStart(){show(vk);clearInterval(ft);ft=setInterval(feed,2800)}
+ function vpStop(){clearInterval(ft)}
+ document.querySelectorAll('#pick button').forEach(function(b){b.onclick=function(){show(b.dataset.k)}});
+ $('v-send').onclick=function(){var e=EX[vk];this.textContent='Offer sent ✓';this.classList.add('sent');var el=$('v-feed');el.classList.remove('in');void el.offsetWidth;el.innerHTML='<span class="fav"></span><span class="ft"><b>Offer sent</b> to <span></span></span><span class="fh">Delivered</span>';el.children[0].textContent=e.init;el.querySelector('.ft span').textContent=e.name;el.classList.add('in')};
+ $('v-skip').onclick=function(){var ks=Object.keys(EX);show(ks[(ks.indexOf(vk)+1)%ks.length])};
+
+ // prices (master catalog; fallbacks are in the page)
+ var P={starter:150,pro:300,elite:500,disc:15},mode='m',plan='starter';
+ var money=function(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})};
+ function renderPrices(anim){document.getElementById('pg').classList.toggle('annual',mode==='y');
+  ['starter','pro','elite'].forEach(function(k){var m=P[k],y=Math.round(m*(1-P.disc/100)*100)/100,to=mode==='y'?y:m,el=document.querySelector('[data-pp="'+k+'"]'),from=parseFloat(el.textContent.replace(/[^0-9.]/g,''))||m;
+   if(anim&&!RM){var t0=null;(function st(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/500),v=from+(to-from)*(1-Math.pow(1-p,3));el.textContent=money(p<1?Math.round(v):to);if(p<1)requestAnimationFrame(st)})(performance.now())}else el.textContent=money(to);
+   document.querySelector('[data-bl="'+k+'"]').textContent='Billed '+money(Math.round(y*12*100)/100)+' yearly · save '+money(Math.round((m-y)*12*100)/100)})}
+ var pl=tog.querySelector('.pl');
+ function placePill(){var b=tog.querySelector('[aria-pressed="true"]');pl.style.width=b.offsetWidth+'px';pl.style.transform='translateX('+(b.offsetLeft-4)+'px)'}
+ tog.querySelectorAll('button').forEach(function(b){b.onclick=function(){mode=b.dataset.b;tog.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});placePill();renderPrices(true)}});
+ addEventListener('resize',placePill);
+ function calc(){var s=+$('c-spend').value,m=+$('c-margin').value;$('o-spend').textContent='$'+s;$('o-margin').textContent=m+'%';
+  $('c-spend').style.setProperty('--p',((s-5)/195*100)+'%');$('c-margin').style.setProperty('--p',((m-5)/85*100)+'%');
+  var n=Math.ceil(P[plan]/(s*m/100)),wk=Math.max(1,Math.round(n/4.3));$('c-out').textContent=n;$('c-txt').textContent='About '+wk+' extra visit'+(wk===1?'':'s')+' a week covers the plan. Everything after that is profit.'}
+ $('c-spend').oninput=calc;$('c-margin').oninput=calc;
+ document.querySelectorAll('#c-plan button').forEach(function(b){b.onclick=function(){plan=b.dataset.p;document.querySelectorAll('#c-plan button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});calc()}});
+ calc();renderPrices(false);
+ fetch('https://gsnxtstesvysesgbxnwr.supabase.co/rest/v1/rpc/get_master_catalog',{method:'POST',headers:{apikey:'sb_publishable_fnzo-6xPsLKxlJfE_iHWFw_i8B5D728','Content-Type':'application/json'},body:'{}'})
+ .then(function(r){return r.ok?r.json():null}).then(function(c){if(!c||!c.items)return;var by={};c.items.forEach(function(i){by[i.key]=i});var v={},num=function(n){return Number(n).toLocaleString('en-US')};
+  ['starter','pro','elite'].forEach(function(p){var i=by['plan.'+p];if(!i)return;if(i.price_monthly!=null)P[p]=Number(i.price_monthly);if(i.price_setup!=null)v[p+'.setup']=money(Number(i.price_setup));if(i.hearts_monthly!=null)v[p+'.hearts']=num(i.hearts_monthly)});
+  if(by['plan.freemium']&&by['plan.freemium'].customer_limit!=null)v['freemium.customers']=num(by['plan.freemium'].customer_limit);
+  var pk=by['addon.hearts_pack'];if(pk){if(pk.price_one_time!=null)v['pack.price']=money(Number(pk.price_one_time));if(pk.hearts_one_time!=null)v['pack.hearts']=num(pk.hearts_one_time)}
+  var pol=function(k){return by['policy.'+k]&&by['policy.'+k].value!=null?by['policy.'+k].value:null};
+  if(pol('annual_discount')!=null){P.disc=Number(pol('annual_discount'));v['annual']=num(P.disc)}
+  if(pol('barstock_trial_days')!=null)v['trial']=num(pol('barstock_trial_days'));if(pol('barstock_overage')!=null)v['overage']=money(Number(pol('barstock_overage')));
+  var mins=[];['freemium','starter','pro','elite'].forEach(function(p){var b=by['addon.barstock.'+p];if(b&&b.price_monthly!=null){v['bs.'+p+'.price']=money(Number(b.price_monthly));mins.push(Number(b.price_monthly))}});
+  if(mins.length)v['barstock.from']=money(Math.min.apply(null,mins));
+  document.querySelectorAll('[data-cat]').forEach(function(el){var k=el.getAttribute('data-cat');if(v[k]!=null)el.textContent=v[k]});renderPrices(false);calc()}).catch(function(){});
+
+ var h=parseInt((location.hash||'').slice(1),10);go(h>0?h-1:0);
+})();
+</script>
+</body>
+</html>
