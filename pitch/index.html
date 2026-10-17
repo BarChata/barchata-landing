@@ -173,7 +173,12 @@ h2{font-size:clamp(30px,4.2vw,56px);line-height:1.05;font-weight:700;letter-spac
 
 /* S6 app tour */
 .tour{position:relative;display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(16px,3vw,48px);align-items:center;margin-top:20px}
-.tour .ph{--pw:min(290px,24vw,calc((100vh - 320px) * .46))}
+.tour .ph{--pw:min(270px,21vw,calc((100vh - 330px) * .46))}
+.duo{position:relative;width:calc(var(--pw) * 1.5);height:calc(var(--pw) * 163.4 / 78 + 30px)}
+.duo .phone{position:absolute;top:0}
+.duo .back{left:0;top:30px;transform:scale(.9);transform-origin:left bottom;opacity:.92;filter:saturate(.95)}
+.duo .front{right:0;z-index:2}
+@media(max-width:900px){.tour .ph{--pw:200px}}
 .co{display:grid;gap:18px}
 .co .card{padding:16px 18px;display:flex;gap:14px;align-items:flex-start}
 .co .card h4{font-size:16px;margin-bottom:3px}.co .card p{font-size:13.5px;color:var(--t2);line-height:1.45}
@@ -472,7 +477,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
     <div class="card a" style="--d:2;--ic:#22D3EE"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div><div><h4>Found nearby</h4><p>Your events and specials show to people close to you, right now.</p></div></div>
     <div class="card a" style="--d:3;--ic:#F27D26"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></div><div><h4>Your offers in their feed</h4><p>Promotions appear where they already scroll, with one-tap "View offer".</p></div></div>
    </div>
-   <div class="ph a" style="--d:2"><div class="phone float"><span class="bt act"></span><span class="bt vu"></span><span class="bt vd"></span><span class="bt pw"></span><span class="bt cc"></span><div class="sc"><img src="/pitch/app-home.webp" alt="BarChata Social app"><span class="isl"></span></div></div></div>
+   <div class="ph duo a" style="--d:2"><div class="phone back"><span class="bt act"></span><span class="bt vu"></span><span class="bt vd"></span><span class="bt pw"></span><span class="bt cc"></span><div class="sc"><img src="/pitch/app-home.webp" alt="BarChata Social feed with an offer"><span class="isl"></span></div></div><div class="phone front float"><span class="bt act"></span><span class="bt vu"></span><span class="bt vd"></span><span class="bt pw"></span><span class="bt cc"></span><div class="sc"><img src="/pitch/app-favs.webp" alt="BarChata Social home with favourite places and events"><span class="isl"></span></div></div></div>
    <div class="co">
     <div class="card a" style="--d:4;--ic:#E86AA6"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div><h4>Hearts on every visit</h4><p>Check in at your counter, earn Hearts, watch rewards get closer.</p></div></div>
     <div class="card a" style="--d:5;--ic:#10B981"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></div><div><h4>Rewards they can spend</h4><p>The rewards you set — plus Hearts they can use at any participating business.</p></div></div>
@@ -668,8 +673,16 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
  // rep personalisation: ?rep=Name&phone=...&email=...
  var q=new URLSearchParams(location.search),rep=(q.get('rep')||'').slice(0,60),ph=(q.get('phone')||'').slice(0,30),em=(q.get('email')||'').slice(0,80);
  if(rep){document.getElementById('r-name').textContent=rep;var av=document.getElementById('r-av');av.textContent=rep.split(/\s+/).map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();av.classList.add('ini');document.getElementById('r-line').textContent=em||'hello@barchata.com';document.getElementById('r-phone').textContent=ph}
- var refc=(q.get('ref')||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,40);
- if(refc){var a=document.getElementById('r-claim');a.href+='&ref='+encodeURIComponent(refc)}
+ // the rep's referral code goes on the Claim button and into the slide-12 QR code, so sign-ups are credited to them
+ var refc=(q.get('ref')||'').replace(/[^A-Za-z0-9@._-]/g,'').slice(0,40);
+ if(refc){
+  var claimUrl='https://biz.barchata.com/signup?ref='+encodeURIComponent(refc).replace(/%40/g,'@')+'&utm_source=pitch';
+  document.getElementById('r-claim').href=claimUrl;
+  var sc=document.createElement('script');sc.src='/pitch/qrcode.js';
+  sc.onload=function(){try{var qr=qrcode(0,'M');qr.addData(claimUrl);qr.make();var n=qr.getModuleCount(),d='';
+   for(var y=0;y<n;y++)for(var x=0;x<n;x++)if(qr.isDark(y,x))d+='M'+x+' '+y+'h1v1h-1z';
+   var box=document.querySelector('.qrc .bigqr svg');if(box){box.setAttribute('viewBox','0 0 '+n+' '+n);box.innerHTML='<path fill="currentColor" d="'+d+'"/>'}}catch(e){}};
+  document.body.appendChild(sc)}
 
  // industries
  var IND=[['#F27D26',5,'<path d="M8 22h8M12 15v7M5 3h14l-1 7a6 6 0 01-12 0L5 3z"/>','Bars & nightlife','Turn one-night visitors into weekly regulars.','Free drink on the 5th visit'],
