@@ -1365,6 +1365,10 @@ calc();
 .cf-brand{display:flex;align-items:center;gap:9px;margin:0 0 16px;font-weight:800;font-size:19px;letter-spacing:-.01em;color:var(--text)}
 .cf-brand img{display:block;width:28px;height:auto}
 .cf-brand b{color:var(--orange);font-weight:800}
+.cf-agree{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--text-2);margin:2px 0 12px;line-height:1.45;cursor:pointer}
+.cf-agree input{margin-top:3px;width:16px;height:16px;flex:none;accent-color:var(--orange)}
+.cf-agree a{color:var(--orange)}
+.cf-agree.bad{color:#e5484d}
 @media (max-width:560px){.cf-grid{grid-template-columns:1fr}}
 </style>
 <div class="cf-ov" id="cf-ov" role="dialog" aria-modal="true" aria-labelledby="cf-h">
@@ -1400,6 +1404,7 @@ calc();
         <div class="cf-f full"><label for="cf-msg">Message</label><textarea id="cf-msg" name="message" maxlength="3000" placeholder="How can we help?" required></textarea></div>
       </div>
       <div class="cf-hp" aria-hidden="true"><label for="cf-website">Website</label><input id="cf-website" name="website" tabindex="-1" autocomplete="off"></div>
+      <label class="cf-agree" id="cf-agree-row" for="cf-agree"><input type="checkbox" id="cf-agree" name="agree"><span>I agree to the BarChata <a href="https://www.barchata.com/terms" target="_blank" rel="noopener">Terms of Service</a> and <a href="https://www.barchata.com/privacy" target="_blank" rel="noopener">Privacy Policy</a>, including how BarChata keeps the messages and files I send.</span></label>
       <div class="cf-err" id="cf-err" role="alert"></div>
       <div class="cf-act">
         <button type="button" class="cf-cancel" id="cf-cancel">Cancel</button>
@@ -1477,10 +1482,13 @@ calc();
   if(name.length<2)return bad('cf-name','Please add your full name.');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return bad('cf-email','Please enter your email address (like you@yourbusiness.com) so we can reply.');
   if(msg.length<10)return bad('cf-msg','Please tell us a little more (at least 10 characters).');
+  var agreeRow=document.getElementById('cf-agree-row');agreeRow.classList.remove('bad');
+  if(!document.getElementById('cf-agree').checked){agreeRow.classList.add('bad');showErr('Please tick the box to agree to our Terms and Privacy Policy.');return}
   send.disabled=true;send.textContent='Sending...';
   fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
    name:name,email:email,company:v('cf-company'),phone:v('cf-phone'),topic:v('cf-topic'),venues:v('cf-venues'),
-   message:msg,website:document.getElementById('cf-website').value,elapsed_ms:Date.now()-opened,page:location.href
+   message:msg,website:document.getElementById('cf-website').value,elapsed_ms:Date.now()-opened,page:location.href,
+   agree:true,terms_version:'2026-10-18',consent_text:'I agree to the BarChata Terms of Service and Privacy Policy, including how BarChata keeps the messages and files I send.'
   })}).then(function(r){return r.json().catch(function(){return {}})}).then(function(d){
    if(d&&d.ok){
     form.reset();form.style.display='none';done.style.display='block';
