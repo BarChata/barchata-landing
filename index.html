@@ -1331,6 +1331,162 @@ calc();
  addEventListener('resize',place);place();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(place);
 })();
 </script>
+<!-- Contact form: links to hello@ / support@ / sales@ open this form instead of an email client.
+     Each message becomes a Support Inbox ticket instantly (reference + time stamp emailed back).
+     Other addresses (privacy@, community@ ...) still use the email card below. -->
+<style>
+.cf-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;z-index:10000;padding:24px 16px;overflow-y:auto}
+.cf-ov.on{display:flex}
+.cf-card{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:16px;max-width:520px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);margin:auto 0}
+.cf-card h3{margin:0 0 4px;font-size:20px}
+.cf-card form>p{margin:0 0 16px;color:var(--text-2);font-size:14px}
+.cf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cf-f{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.cf-f.full{grid-column:1/-1}
+.cf-f label{font-size:12.5px;font-weight:600;color:var(--text-2)}
+.cf-f input,.cf-f select,.cf-f textarea{font:inherit;font-size:14.5px;color:var(--text);background:var(--bg-alt);border:1px solid var(--border-2);border-radius:10px;padding:10px 12px;width:100%;box-sizing:border-box}
+.cf-f textarea{min-height:110px;resize:vertical}
+.cf-f input:focus,.cf-f select:focus,.cf-f textarea:focus{outline:none;border-color:var(--orange)}
+.cf-hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
+.cf-err{display:none;color:#e5484d;font-size:13.5px;margin:2px 0 10px}
+.cf-act{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:6px}
+.cf-act button{font:inherit;cursor:pointer}
+.cf-send{background:var(--orange);color:#fff;border:0;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14.5px}
+.cf-send[disabled]{opacity:.6;cursor:default}
+.cf-cancel{background:none;border:0;color:var(--text-3);font-size:13.5px}
+.cf-alt{margin-top:14px;font-size:12.5px;color:var(--text-3)}
+.cf-alt a{color:var(--text-2)}
+.cf-done{display:none;text-align:center;padding:10px 0}
+.cf-done h3{margin:8px 0 6px}
+.cf-done p{color:var(--text-2);font-size:14px;margin:0 0 6px}
+.cf-ref{display:inline-block;margin:8px 0 14px;font-weight:800;letter-spacing:.04em;border:1px solid var(--border-2);border-radius:8px;padding:6px 12px}
+@media (max-width:560px){.cf-grid{grid-template-columns:1fr}}
+</style>
+<div class="cf-ov" id="cf-ov" role="dialog" aria-modal="true" aria-labelledby="cf-h">
+  <div class="cf-card">
+    <form id="cf-form" novalidate>
+      <h3 id="cf-h">Talk to us</h3>
+      <p>Send us a message and you'll get a reference number by email right away. Most questions are answered within minutes.</p>
+      <div class="cf-grid">
+        <div class="cf-f"><label for="cf-name">Your name</label><input id="cf-name" name="name" autocomplete="name" maxlength="100" required></div>
+        <div class="cf-f"><label for="cf-email">Email</label><input id="cf-email" name="email" type="email" autocomplete="email" maxlength="200" required></div>
+        <div class="cf-f"><label for="cf-company">Business name</label><input id="cf-company" name="company" autocomplete="organization" maxlength="150"></div>
+        <div class="cf-f"><label for="cf-phone">Phone (optional)</label><input id="cf-phone" name="phone" type="tel" autocomplete="tel" maxlength="40"></div>
+        <div class="cf-f"><label for="cf-topic">What's it about?</label>
+          <select id="cf-topic" name="topic">
+            <option value="pricing">Pricing and plans</option>
+            <option value="demo">Book a demo</option>
+            <option value="support">Help with my account</option>
+            <option value="billing">Billing</option>
+            <option value="partners">Partnerships</option>
+            <option value="chromaring">Chroma-Ring</option>
+            <option value="other">Something else</option>
+          </select></div>
+        <div class="cf-f"><label for="cf-venues">How many locations?</label>
+          <select id="cf-venues" name="venues">
+            <option value="">Choose one</option>
+            <option value="1">1</option>
+            <option value="2-3">2 to 3</option>
+            <option value="4-10">4 to 10</option>
+            <option value="11+">11 or more</option>
+            <option value="not-yet">Not open yet</option>
+          </select></div>
+        <div class="cf-f full"><label for="cf-msg">Message</label><textarea id="cf-msg" name="message" maxlength="3000" required></textarea></div>
+      </div>
+      <div class="cf-hp" aria-hidden="true"><label for="cf-website">Website</label><input id="cf-website" name="website" tabindex="-1" autocomplete="off"></div>
+      <div class="cf-err" id="cf-err" role="alert"></div>
+      <div class="cf-act">
+        <button type="button" class="cf-cancel" id="cf-cancel">Cancel</button>
+        <button type="submit" class="cf-send" id="cf-send">Send message</button>
+      </div>
+      <div class="cf-alt">Prefer email? <a href="#" id="cf-email-link">Use our email address instead</a>.</div>
+    </form>
+    <div class="cf-done" id="cf-done">
+      <h3>Message received</h3>
+      <p>Thanks. We've emailed you a copy with your reference number.</p>
+      <div class="cf-ref" id="cf-ref"></div>
+      <p>Reply to that email any time to add more.</p>
+      <div class="cf-act" style="justify-content:center"><button type="button" class="cf-send" id="cf-ok">Done</button></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+ var FN='https://gsnxtstesvysesgbxnwr.supabase.co/functions/v1/contact-form';
+ var FORM_ADDR={'hello@barchata.com':'pricing','support@barchata.com':'support','sales@barchata.com':'pricing','info@barchata.com':'pricing','contact@barchata.com':'pricing'};
+ var ov=document.getElementById('cf-ov'),form=document.getElementById('cf-form'),done=document.getElementById('cf-done'),err=document.getElementById('cf-err'),send=document.getElementById('cf-send');
+ if(!ov)return;
+ var opened=0,lastAddr='hello@barchata.com',lastSubj='';
+ function topicFor(addr,subj){
+  var s=(subj||'').toLowerCase();
+  if(/demo/.test(s))return 'demo';
+  if(/bill|invoice|refund/.test(s))return 'billing';
+  if(/partner|affiliate|reseller/.test(s))return 'partners';
+  if(/chroma/.test(s))return 'chromaring';
+  if(/support|help|account|delete/.test(s))return 'support';
+  return FORM_ADDR[addr]||'other';
+ }
+ function open(addr,subj){
+  lastAddr=addr;lastSubj=subj||'';
+  form.style.display='';done.style.display='none';err.style.display='none';send.disabled=false;send.textContent='Send message';
+  document.getElementById('cf-topic').value=topicFor(addr,subj);
+  opened=Date.now();
+  ov.classList.add('on');
+  setTimeout(function(){document.getElementById('cf-name').focus()},50);
+ }
+ function close(){ov.classList.remove('on')}
+ window.bcOpenContact=open;
+ // Runs before the email-card handler (capture phase) so form addresses never reach it.
+ document.addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('a[href^="mailto:"]');
+  if(!a||a.id==='ct-app'||a.id==='cf-fallback')return;
+  var m=a.getAttribute('href').slice(7).split('?');
+  var addr=decodeURIComponent(m[0]).toLowerCase();
+  if(!FORM_ADDR[addr])return;
+  e.preventDefault();e.stopPropagation();
+  var q=new URLSearchParams(m[1]||'');
+  open(addr,q.get('subject')||a.getAttribute('data-subject'));
+ },true);
+ document.getElementById('cf-cancel').onclick=close;
+ document.getElementById('cf-ok').onclick=close;
+ ov.addEventListener('click',function(e){if(e.target===ov)close()});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ov.classList.contains('on'))close()});
+ document.getElementById('cf-email-link').onclick=function(e){
+  e.preventDefault();close();
+  var a=document.createElement('a');a.href='mailto:'+lastAddr+(lastSubj?'?subject='+encodeURIComponent(lastSubj):'');a.id='cf-fallback';
+  document.body.appendChild(a);
+  // Hand over to the email card (its listener ignores nothing but ct-app; this form ignores cf-fallback).
+  a.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true}));
+  a.remove();
+ };
+ function showErr(t){err.textContent=t;err.style.display='block'}
+ form.addEventListener('submit',function(e){
+  e.preventDefault();
+  err.style.display='none';
+  var v=function(id){return document.getElementById(id).value.trim()};
+  var name=v('cf-name'),email=v('cf-email'),msg=v('cf-msg');
+  if(name.length<2)return showErr('Please add your name.');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return showErr('Please add a valid email address.');
+  if(msg.length<10)return showErr('Please tell us a little more (at least 10 characters).');
+  send.disabled=true;send.textContent='Sending...';
+  fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+   name:name,email:email,company:v('cf-company'),phone:v('cf-phone'),topic:v('cf-topic'),venues:v('cf-venues'),
+   message:msg,website:document.getElementById('cf-website').value,elapsed_ms:Date.now()-opened,page:location.href
+  })}).then(function(r){return r.json().catch(function(){return {}})}).then(function(d){
+   if(d&&d.ok){
+    form.reset();form.style.display='none';done.style.display='block';
+    document.getElementById('cf-ref').textContent=d.ref?('Reference '+d.ref):'Reference on its way';
+   }else{
+    send.disabled=false;send.textContent='Send message';
+    showErr((d&&d.error)||'Something went wrong. Please try again, or email hello@barchata.com.');
+   }
+  }).catch(function(){
+   send.disabled=false;send.textContent='Send message';
+   showErr('Could not send right now. Please try again, or email hello@barchata.com.');
+  });
+ });
+})();
+</script>
 <!-- Contact popover: mailto links open a small card (copy email, Gmail, Outlook, Mail app),
      because a bare mailto does nothing useful when the visitor has no mail app set up. -->
 <style>
