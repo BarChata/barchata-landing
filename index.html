@@ -1347,6 +1347,8 @@ calc();
 .cf-f input,.cf-f select,.cf-f textarea{font:inherit;font-size:14.5px;color:var(--text);background:var(--bg-alt);border:1px solid var(--border-2);border-radius:10px;padding:10px 12px;width:100%;box-sizing:border-box}
 .cf-f textarea{min-height:110px;resize:vertical}
 .cf-f input:focus,.cf-f select:focus,.cf-f textarea:focus{outline:none;border-color:var(--orange)}
+.cf-f input::placeholder,.cf-f textarea::placeholder{color:var(--text-3);opacity:.8}
+.cf-f.bad input,.cf-f.bad textarea{border-color:#e5484d}
 .cf-hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
 .cf-err{display:none;color:#e5484d;font-size:13.5px;margin:2px 0 10px}
 .cf-act{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:6px}
@@ -1368,10 +1370,10 @@ calc();
       <h3 id="cf-h">Talk to us</h3>
       <p>Send us a message and you'll get a reference number by email right away. Most questions are answered within minutes.</p>
       <div class="cf-grid">
-        <div class="cf-f"><label for="cf-name">Your name</label><input id="cf-name" name="name" autocomplete="name" maxlength="100" required></div>
-        <div class="cf-f"><label for="cf-email">Email</label><input id="cf-email" name="email" type="email" autocomplete="email" maxlength="200" required></div>
-        <div class="cf-f"><label for="cf-company">Business name</label><input id="cf-company" name="company" autocomplete="organization" maxlength="150"></div>
-        <div class="cf-f"><label for="cf-phone">Phone (optional)</label><input id="cf-phone" name="phone" type="tel" autocomplete="tel" maxlength="40"></div>
+        <div class="cf-f full"><label for="cf-name">Your full name</label><input id="cf-name" name="name" autocomplete="name" maxlength="100" placeholder="First and last name" required></div>
+        <div class="cf-f full"><label for="cf-email">Your email address</label><input id="cf-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="200" placeholder="you@yourbusiness.com" required></div>
+        <div class="cf-f"><label for="cf-company">Business name (optional)</label><input id="cf-company" name="company" autocomplete="organization" maxlength="150" placeholder="e.g. The Corner Tap"></div>
+        <div class="cf-f"><label for="cf-phone">Phone (optional)</label><input id="cf-phone" name="phone" type="tel" autocomplete="tel" maxlength="40" placeholder="(416) 555-0123"></div>
         <div class="cf-f"><label for="cf-topic">What's it about?</label>
           <select id="cf-topic" name="topic">
             <option value="pricing">Pricing and plans</option>
@@ -1391,7 +1393,7 @@ calc();
             <option value="11+">11 or more</option>
             <option value="not-yet">Not open yet</option>
           </select></div>
-        <div class="cf-f full"><label for="cf-msg">Message</label><textarea id="cf-msg" name="message" maxlength="3000" required></textarea></div>
+        <div class="cf-f full"><label for="cf-msg">Message</label><textarea id="cf-msg" name="message" maxlength="3000" placeholder="How can we help?" required></textarea></div>
       </div>
       <div class="cf-hp" aria-hidden="true"><label for="cf-website">Website</label><input id="cf-website" name="website" tabindex="-1" autocomplete="off"></div>
       <div class="cf-err" id="cf-err" role="alert"></div>
@@ -1465,9 +1467,11 @@ calc();
   err.style.display='none';
   var v=function(id){return document.getElementById(id).value.trim()};
   var name=v('cf-name'),email=v('cf-email'),msg=v('cf-msg');
-  if(name.length<2)return showErr('Please add your name.');
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return showErr('Please add a valid email address.');
-  if(msg.length<10)return showErr('Please tell us a little more (at least 10 characters).');
+  [].forEach.call(form.querySelectorAll('.cf-f.bad'),function(x){x.classList.remove('bad')});
+  function bad(id,t){var el=document.getElementById(id);el.parentNode.classList.add('bad');el.focus();showErr(t)}
+  if(name.length<2)return bad('cf-name','Please add your full name.');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return bad('cf-email','Please enter your email address (like you@yourbusiness.com) so we can reply.');
+  if(msg.length<10)return bad('cf-msg','Please tell us a little more (at least 10 characters).');
   send.disabled=true;send.textContent='Sending...';
   fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
    name:name,email:email,company:v('cf-company'),phone:v('cf-phone'),topic:v('cf-topic'),venues:v('cf-venues'),
