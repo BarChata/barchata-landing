@@ -1362,11 +1362,15 @@ calc();
 .cf-done h3{margin:8px 0 6px}
 .cf-done p{color:var(--text-2);font-size:14px;margin:0 0 6px}
 .cf-ref{display:inline-block;margin:8px 0 14px;font-weight:800;letter-spacing:.04em;border:1px solid var(--border-2);border-radius:8px;padding:6px 12px}
+.cf-brand{display:flex;align-items:center;gap:9px;margin:0 0 16px;font-weight:800;font-size:19px;letter-spacing:-.01em;color:var(--text)}
+.cf-brand img{display:block;width:28px;height:auto}
+.cf-brand b{color:var(--orange);font-weight:800}
 @media (max-width:560px){.cf-grid{grid-template-columns:1fr}}
 </style>
 <div class="cf-ov" id="cf-ov" role="dialog" aria-modal="true" aria-labelledby="cf-h">
   <div class="cf-card">
     <form id="cf-form" novalidate>
+      <div class="cf-brand"><img src="/assets/email/icon.png" alt="" width="28" height="29"><span>Bar<b>Chata</b></span></div>
       <h3 id="cf-h">Talk to us</h3>
       <p>Send us a message and you'll get a reference number by email right away. Most questions are answered within minutes.</p>
       <div class="cf-grid">
@@ -1404,6 +1408,7 @@ calc();
       <div class="cf-alt">Prefer email? <a href="#" id="cf-email-link">Use our email address instead</a>.</div>
     </form>
     <div class="cf-done" id="cf-done">
+      <div class="cf-brand" style="justify-content:center"><img src="/assets/email/icon.png" alt="" width="28" height="29"><span>Bar<b>Chata</b></span></div>
       <h3>Message received</h3>
       <p>Thanks. We've emailed you a copy with your reference number.</p>
       <div class="cf-ref" id="cf-ref"></div>
