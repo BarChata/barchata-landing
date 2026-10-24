@@ -1,0 +1,47 @@
+/* BarChata Arena play page (barchata.com/play). Builds on /app/app.css. Oct 24, 2026. */
+body{font-family:"DM Sans",Inter,system-ui,-apple-system,sans-serif}
+.arena-tag{font-style:normal;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--brand);border-left:1px solid var(--line);padding-left:8px;margin-left:2px}
+.arena-venue{max-width:45%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.center-text{text-align:center}
+.center.small{min-height:0;padding:12px 0 4px}
+.arena-game .name{font-family:"DM Sans";font-weight:800;font-size:18px}
+.arena-game .venue .img{width:52px;height:52px;font-size:22px}
+.live-dot{color:var(--ok);font-weight:700}
+.live-dot::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:5px;vertical-align:1px;animation:arenaPulse 1.4s infinite}
+@keyframes arenaPulse{50%{opacity:.35}}
+.code-input{text-align:center;font-size:26px!important;font-weight:800;letter-spacing:8px;text-transform:uppercase;font-family:"DM Sans"}
+.tabs button{font-size:14px;padding:0 6px}
+.taken{border-color:rgba(242,125,38,.45);background:rgba(242,125,38,.08);display:flex;flex-direction:column;gap:8px}
+.team-code{text-align:center;margin-top:16px}
+.team-code .code{font-family:"DM Sans";font-size:44px;font-weight:800;letter-spacing:10px;color:var(--brand);margin:4px 0 6px}
+
+.arena-qhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--brand);letter-spacing:.3px;text-transform:uppercase}
+.clock{font-family:"DM Sans";font-size:22px;color:var(--text);letter-spacing:0}
+.bar{height:6px;border-radius:3px;background:var(--card2);margin:10px 0 16px;overflow:hidden}
+.bar div{height:100%;width:100%;background:var(--brand);border-radius:3px;transition:width .25s linear}
+.bar div.low{background:var(--err)}
+.prompt{font-family:"DM Sans";font-size:22px;font-weight:800;line-height:1.25;margin-bottom:16px}
+.answers{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.answer{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;border:0;border-radius:16px;background:var(--c);color:#fff;font-weight:800;font-size:17px;text-align:left;cursor:pointer;transition:transform .1s,opacity .2s}
+.answer:active{transform:scale(.98)}
+.answer .l{width:36px;height:36px;flex:none;border-radius:10px;background:rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;font-size:17px}
+.answer .t{line-height:1.2}
+.answer.dim{opacity:.28}
+.answer.picked{box-shadow:0 0 0 3px #fff inset}
+.answer:disabled{cursor:default}
+.lead{font-family:"DM Sans";font-size:120px;font-weight:800;color:var(--brand);line-height:1}
+
+.verdict{border-radius:18px;padding:22px 16px;text-align:center;margin-bottom:14px;display:flex;flex-direction:column;gap:4px}
+.verdict b{font-family:"DM Sans";font-size:30px;font-weight:800}
+.verdict span{color:var(--text2);font-size:15px}
+.verdict.ok{background:rgba(52,199,89,.14);border:1px solid rgba(52,199,89,.45)}
+.verdict.ok b{color:var(--ok)}
+.verdict.no{background:rgba(255,55,95,.10);border:1px solid rgba(255,55,95,.4)}
+.verdict.none{background:var(--card);border:1px solid var(--line)}
+.right-answer{display:flex;align-items:center;gap:10px;margin-top:8px;font-weight:800;font-size:17px}
+.right-answer .l{width:32px;height:32px;border-radius:9px;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center}
+.arena-team{display:flex;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:14px 0 10px;font-weight:700;font-size:15px}
+.arena-team span:last-child{color:var(--brand);white-space:nowrap}
+.final-rank{font-family:"DM Sans";font-size:72px;font-weight:800;color:var(--brand);line-height:1;margin:6px 0}
+.cta h2{margin-bottom:2px}
+.cta a.btn{text-decoration:none}

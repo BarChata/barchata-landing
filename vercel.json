@@ -72,6 +72,10 @@
       "destination": "/app"
     },
     {
+      "source": "/play/:code((?!.*\\.).*)",
+      "destination": "/play"
+    },
+    {
       "source": "/app/:path((?!.*\\.).*)",
       "destination": "/app"
     }

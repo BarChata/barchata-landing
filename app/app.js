@@ -41,6 +41,17 @@
     } catch (e) { return null; }
   }
 
+  // Arena (barchata.com/play) sends players here to sign in, then back to their game.
+  const RETURN = 'bc_return_to';
+  function takeReturn() {
+    try {
+      const v = JSON.parse(localStorage.getItem(RETURN) || 'null');
+      if (!v) return null;
+      localStorage.removeItem(RETURN);
+      return Date.now() - v.at < 30 * 60 * 1000 && /^\/play(\/[A-Za-z0-9]{6})?$/.test(v.path) ? v.path : null;
+    } catch (e) { return null; }
+  }
+
   function formatDob(v) {
     const d = (v || '').replace(/\D/g, '').slice(0, 8);
     if (d.length <= 4) return d;
@@ -208,6 +219,8 @@
           const { error } = await sb.auth.signInWithPassword({ email, password: pw });
           if (error) throw error;
         }
+        const back = takeReturn();
+        if (back) { location.href = back; return; }
         const pending = takeScan();
         go(pending ? '/scan/' + encodeURIComponent(pending) : '/app');
       } catch (err) {
@@ -424,6 +437,7 @@
     if (code) return viewScan(code);
     const { data: { session } } = await sb.auth.getSession();
     if (params.get('reset') && session) return viewReset();
+    if (session) { const back = takeReturn(); if (back) { location.href = back; return; } }
     if (location.pathname.startsWith('/join')) return session ? viewHome(session) : viewAuth('signup');
     if (!session) return viewAuth(params.get('mode') === 'signin' ? 'signin' : 'signup');
     const pending = takeScan();
