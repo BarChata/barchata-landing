@@ -48,3 +48,5 @@ body{font-family:"DM Sans",Inter,system-ui,-apple-system,sans-serif}
 .final-rank{font-family:"DM Sans";font-size:72px;font-weight:800;color:var(--brand);line-height:1;margin:6px 0}
 .cta h2{margin-bottom:2px}
 .cta a.btn{text-decoration:none}
+.prize{border-color:rgba(242,125,38,.5);background:linear-gradient(160deg,rgba(242,125,38,.16),rgba(255,255,255,.04))}
+.prize-amt{font-family:"DM Sans";font-size:40px;font-weight:800;color:var(--brand);line-height:1;margin-bottom:8px}

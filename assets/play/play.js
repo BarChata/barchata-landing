@@ -304,7 +304,7 @@
       viewClosed(); return;
     }
     var q = s.question;
-    var key = [s.session.status, s.session.current_index, q ? q.revealed : '', s.me.answer, s.teams, s.me.rank, s.me.team_points].join('|');
+    var key = [s.session.status, s.session.current_index, q ? q.revealed : '', s.me.answer, s.teams, s.me.rank, s.me.team_points, s.me.prize ? s.me.prize.status : ''].join('|');
     if (key !== lastKey) { lastKey = key; draw(); stateSounds(s); }
     clearInterval(tickTimer);
     tickTimer = setInterval(updateClock, 250);
@@ -424,11 +424,45 @@
       '<div class="final-rank">' + ordinal(m.rank || st.teams) + '</div><p class="sub">' + esc(m.team_name) + ' · ' + fmt(m.team_points) + ' points' + (m.rank ? ' · ' + ordinal(m.rank) + ' of ' + st.teams : '') + '</p></div>' +
       (top && !won ? '<p class="muted center-text">Winner: <b>' + esc(top.name) + '</b> with ' + fmt(top.points) + ' points</p>' : '') +
       '<div class="gap"></div>' +
-      (m.is_guest
-        ? '<div class="card cta"><h2>Win Hearts next time</h2><p class="sub">Create your free BarChata account to keep your scores, win Hearts at ' + esc(s.venue_name || 'this venue') + ' and get rewards.</p><div class="gap"></div><a class="btn" href="/join">Join BarChata free</a></div>'
-        : '<div class="card cta"><h2>Thanks for playing</h2><p class="sub">Check in at ' + esc(s.venue_name || 'the venue') + ' in the BarChata app to earn Hearts on every visit.</p><div class="gap"></div><a class="btn secondary" href="/app">Open BarChata</a></div>') +
+      endCard(m, s) +
       '<button class="btn ghost" id="again">Join another game</button>');
     document.getElementById('again').onclick = function () { setJSON(GAME_KEY, null); history.replaceState({}, '', '/play'); viewCode(); };
+    var collect = document.getElementById('collect');
+    if (collect) collect.onclick = function () { setJSON(RETURN_KEY, { path: '/play', at: Date.now() }); location.href = '/join'; };
+  }
+
+  // What the player won, and the next step (members: it's in your balance; guests: join to collect).
+  function endCard(m, s) {
+    var pz = m.prize, venue = esc(s.venue_name || 'this venue');
+    if (pz && pz.status === 'pending_claim') {
+      var days = pz.expires_at ? Math.max(1, Math.ceil((new Date(pz.expires_at).getTime() - Date.now()) / 86400000)) : 7;
+      return '<div class="card cta prize"><div class="prize-amt">+' + fmt(pz.hearts) + ' Hearts</div><h2>You won ' + fmt(pz.hearts) + ' Hearts!</h2>' +
+        '<p class="sub">Create your free BarChata account in the next ' + days + (days === 1 ? ' day' : ' days') + ' to collect them. Use Hearts for rewards at ' + venue + '.</p>' +
+        '<div class="gap"></div><button class="btn" id="collect">Collect my Hearts</button></div>';
+    }
+    if (pz && (pz.status === 'awarded' || pz.status === 'claimed')) {
+      return '<div class="card cta prize"><div class="prize-amt">+' + fmt(pz.hearts) + ' Hearts</div><h2>Your Hearts are in!</h2>' +
+        '<p class="sub">' + fmt(pz.hearts) + ' Hearts were added to your BarChata balance. Use them for rewards at ' + venue + '.</p>' +
+        '<div class="gap"></div><a class="btn secondary" href="/app">See my Hearts</a></div>';
+    }
+    var note = s.prizes_note && s.prizes_note !== 'Paid' && m.rank && m.rank <= 3 ? '<p class="muted">' + esc(s.prizes_note) + '</p><div class="gap"></div>' : '';
+    if (m.is_guest) {
+      return '<div class="card cta"><h2>Win Hearts next time</h2>' + note + '<p class="sub">Create your free BarChata account to keep your scores, win Hearts at ' + venue + ' and get rewards.</p><div class="gap"></div><a class="btn" href="/join">Join BarChata free</a></div>';
+    }
+    return '<div class="card cta"><h2>Thanks for playing</h2>' + note + '<p class="sub">Check in at ' + venue + ' in the BarChata app to earn Hearts on every visit.</p><div class="gap"></div><a class="btn secondary" href="/app">Open BarChata</a></div>';
+  }
+
+  // A guest who just created an account on this phone: move the Hearts they won into it.
+  async function claimGuestHearts() {
+    var guest = getJSON(GUEST_KEY);
+    if (!guest || !guest.token) return;
+    var s = (await sb.auth.getSession()).data.session;
+    if (!s) return;
+    try {
+      var r = await call('claim', {});
+      if (r.status === 200 && r.data.hearts > 0) toast(fmt(r.data.hearts) + ' Hearts from Arena were added to your BarChata balance!');
+      if (r.status === 200) setJSON(GUEST_KEY, null);
+    } catch (e) { /* try again next visit */ }
   }
 
   function viewClosed() {
@@ -440,6 +474,7 @@
 
   // ------------------------------------------------------------------ start
   async function boot() {
+    await claimGuestHearts();
     var code = codeFromUrl();
     var saved = getJSON(GAME_KEY);
     if (code && saved && saved.code === code && Date.now() - saved.at < 15 * 60000) {
