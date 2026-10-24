@@ -26,6 +26,44 @@
   var sending = false;
   var lastKey = '';
 
+  // ------------------------------------------------------------------ sound (made in the browser, no files)
+  var SOUND_KEY = 'bc_arena_sound';
+  var soundOn = (function () { try { return localStorage.getItem(SOUND_KEY) !== 'off'; } catch (e) { return true; } })();
+  var actx = null;
+  var played = {};
+  function unlockAudio() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!actx) actx = new AC();
+      if (actx.state === 'suspended') actx.resume();
+    } catch (e) { /* no sound on this phone */ }
+  }
+  function tone(freq, start, dur, type, vol) {
+    if (!soundOn || !actx || actx.state !== 'running') return;
+    var t0 = actx.currentTime + start, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol || 0.2, t0 + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + dur + 0.03);
+  }
+  var sfx = {
+    count: function () { tone(660, 0, 0.2, 'sine', 0.25); },
+    go: function () { tone(880, 0, 0.09, 'square', 0.08); tone(1320, 0.08, 0.35, 'sine', 0.25); },
+    tick: function () { tone(1250, 0, 0.05, 'square', 0.05); },
+    tap: function () { tone(520, 0, 0.06, 'triangle', 0.15); },
+    right: function () { tone(784, 0, 0.12, 'triangle', 0.25); tone(988, 0.1, 0.12, 'triangle', 0.25); tone(1319, 0.2, 0.35, 'triangle', 0.25); },
+    wrong: function () { tone(220, 0, 0.32, 'sawtooth', 0.12); tone(196, 0.05, 0.32, 'sawtooth', 0.1); },
+    win: function () { [523, 659, 784, 1047].forEach(function (f, i) { tone(f, i * 0.14, i === 3 ? 0.7 : 0.16, 'triangle', 0.25); }); },
+    done: function () { tone(659, 0, 0.15, 'triangle', 0.2); tone(523, 0.14, 0.35, 'triangle', 0.2); },
+  };
+  function once(key, fn) { if (played[key]) return; played[key] = 1; fn(); }
+  function buzz(ms) { try { if (soundOn && navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* not supported */ } }
+  function speakerIcon() {
+    return soundOn
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>';
+  }
+
   // ------------------------------------------------------------------ helpers
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove('show'); }, 3200); }
@@ -39,7 +77,8 @@
   function header() {
     var v = game && game.session;
     return '<div class="top"><a class="logo" href="/app"><img src="/assets/barchata-icon.png" alt=""><span>Bar<b>Chata</b></span><em class="arena-tag">ARENA</em></a>' +
-      (v && v.venue_name ? '<span class="muted arena-venue">' + esc(v.venue_name) + '</span>' : '') + '</div>';
+      '<div class="arena-right">' + (v && v.venue_name ? '<span class="muted arena-venue">' + esc(v.venue_name) + '</span>' : '') +
+      '<button class="snd' + (soundOn ? ' on' : '') + '" id="snd" type="button" aria-label="' + (soundOn ? 'Turn sound off' : 'Turn sound on') + '">' + speakerIcon() + '</button></div></div>';
   }
   function render(html) { $app.innerHTML = header() + html; }
   function loading(text) { render('<div class="center"><div class="spinner"></div>' + (text ? '<p class="muted">' + esc(text) + '</p>' : '') + '</div>'); }
@@ -266,7 +305,7 @@
     }
     var q = s.question;
     var key = [s.session.status, s.session.current_index, q ? q.revealed : '', s.me.answer, s.teams, s.me.rank, s.me.team_points].join('|');
-    if (key !== lastKey) { lastKey = key; draw(); }
+    if (key !== lastKey) { lastKey = key; draw(); stateSounds(s); }
     clearInterval(tickTimer);
     tickTimer = setInterval(updateClock, 250);
     updateClock();
@@ -323,10 +362,33 @@
     viewClosed();
   }
 
+  // Reveal and end-of-game sounds (once each, only if they just happened).
+  function stateSounds(s) {
+    var q = s.question, m = s.me;
+    if (s.session.status === 'live' && q && q.revealed && m) {
+      var at = q.revealed_at ? new Date(q.revealed_at).getTime() : serverNow();
+      if (serverNow() - at < 6000) once(q.id + ':rev', function () { if (m.answer_correct === true) { sfx.right(); buzz(60); } else { sfx.wrong(); buzz([90, 60, 90]); } });
+    }
+    if (s.session.status === 'ended' && m) {
+      var end = s.session.ended_at ? new Date(s.session.ended_at).getTime() : serverNow();
+      if (serverNow() - end < 60000) once(s.session.id + ':end', m.rank === 1 ? sfx.win : sfx.done);
+    }
+  }
+
+  // 3-2-1 before each question, a tone when it opens, ticks in the last 5 seconds.
+  function clockSounds(q, now, opens, closes) {
+    if (q.revealed) return;
+    if (now < opens) { var c = Math.ceil((opens - now) / 1000); if (c >= 1 && c <= 3) once(q.id + ':c' + c, sfx.count); }
+    else if (now - opens < 1200) once(q.id + ':go', sfx.go);
+    var left = closes - now;
+    if (left > 0 && left <= 5000) once(q.id + ':t' + Math.ceil(left / 1000), sfx.tick);
+  }
+
   function updateClock() {
     if (!st || !st.question || st.session.status !== 'live') return;
     var q = st.question, now = serverNow();
     var opens = new Date(q.opens_at).getTime(), closes = new Date(q.closes_at).getTime();
+    clockSounds(q, now, opens, closes);
     var lead = document.getElementById('lead');
     if (lead) {
       if (now >= opens) { lastKey = ''; draw(); return; }
@@ -343,6 +405,7 @@
   async function answer(i) {
     if (sending || !st || !st.question) return;
     sending = true;
+    sfx.tap(); buzz(25);
     st.me.answer = i; lastKey = ''; draw();
     try {
       var r = await call('answer', { question_id: st.question.id, choice: i });
@@ -396,6 +459,21 @@
     }
     viewCode();
   }
+
+  // Phones only allow sound after a tap: unlock on the first tap anywhere. The speaker button turns it on/off.
+  ['pointerdown', 'touchend', 'click'].forEach(function (ev) { document.addEventListener(ev, unlockAudio, { passive: true }); });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('#snd');
+    if (!b) return;
+    soundOn = !soundOn;
+    try { localStorage.setItem(SOUND_KEY, soundOn ? 'on' : 'off'); } catch (x) { /* private mode */ }
+    unlockAudio();
+    b.classList.toggle('on', soundOn);
+    b.setAttribute('aria-label', soundOn ? 'Turn sound off' : 'Turn sound on');
+    b.innerHTML = speakerIcon();
+    if (soundOn) setTimeout(sfx.tap, 60);
+    toast(soundOn ? 'Sound on' : 'Sound off');
+  });
 
   document.addEventListener('visibilitychange', function () {
     // Phones pause timers in the background: catch up as soon as the page is visible again.

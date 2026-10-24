@@ -1,7 +1,10 @@
 /* BarChata Arena play page (barchata.com/play). Builds on /app/app.css. Oct 24, 2026. */
 body{font-family:"DM Sans",Inter,system-ui,-apple-system,sans-serif}
 .arena-tag{font-style:normal;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--brand);border-left:1px solid var(--line);padding-left:8px;margin-left:2px}
-.arena-venue{max-width:45%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arena-right{display:flex;align-items:center;gap:10px;min-width:0;max-width:52%}
+.arena-venue{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.snd{flex:none;width:36px;height:36px;border-radius:18px;background:var(--card);border:1px solid var(--line);color:var(--text3);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.snd.on{color:var(--brand);border-color:rgba(242,125,38,.45)}
 .center-text{text-align:center}
 .center.small{min-height:0;padding:12px 0 4px}
 .arena-game .name{font-family:"DM Sans";font-weight:800;font-size:18px}
@@ -16,7 +19,7 @@ body{font-family:"DM Sans",Inter,system-ui,-apple-system,sans-serif}
 .team-code .code{font-family:"DM Sans";font-size:44px;font-weight:800;letter-spacing:10px;color:var(--brand);margin:4px 0 6px}
 
 .arena-qhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--brand);letter-spacing:.3px;text-transform:uppercase}
-.clock{font-family:"DM Sans";font-size:22px;color:var(--text);letter-spacing:0}
+.clock{font-family:"DM Sans";font-size:22px;color:var(--text);letter-spacing:0;text-transform:none}
 .bar{height:6px;border-radius:3px;background:var(--card2);margin:10px 0 16px;overflow:hidden}
 .bar div{height:100%;width:100%;background:var(--brand);border-radius:3px;transition:width .25s linear}
 .bar div.low{background:var(--err)}
