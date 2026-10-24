@@ -44,7 +44,7 @@ body{font-family:"DM Sans",Inter,system-ui,-apple-system,sans-serif}
 .right-answer{display:flex;align-items:center;gap:10px;margin-top:8px;font-weight:800;font-size:17px}
 .right-answer .l{width:32px;height:32px;border-radius:9px;background:var(--c);color:#fff;display:flex;align-items:center;justify-content:center}
 .arena-team{display:flex;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:14px 0 10px;font-weight:700;font-size:15px}
-.arena-team span:last-child{color:var(--brand);white-space:nowrap}
+.arena-team>span:last-child{color:var(--brand);white-space:nowrap}
 .final-rank{font-family:"DM Sans";font-size:72px;font-weight:800;color:var(--brand);line-height:1;margin:6px 0}
 .cta h2{margin-bottom:2px}
 .cta a.btn{text-decoration:none}
@@ -62,3 +62,17 @@ body{font-family:"DM Sans",Inter,system-ui,-apple-system,sans-serif}
 .voucher.done{border-style:solid;border-color:var(--line);background:var(--card)}
 .voucher.done .voucher-state{color:var(--text2)}
 .voucher.given .voucher-state{color:var(--ok)}
+/* Player pictures: profile photo (members), avatar (guests) or first letter */
+.pic{display:inline-flex;align-items:center;justify-content:center;flex:none;border-radius:50%;overflow:hidden;object-fit:cover;background:#2A2A33;color:var(--text);font-family:"DM Sans";font-weight:800;line-height:1;vertical-align:middle}
+.av-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.av-opt{display:flex;align-items:center;justify-content:center;aspect-ratio:1;border-radius:14px;background:var(--card);border:2px solid transparent;cursor:pointer;padding:0}
+.av-opt.on{border-color:var(--brand);background:rgba(242,125,38,.12)}
+.av-opt:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.playing-as{display:flex;align-items:center;gap:10px}
+.playing-as .sub{margin:0}
+.me-pic{position:relative;display:inline-flex;margin:0 auto 10px}
+.me-pic .pic{box-shadow:0 0 0 3px var(--bg,#0A0A0E),0 0 0 5px rgba(242,125,38,.7)}
+.me-check{position:absolute;right:-4px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:var(--ok);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--bg,#0A0A0E)}
+.me-pic.end{margin-bottom:6px}
+.arena-team-name{display:flex;align-items:center;gap:8px;min-width:0}
+.arena-team-name span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

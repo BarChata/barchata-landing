@@ -80,7 +80,31 @@
       '<div class="arena-right">' + (v && v.venue_name ? '<span class="muted arena-venue">' + esc(v.venue_name) + '</span>' : '') +
       '<button class="snd' + (soundOn ? ' on' : '') + '" id="snd" type="button" aria-label="' + (soundOn ? 'Turn sound off' : 'Turn sound on') + '">' + speakerIcon() + '</button></div></div>';
   }
-  function render(html) { $app.innerHTML = header() + html; }
+  function render(html) { $app.innerHTML = header() + html; fixPics(); }
+
+  // ------------------------------------------------------------------ pictures
+  // Members show their BarChata profile photo; guests the avatar they picked; anyone else their first letter.
+  var AVATARS = window.BC_AVATARS || [];
+  function avatarByKey(k) { for (var i = 0; i < AVATARS.length; i++) if (AVATARS[i].key === k) return AVATARS[i]; return null; }
+  function letterHtml(n, px) {
+    return '<span class="pic letter" style="width:' + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * 0.46) + 'px">' + esc(String(n || '?').charAt(0).toUpperCase() || '?') + '</span>';
+  }
+  function avatarHtml(a, px) {
+    return '<span class="pic" style="width:' + px + 'px;height:' + px + 'px;background:' + a.color + '"><svg viewBox="0 0 24 24" width="56%" height="56%" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">' + a.svg + '</svg></span>';
+  }
+  function picHtml(pic, px) {
+    if (pic && pic.u && /^https:\/\/[^\s"'<>]+$/.test(pic.u)) {
+      return '<img class="pic" style="width:' + px + 'px;height:' + px + 'px" src="' + esc(pic.u) + '" alt="" referrerpolicy="no-referrer" data-n="' + esc(pic.n || '') + '" data-px="' + px + '">';
+    }
+    var a = pic && pic.a ? avatarByKey(pic.a) : null;
+    return a ? avatarHtml(a, px) : letterHtml(pic && pic.n, px);
+  }
+  // A profile photo that fails to load falls back to the first letter.
+  function fixPics() {
+    $app.querySelectorAll('img.pic').forEach(function (img) {
+      img.onerror = function () { img.outerHTML = letterHtml(img.getAttribute('data-n'), Number(img.getAttribute('data-px')) || 32); };
+    });
+  }
   function loading(text) { render('<div class="center"><div class="spinner"></div>' + (text ? '<p class="muted">' + esc(text) + '</p>' : '') + '</div>'); }
 
   async function call(action, body) {
@@ -173,13 +197,26 @@
 
   function viewGuest() {
     var guest = getJSON(GUEST_KEY);
-    render(gameCard() + '<div class="gap"></div><h1>Pick a nickname</h1><p class="sub">It shows on the TV if you play solo.</p><div class="gap"></div>' +
+    var picked = guest && guest.avatar && avatarByKey(guest.avatar) ? guest.avatar
+      : (AVATARS.length ? AVATARS[Math.floor(Math.random() * AVATARS.length)].key : null);
+    var grid = AVATARS.map(function (a) {
+      return '<button type="button" class="av-opt' + (a.key === picked ? ' on' : '') + '" data-k="' + esc(a.key) + '" aria-label="Avatar ' + esc(a.key.replace('-', ' ')) + '" aria-pressed="' + (a.key === picked) + '">' + avatarHtml(a, 40) + '</button>';
+    }).join('');
+    render(gameCard() + '<div class="gap"></div><h1>Pick a nickname</h1><p class="sub">Your nickname and avatar show on the TV.</p><div class="gap"></div>' +
       '<form id="gf" class="stack" novalidate><div class="field"><label for="nick">Nickname</label>' +
       '<input id="nick" maxlength="24" autocomplete="nickname" value="' + esc(guest && guest.nickname || '') + '" placeholder="e.g. Trivia Queen"></div>' +
+      (AVATARS.length ? '<div class="field"><label>Your avatar</label><div class="av-grid" role="group" aria-label="Pick your avatar">' + grid + '</div></div>' : '') +
       '<label class="check"><input type="checkbox" id="adult"><span>I am of legal drinking age where I live.</span></label>' +
       '<p class="err" id="ge"></p><button class="btn" id="gb">Continue</button>' +
       '<button class="btn ghost" type="button" id="back">Back</button></form>' + legal());
     document.getElementById('back').onclick = viewWho;
+    document.querySelectorAll('.av-opt').forEach(function (b) {
+      b.onclick = function () {
+        picked = b.getAttribute('data-k');
+        document.querySelectorAll('.av-opt').forEach(function (x) { var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); });
+        sfx.tap();
+      };
+    });
     document.getElementById('gf').onsubmit = async function (e) {
       e.preventDefault();
       var err = document.getElementById('ge'); err.textContent = '';
@@ -188,10 +225,10 @@
       if (!document.getElementById('adult').checked) { err.textContent = 'Please confirm you are of legal drinking age.'; return; }
       var btn = document.getElementById('gb'); btn.disabled = true;
       try {
-        var r = await call('guest', { nickname: nick, adult: true });
+        var r = await call('guest', { nickname: nick, avatar: picked, adult: true });
         if (r.status !== 200) { err.textContent = r.data.error || 'Could not continue. Try again.'; btn.disabled = false; return; }
-        setJSON(GUEST_KEY, { token: r.data.guest_token, nickname: r.data.nickname });
-        player = { kind: 'guest', name: r.data.nickname };
+        setJSON(GUEST_KEY, { token: r.data.guest_token, nickname: r.data.nickname, avatar: r.data.avatar || null });
+        player = { kind: 'guest', name: r.data.nickname, pic: { a: r.data.avatar || null, n: r.data.nickname } };
         viewTeam();
       } catch (x) { err.textContent = 'No internet connection. Try again.'; btn.disabled = false; }
     };
@@ -205,7 +242,7 @@
     var f = teamForm;
     var who = player ? (player.kind === 'member' ? '@' + player.name : player.name + ' (guest)') : '';
     render(gameCard() + '<div class="gap"></div><h1>Who are you with?</h1>' +
-      '<p class="sub">Playing as <b>' + esc(who) + '</b> · <a href="#" id="switch">' + (player && player.kind === 'member' ? 'Sign out' : 'Change') + '</a></p><div class="gap"></div>' +
+      '<div class="playing-as">' + picHtml(player && player.pic, 36) + '<p class="sub">Playing as <b>' + esc(who) + '</b> · <a href="#" id="switch">' + (player && player.kind === 'member' ? 'Sign out' : 'Change') + '</a></p></div><div class="gap"></div>' +
       '<div class="tabs" role="tablist">' +
       '<button data-m="table" class="' + (f.mode === 'table' ? 'on' : '') + '">Table number</button>' +
       '<button data-m="name" class="' + (f.mode === 'name' ? 'on' : '') + '">Team name</button>' +
@@ -224,8 +261,8 @@
     });
     document.getElementById('switch').onclick = async function (e) {
       e.preventDefault();
-      if (player && player.kind === 'member') { await sb.auth.signOut(); }
-      player = null; viewWho();
+      if (player && player.kind === 'member') { await sb.auth.signOut(); player = null; viewWho(); return; }
+      viewGuest();
     };
     var tbl = document.getElementById('tbl');
     if (tbl) tbl.oninput = function () { tbl.value = tbl.value.replace(/\D/g, '').slice(0, 3); };
@@ -338,14 +375,14 @@
   function teamLine() {
     var m = st.me;
     var rank = m.rank && st.leaderboard.length > 1 ? ordinal(m.rank) + ' · ' : '';
-    return '<div class="arena-team"><span>' + esc(m.team_name) + '</span><span>' + rank + fmt(m.team_points) + ' pts</span></div>';
+    return '<div class="arena-team"><span class="arena-team-name">' + picHtml(m.pic, 26) + '<span>' + esc(m.team_name) + '</span></span><span>' + rank + fmt(m.team_points) + ' pts</span></div>';
   }
 
   function draw() {
     var s = st, q = s.question, status = s.session.status;
     if (status === 'lobby') {
       render(gameCard() + '<div class="gap"></div><div class="center small">' +
-        '<div class="success">✓</div><h1>You’re in!</h1><p class="sub">Playing as <b>' + esc(s.me.team_name) + '</b></p></div>' +
+        '<div class="me-pic">' + picHtml(s.me.pic, 76) + '<span class="me-check">✓</span></div><h1>You’re in!</h1><p class="sub">Playing as <b>' + esc(s.me.team_name) + '</b></p></div>' +
         (teamCode && s.me.kind !== 'solo' ? '<div class="card team-code"><p class="muted">Your team code</p><div class="code">' + esc(teamCode) + '</div>' +
           '<p class="muted">Friends at your table pick <b>' + esc(s.me.team_name) + '</b> and enter this code to join you.</p></div>' : '') +
         prizesCard(s.session) +
@@ -443,7 +480,7 @@
     var m = st.me, s = st.session;
     var top = st.leaderboard[0];
     var won = m.rank === 1;
-    render('<div class="center small"><p class="muted">' + esc(s.title) + '</p><h1>' + (won ? 'You won!' : 'Game over') + '</h1>' +
+    render('<div class="center small"><div class="me-pic end">' + picHtml(m.pic, 64) + '</div><p class="muted">' + esc(s.title) + '</p><h1>' + (won ? 'You won!' : 'Game over') + '</h1>' +
       '<div class="final-rank">' + ordinal(m.rank || st.teams) + '</div><p class="sub">' + esc(m.team_name) + ' · ' + fmt(m.team_points) + ' points' + (m.rank ? ' · ' + ordinal(m.rank) + ' of ' + st.teams : '') + '</p></div>' +
       (top && !won ? '<p class="muted center-text">Winner: <b>' + esc(top.name) + '</b> with ' + fmt(top.points) + ' points</p>' : '') +
       '<div class="gap"></div>' +
