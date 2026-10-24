@@ -304,13 +304,35 @@
       viewClosed(); return;
     }
     var q = s.question;
-    var key = [s.session.status, s.session.current_index, q ? q.revealed : '', s.me.answer, s.teams, s.me.rank, s.me.team_points, s.me.prize ? s.me.prize.status : ''].join('|');
+    var key = [s.session.status, s.session.current_index, q ? q.revealed : '', s.me.answer, s.teams, s.me.rank, s.me.team_points, s.me.prize ? s.me.prize.status : '', s.me.voucher ? s.me.voucher.status : ''].join('|');
     if (key !== lastKey) { lastKey = key; draw(); stateSounds(s); }
     clearInterval(tickTimer);
     tickTimer = setInterval(updateClock, 250);
     updateClock();
     var delay = nextPollDelay(s);
     if (delay > 0) pollTimer = setTimeout(poll, delay);
+  }
+
+  // "1st: Free appetizer + 50 Hearts" for each place that has a prize.
+  function prizeLine(s, i) {
+    var item = ((s.prize_items || [])[i] || '').trim();
+    var hearts = Number((s.prizes || [])[i] || 0);
+    var parts = [];
+    if (item) parts.push(esc(item));
+    if (hearts > 0) parts.push(fmt(hearts) + ' Hearts');
+    return parts.join(' + ');
+  }
+  function prizesCard(s) {
+    var rows = '';
+    var hearts = false;
+    for (var i = 0; i < 3; i++) {
+      var line = prizeLine(s, i);
+      if (Number((s.prizes || [])[i] || 0) > 0) hearts = true;
+      if (line) rows += '<div class="prize-row"><b>' + ordinal(i + 1) + '</b><span>' + line + '</span></div>';
+    }
+    if (!rows) return '';
+    return '<div class="card prizes-list"><p class="muted">Tonight’s prizes</p>' + rows +
+      (hearts ? '<p class="muted small">Hearts go to BarChata members. Guests can join free after the game to collect them.</p>' : '') + '</div>';
   }
 
   function teamLine() {
@@ -326,6 +348,7 @@
         '<div class="success">✓</div><h1>You’re in!</h1><p class="sub">Playing as <b>' + esc(s.me.team_name) + '</b></p></div>' +
         (teamCode && s.me.kind !== 'solo' ? '<div class="card team-code"><p class="muted">Your team code</p><div class="code">' + esc(teamCode) + '</div>' +
           '<p class="muted">Friends at your table pick <b>' + esc(s.me.team_name) + '</b> and enter this code to join you.</p></div>' : '') +
+        prizesCard(s.session) +
         '<div class="gap"></div><p class="muted center-text">Waiting for the host to start · ' + s.teams + (s.teams === 1 ? ' team' : ' teams') + ' joined</p>');
       return;
     }
@@ -424,11 +447,30 @@
       '<div class="final-rank">' + ordinal(m.rank || st.teams) + '</div><p class="sub">' + esc(m.team_name) + ' · ' + fmt(m.team_points) + ' points' + (m.rank ? ' · ' + ordinal(m.rank) + ' of ' + st.teams : '') + '</p></div>' +
       (top && !won ? '<p class="muted center-text">Winner: <b>' + esc(top.name) + '</b> with ' + fmt(top.points) + ' points</p>' : '') +
       '<div class="gap"></div>' +
+      voucherCard(m.voucher) +
       endCard(m, s) +
       '<button class="btn ghost" id="again">Join another game</button>');
     document.getElementById('again').onclick = function () { setJSON(GAME_KEY, null); history.replaceState({}, '', '/play'); viewCode(); };
     var collect = document.getElementById('collect');
     if (collect) collect.onclick = function () { setJSON(RETURN_KEY, { path: '/play', at: Date.now() }); location.href = '/join'; };
+  }
+
+  // A real prize the team won (free appetizer, $20 off...): one per team, the code is shown to staff.
+  function voucherCard(v) {
+    if (!v) return '';
+    var until = new Date(v.expires_at);
+    var expired = v.status === 'issued' && until.getTime() < Date.now();
+    var head = '<p class="muted">Your prize · ' + ordinal(v.place) + ' place</p><div class="voucher-item">' + esc(v.item) + '</div>';
+    if (v.status === 'redeemed') {
+      return '<div class="card voucher done given">' + head + '<div class="voucher-state">✓ Given. Enjoy!</div></div>';
+    }
+    if (v.status === 'void' || expired) {
+      return '<div class="card voucher done">' + head + '<div class="voucher-state">' + (expired ? 'This prize has expired.' : 'This prize was cancelled.') + '</div></div>';
+    }
+    var date = until.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    return '<div class="card voucher">' + head +
+      '<p class="muted">Show this code to staff</p><div class="voucher-code">' + esc(v.code) + '</div>' +
+      '<p class="sub">One prize per team · valid until ' + esc(date) + '. Take a screenshot to keep it.</p></div>';
   }
 
   // What the player won, and the next step (members: it's in your balance; guests: join to collect).
@@ -445,7 +487,11 @@
         '<p class="sub">' + fmt(pz.hearts) + ' Hearts were added to your BarChata balance. Use them for rewards at ' + venue + '.</p>' +
         '<div class="gap"></div><a class="btn secondary" href="/app">See my Hearts</a></div>';
     }
-    var note = s.prizes_note && s.prizes_note !== 'Paid' && m.rank && m.rank <= 3 ? '<p class="muted">' + esc(s.prizes_note) + '</p><div class="gap"></div>' : '';
+    // A winning place that should have paid Hearts but didn't (venue pool or budget ran out, or the daily limit).
+    var paidPlaces = Math.min(3, Math.max(0, (st.teams || 0) - 1));
+    var heartsForPlace = m.rank ? Number((s.prizes || [])[m.rank - 1] || 0) : 0;
+    var missedHearts = m.rank && m.rank <= paidPlaces && m.team_points > 0 && heartsForPlace > 0 && !pz && /Hearts/.test(s.prizes_note || '');
+    var note = missedHearts ? '<p class="muted">No Hearts this time: ' + venue + ' had none left to give tonight.</p><div class="gap"></div>' : '';
     if (m.is_guest) {
       return '<div class="card cta"><h2>Win Hearts next time</h2>' + note + '<p class="sub">Create your free BarChata account to keep your scores, win Hearts at ' + venue + ' and get rewards.</p><div class="gap"></div><a class="btn" href="/join">Join BarChata free</a></div>';
     }

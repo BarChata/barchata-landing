@@ -50,3 +50,15 @@ body{font-family:"DM Sans",Inter,system-ui,-apple-system,sans-serif}
 .cta a.btn{text-decoration:none}
 .prize{border-color:rgba(242,125,38,.5);background:linear-gradient(160deg,rgba(242,125,38,.16),rgba(255,255,255,.04))}
 .prize-amt{font-family:"DM Sans";font-size:40px;font-weight:800;color:var(--brand);line-height:1;margin-bottom:8px}
+.prizes-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.prize-row{display:flex;gap:10px;align-items:baseline;font-weight:700;font-size:15px}
+.prize-row b{color:var(--brand);width:30px;flex:none}
+.prize-row span{min-width:0;overflow-wrap:anywhere}
+.muted.small{font-size:12px}
+.voucher{text-align:center;border:2px dashed rgba(242,125,38,.6);background:linear-gradient(160deg,rgba(242,125,38,.14),rgba(255,255,255,.03));margin-bottom:12px;display:flex;flex-direction:column;gap:6px}
+.voucher-item{font-family:"DM Sans";font-size:26px;font-weight:800;line-height:1.15;overflow-wrap:anywhere}
+.voucher-code{font-family:"DM Sans";font-size:44px;font-weight:800;letter-spacing:8px;color:var(--brand);line-height:1.1;margin:2px 0}
+.voucher-state{font-weight:800;font-size:17px;color:var(--ok);margin-top:4px}
+.voucher.done{border-style:solid;border-color:var(--line);background:var(--card)}
+.voucher.done .voucher-state{color:var(--text2)}
+.voucher.given .voucher-state{color:var(--ok)}
