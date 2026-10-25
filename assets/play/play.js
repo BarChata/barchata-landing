@@ -2,6 +2,10 @@
  * The QR code on the TV opens this page. Members play with their BarChata account; anyone else can
  * play as a guest with a nickname. Everything goes through the arena-play edge function.
  * Plain JavaScript on purpose: the landing site is static, so there is no build step. (Oct 24, 2026)
+ *
+ * Giveaways and free draws (Oct 25, 2026): the same TV code can open an instant giveaway ("first 10 to scan
+ * win free wings": claim one, get a prize code) or a free draw (enter free; if you're drawn, answer the
+ * skill-testing question within a few minutes to get your prize code). The rules are on the page.
  */
 (function () {
   var cfg = window.BC_CONFIG || {};
@@ -73,6 +77,10 @@
   function fmt(n) { return Number(n || 0).toLocaleString(); }
   function serverNow() { return Date.now() + skew; }
   function stopTimers() { clearTimeout(pollTimer); clearInterval(tickTimer); pollTimer = null; tickTimer = null; }
+  function clockText(ms) {
+    var s = Math.max(0, Math.ceil(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+    return h > 0 ? h + ':' + String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0') : m + ':' + String(r).padStart(2, '0');
+  }
 
   function header() {
     var v = game && game.session;
@@ -155,9 +163,14 @@
     loading('Finding the game...');
     var r;
     try { r = await call('find', { code: code }); } catch (e) { viewCode('No internet connection. Try again.'); return; }
-    if (r.status !== 200 || !r.data.session) { viewCode(r.data.error || 'That code doesn’t match a game right now.'); return; }
-    game = { session: r.data.session, pass: r.data.pass, code: code.toUpperCase() };
-    setJSON(GAME_KEY, { session_id: game.session.id, pass: game.pass, code: game.code, session: game.session, at: Date.now() });
+    if (r.status !== 200 || !(r.data.session || r.data.contest)) { viewCode(r.data.error || 'That code doesn’t match a game right now.'); return; }
+    if (r.data.contest) {
+      var k = r.data.contest;
+      game = { contest: true, session: { id: k.id, kind: k.kind, title: k.prize, status: k.status, venue_name: k.venue_name, venue_logo: k.venue_logo }, pass: r.data.pass, code: code.toUpperCase() };
+    } else {
+      game = { session: r.data.session, pass: r.data.pass, code: code.toUpperCase() };
+    }
+    setJSON(GAME_KEY, { session_id: game.session.id, pass: game.pass, code: game.code, session: game.session, contest: !!game.contest, at: Date.now() });
     if (location.pathname !== '/play/' + game.code) history.replaceState({}, '', '/play/' + game.code);
     await afterFind();
   }
@@ -166,6 +179,11 @@
     var me = await call('me', {});
     player = me.data.player || null;
     if (!player) { viewWho(); return; }
+    if (game.contest) {
+      if (player.kind === 'guest' && !(player.pic && player.pic.a) && AVATARS.length) { viewGuest(); return; }
+      contestPoll();
+      return;
+    }
     var s = await call('state', { session_id: game.session.id });
     if (s.status === 200 && s.data.me) { applyState(s.data); return; }
     if (s.status === 200 && s.data.session && !/^(lobby|live)$/.test(s.data.session.status)) { viewClosed(); return; }
@@ -177,7 +195,11 @@
   // ------------------------------------------------------------------ who is playing
   function gameCard() {
     var v = game.session;
-    var live = v.status === 'live';
+    var live = v.status === 'live' || (game.contest && v.status === 'open');
+    if (game.contest) {
+      return '<div class="card arena-game"><div class="venue"><div class="img"' + (v.venue_logo ? ' style="background-image:url(\'' + esc(v.venue_logo) + '\')"' : '') + '>' + (v.venue_logo ? '' : esc((v.venue_name || 'B').charAt(0))) + '</div>' +
+        '<div><div class="name">' + esc(v.title) + '</div><div class="muted">' + esc(v.venue_name || '') + ' · ' + (v.kind === 'giveaway' ? 'Instant giveaway' : 'Free draw') + (live ? ' · <b class="live-dot">Open now</b>' : '') + '</div></div></div></div>';
+    }
     return '<div class="card arena-game"><div class="venue"><div class="img"' + (v.venue_logo ? ' style="background-image:url(\'' + esc(v.venue_logo) + '\')"' : '') + '>' + (v.venue_logo ? '' : esc((v.venue_name || 'B').charAt(0))) + '</div>' +
       '<div><div class="name">' + esc(v.title) + '</div><div class="muted">' + esc(v.venue_name || '') + ' · ' + (live ? '<b class="live-dot">Live now</b>' : 'Starting soon') + '</div></div></div></div>';
   }
@@ -231,7 +253,7 @@
         if (r.status !== 200) { err.textContent = r.data.error || 'Could not continue. Try again.'; btn.disabled = false; return; }
         setJSON(GUEST_KEY, { token: r.data.guest_token, nickname: r.data.nickname, avatar: r.data.avatar || null });
         player = { kind: 'guest', name: r.data.nickname, pic: { a: r.data.avatar || null, n: r.data.nickname } };
-        viewTeam();
+        if (game && game.contest) contestPoll(); else viewTeam();
       } catch (x) { err.textContent = 'No internet connection. Try again.'; btn.disabled = false; }
     };
   }
@@ -557,23 +579,244 @@
     document.getElementById('again').onclick = function () { setJSON(GAME_KEY, null); history.replaceState({}, '', '/play'); viewCode(); };
   }
 
+  // ------------------------------------------------------------------ giveaways and free draws
+  var cst = null;        // last contest state
+  var cKey = '';
+  var cSending = false;
+  var cRevealed = false; // the TV has shown this player's draw result
+
+  async function contestPoll() {
+    clearTimeout(pollTimer);
+    var sent = Date.now(), r;
+    try { r = await call('contest_state', { contest_id: game.session.id }); } catch (e) { pollTimer = setTimeout(contestPoll, 4000); return; }
+    if (r.status !== 200 || !r.data.contest) { pollTimer = setTimeout(contestPoll, 5000); return; }
+    var got = Date.now(), srv = new Date(r.data.server_time).getTime();
+    if (isFinite(srv)) skew = srv - (sent + got) / 2;
+    applyContest(r.data);
+  }
+
+  // When each drawn winner's name stops on the TV's reel (same timing as the TV).
+  function revealTimes(drawn) {
+    var groups = {};
+    return (drawn || []).map(function (w) {
+      var t = new Date(w.drawn_at).getTime(), k = String(Math.round(t / 1000)), i = groups[k] || 0;
+      groups[k] = i + 1;
+      return t + 4500 + i * 2500;
+    });
+  }
+  function revealed(s) {
+    // Has the TV shown this player's result yet? (Winners: their own name; everyone else: the last name.)
+    var drawn = s.drawn || [], times = revealTimes(drawn), now = serverNow();
+    if (!drawn.length) return false;
+    if (s.me && s.me.won) {
+      for (var i = 0; i < drawn.length; i++) if (drawn[i].order === s.me.order) return now >= times[i];
+    }
+    return now >= Math.max.apply(null, times);
+  }
+
+  function contestDelay(s) {
+    var c = s.contest, m = s.me;
+    if (c.status === 'open' || c.status === 'closed' || c.status === 'scheduled') return 3500;
+    if (c.status === 'drawn') return m && m.outcome === 'pending' ? 3000 : 4000;
+    if (m && m.voucher && m.voucher.status === 'issued') return 20000; // to show "Given" when staff mark it
+    return 0;
+  }
+
+  function applyContest(s) {
+    cst = s;
+    var m = s.me, pending = m && m.outcome === 'pending';
+    var key = JSON.stringify([s.contest.status, s.contest.kind === 'giveaway' ? s.left : '', m ? [m.won, m.outcome, m.voucher && m.voucher.status] : null,
+      pending ? '' : (s.drawn || []).map(function (d) { return d.order + d.outcome; }).join(','), revealed(s)]);
+    cRevealed = revealed(s);
+    if (key !== cKey) { cKey = key; drawContest(); contestSounds(s); }
+    clearInterval(tickTimer);
+    tickTimer = setInterval(updateContestClock, 500);
+    updateContestClock();
+    var d = contestDelay(s);
+    if (d > 0) pollTimer = setTimeout(contestPoll, d);
+  }
+
+  function rulesBox(c) {
+    return '<details class="card rules"><summary>Contest rules</summary><p>' + esc(c.rules) + '</p></details>';
+  }
+
+  function contestHead(s) {
+    var c = s.contest;
+    return '<div class="card contest-head"><p class="contest-eyebrow">' + (c.kind === 'giveaway' ? 'Instant giveaway' : 'Free draw · no purchase necessary') + '</p>' +
+      '<div class="contest-prize">' + esc(c.prize) + '</div><p class="muted">' + esc(c.venue_name || '') +
+      (c.prize_value ? ' · approx. value $' + Number(c.prize_value).toFixed(2).replace(/\.00$/, '') + (c.winners > 1 ? ' each' : '') : '') + '</p></div>';
+  }
+
+  function contestVoucher(v, won) {
+    var until = new Date(v.expires_at);
+    var head = '<p class="muted">' + (won ? 'Your prize' : 'Your prize') + '</p><div class="voucher-item">' + esc(v.item) + '</div>';
+    if (v.status === 'redeemed') return '<div class="card voucher done given">' + head + '<div class="voucher-state">✓ Given. Enjoy!</div></div>';
+    if (v.status === 'void' || until.getTime() < Date.now()) return '<div class="card voucher done">' + head + '<div class="voucher-state">' + (v.status === 'void' ? 'This prize was cancelled.' : 'This prize has expired.') + '</div></div>';
+    var when = until.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+    return '<div class="card voucher">' + head + '<p class="muted">Show this code to staff</p><div class="voucher-code">' + esc(v.code) + '</div>' +
+      '<p class="sub">Valid until ' + esc(when) + '. Take a screenshot to keep it.</p></div>';
+  }
+
+  function againButton() { return '<button class="btn ghost" id="again">Join another game</button>'; }
+  function wireAgain() {
+    var b = document.getElementById('again');
+    if (b) b.onclick = function () { setJSON(GAME_KEY, null); history.replaceState({}, '', '/play'); cst = null; cKey = ''; viewCode(); };
+  }
+
+  function drawContest() {
+    var s = cst, c = s.contest, m = s.me, give = c.kind === 'giveaway';
+    var html = '';
+    if (m && m.voucher) {
+      html = '<div class="center small"><div class="me-pic">' + picHtml(m.pic, 72) + '<span class="me-check">✓</span></div>' +
+        '<h1>' + (give ? 'It’s yours!' : 'You won!') + '</h1><p class="sub">' + (give ? 'You claimed one. ' : 'You answered correctly. ') + 'Show your code at the bar.</p></div>' +
+        contestVoucher(m.voucher, !give) + rulesBox(c) + againButton();
+      render(html); wireAgain(); return;
+    }
+    if (give) {
+      if (!m && c.status === 'open' && (s.left || 0) > 0) {
+        html = contestHead(s) +
+          '<div class="contest-stats"><div><b>' + fmt(s.left) + '</b><span>left of ' + fmt(c.winners) + '</span></div><div><b id="cclock">–</b><span>ends in</span></div></div>' +
+          '<button class="btn" id="enter">Claim mine</button><p class="muted center-text">Free. One per person. First come, first served.</p>' + rulesBox(c) + legal();
+        render(html);
+        document.getElementById('enter').onclick = contestEnter;
+        return;
+      }
+      html = '<div class="center"><h1>' + (s.claimed >= c.winners ? 'All gone!' : 'This giveaway has ended') + '</h1><p class="sub">' + esc(c.prize) + ' · ' + fmt(s.claimed) + ' of ' + fmt(c.winners) + ' claimed. Watch the TV for the next one.</p></div>' + againButton();
+      render(html); wireAgain(); return;
+    }
+
+    // Free draw
+    if (!m) {
+      if (c.status === 'open') {
+        html = contestHead(s) +
+          '<div class="contest-stats"><div><b>' + fmt(s.entries) + '</b><span>' + (s.entries === 1 ? 'entry' : 'entries') + '</span></div><div><b id="cclock">–</b><span>draw in · ' + c.winners + (c.winners === 1 ? ' winner' : ' winners') + '</span></div></div>' +
+          '<button class="btn" id="enter">Enter the free draw</button><p class="muted center-text">Free. One entry per person. No purchase necessary.' + (c.skill_test ? ' Winners answer a skill-testing question.' : '') + '</p>' + rulesBox(c) + legal();
+        render(html);
+        document.getElementById('enter').onclick = contestEnter;
+        return;
+      }
+      html = '<div class="center"><h1>Entries are closed</h1><p class="sub">' + esc(c.prize) + '. Watch the TV for the winners.</p></div>' + againButton();
+      render(html); wireAgain(); return;
+    }
+    if (c.status === 'open' || c.status === 'closed' || c.status === 'scheduled' || (c.status === 'drawn' && !revealed(s))) {
+      var drawing = c.status !== 'open';
+      html = '<div class="center small"><div class="me-pic">' + picHtml(m.pic, 72) + '<span class="me-check">✓</span></div><h1>' + (drawing ? 'Drawing now...' : 'You’re in!') + '</h1>' +
+        '<p class="sub">' + (drawing ? 'Watch the TV.' : 'Draw in <b id="cclock">–</b>') + '</p></div>' + contestHead(s) +
+        '<p class="muted center-text">Keep this page open: if you win, you’ll answer ' + (c.skill_test ? 'a skill-testing question' : 'here') + ' to claim. ' + fmt(s.entries) + (s.entries === 1 ? ' entry' : ' entries') + ' so far.</p>' + rulesBox(c);
+      render(html); return;
+    }
+    if (m.won && m.outcome === 'pending' && m.skill_q) {
+      html = '<div class="center small"><div class="me-pic">' + picHtml(m.pic, 72) + '</div><h1>You won!</h1><p class="sub">' + esc(c.prize) + '</p></div>' +
+        '<div class="card skill"><p class="muted">Answer this skill-testing question to claim your prize. <b>You have one try.</b></p>' +
+        '<div class="skill-q">' + esc(m.skill_q) + ' = ?</div>' +
+        '<form id="sf" class="stack" novalidate><div class="field"><label for="sa">Your answer</label><input id="sa" class="code-input" inputmode="numeric" pattern="-?[0-9]*" maxlength="6" autocomplete="off" placeholder="?"></div>' +
+        '<p class="err" id="se"></p><button class="btn" id="sb">Submit my answer</button></form>' +
+        '<p class="muted center-text">Time left: <b id="cclock">–</b></p></div>' + rulesBox(c);
+      render(html);
+      var input = document.getElementById('sa');
+      input.oninput = function () { input.value = input.value.replace(/[^0-9-]/g, '').slice(0, 6); };
+      document.getElementById('sf').onsubmit = function (e) { e.preventDefault(); contestAnswer(); };
+      return;
+    }
+    if (m.won && m.outcome === 'pending') {
+      html = '<div class="center"><h1>You won!</h1><p class="sub">Claiming your prize...</p></div>';
+      render(html); return;
+    }
+    var winners = (s.drawn || []).filter(function (d) { return d.outcome === 'claimed' || d.outcome === 'pending'; }).map(function (d) { return esc(d.name); });
+    if (m.won && m.outcome === 'forfeit_wrong') {
+      html = '<div class="verdict no"><b>Not quite</b><span>That answer wasn’t right, so the prize goes to another entrant. Thanks for playing!</span></div>';
+    } else if (m.won && m.outcome === 'forfeit_time') {
+      html = '<div class="verdict none"><b>Time ran out</b><span>The prize wasn’t claimed in time, so it goes to another entrant.</span></div>';
+    } else {
+      html = '<div class="verdict none"><b>Not this time</b><span>' + (winners.length ? 'Congrats to ' + winners.join(', ') + '!' : 'Thanks for entering!') + '</span></div>';
+    }
+    render(contestHead(s) + html + againButton());
+    wireAgain();
+  }
+
+  function updateContestClock() {
+    if (!cst) return;
+    var c = cst.contest, m = cst.me, now = serverNow();
+    var el = document.getElementById('cclock');
+    if (m && m.outcome === 'pending' && m.claim_by) {
+      if (el) el.textContent = clockText(new Date(m.claim_by).getTime() - now);
+    } else if (el) {
+      el.textContent = clockText(new Date(c.closes_at).getTime() - now);
+    }
+    // The draw just reached this player's name on the TV: show the result.
+    if (c.status === 'drawn' && !cRevealed && revealed(cst)) {
+      cRevealed = true;
+      cKey = '';
+      drawContest();
+      contestSounds(cst);
+    }
+  }
+
+  function contestSounds(s) {
+    var m = s.me, c = s.contest;
+    if (!m) return;
+    if (m.voucher) once(c.id + ':v', c.kind === 'giveaway' ? sfx.right : sfx.win);
+    else if (m.won && m.outcome === 'pending' && revealed(s)) { once(c.id + ':won', sfx.win); buzz([80, 60, 80]); }
+    else if (m.won && /^forfeit/.test(m.outcome || '')) once(c.id + ':lost', sfx.wrong);
+    else if (c.status === 'drawn' && revealed(s) && !m.won) once(c.id + ':done', sfx.done);
+  }
+
+  async function contestEnter() {
+    if (cSending || !cst) return;
+    cSending = true;
+    var btn = document.getElementById('enter'); if (btn) btn.disabled = true;
+    sfx.tap(); buzz(25);
+    try {
+      var r = await call('contest_enter', { contest_id: game.session.id, pass: game.pass });
+      if (r.status === 401) { cSending = false; player = null; viewWho(); return; }
+      if (r.status !== 200) toast(r.data.error || 'Could not do that. Try again.');
+      else if (r.data.reason === 'wrong_code') { cSending = false; viewCode('The code on the TV has changed. Enter the one showing now.'); return; }
+      else if (r.data.error) toast(r.data.error);
+    } catch (e) { toast('No internet connection. Try again.'); }
+    cSending = false;
+    cKey = '';
+    contestPoll();
+  }
+
+  async function contestAnswer() {
+    if (cSending) return;
+    var input = document.getElementById('sa'), err = document.getElementById('se');
+    var val = (input && input.value || '').trim();
+    if (!/^-?\d{1,6}$/.test(val)) { if (err) err.textContent = 'Type your answer as a number.'; return; }
+    cSending = true;
+    var btn = document.getElementById('sb'); if (btn) btn.disabled = true;
+    try {
+      var r = await call('contest_answer', { contest_id: game.session.id, answer: val });
+      if (r.status !== 200) { toast(r.data.error || 'Could not send your answer. Try again.'); if (btn) btn.disabled = false; cSending = false; return; }
+    } catch (e) { toast('No internet connection. Try again.'); if (btn) btn.disabled = false; cSending = false; return; }
+    cSending = false;
+    cKey = '';
+    contestPoll();
+  }
+
   // ------------------------------------------------------------------ start
   async function boot() {
     await claimGuestHearts();
     var code = codeFromUrl();
     var saved = getJSON(GAME_KEY);
     if (code && saved && saved.code === code && Date.now() - saved.at < 15 * 60000) {
-      game = { session: saved.session, pass: saved.pass, code: saved.code };
+      game = { session: saved.session, pass: saved.pass, code: saved.code, contest: !!saved.contest };
       loading();
       await afterFind();
       return;
     }
     if (code) { start(code); return; }
     if (saved && Date.now() - saved.at < 3 * 3600000) {
-      game = { session: saved.session, pass: saved.pass, code: saved.code };
+      game = { session: saved.session, pass: saved.pass, code: saved.code, contest: !!saved.contest };
       loading();
       var me = await call('me', {});
       player = me.data.player || null;
+      if (game.contest) {
+        var cs = await call('contest_state', { contest_id: game.session.id });
+        if (cs.status === 200 && cs.data.me) { applyContest(cs.data); return; }
+        viewCode();
+        return;
+      }
       var s = await call('state', { session_id: game.session.id });
       if (s.status === 200 && s.data.me && /^(lobby|live|ended)$/.test(s.data.session.status)) { applyState(s.data); return; }
     }
@@ -597,6 +840,7 @@
 
   document.addEventListener('visibilitychange', function () {
     // Phones pause timers in the background: catch up as soon as the page is visible again.
+    if (document.visibilityState === 'visible' && game && game.contest && cst) { contestPoll(); return; }
     if (document.visibilityState === 'visible' && st && st.me && /^(lobby|live)$/.test(st.session.status)) poll();
   });
   boot();

@@ -76,3 +76,19 @@ body{font-family:"DM Sans",Inter,system-ui,-apple-system,sans-serif}
 .me-pic.end{margin-bottom:6px}
 .arena-team-name{display:flex;align-items:center;gap:8px;min-width:0}
 .arena-team-name span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Giveaways and free draws (Oct 25, 2026) */
+.contest-head{display:flex;flex-direction:column;gap:4px;border-color:rgba(242,125,38,.45);background:linear-gradient(160deg,rgba(242,125,38,.14),rgba(255,255,255,.03));margin-bottom:12px}
+.contest-eyebrow{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--brand);margin:0}
+.contest-prize{font-family:"DM Sans";font-size:28px;font-weight:800;line-height:1.12;overflow-wrap:anywhere}
+.contest-head .muted{margin:0}
+.contest-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.contest-stats>div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.contest-stats b{font-family:"DM Sans";font-size:30px;font-weight:800;color:var(--brand);line-height:1.05;font-variant-numeric:tabular-nums}
+.contest-stats span{font-size:13px;color:var(--text2)}
+.skill{display:flex;flex-direction:column;gap:12px;border-color:rgba(242,125,38,.5)}
+.skill-q{font-family:"DM Sans";font-size:34px;font-weight:800;text-align:center;letter-spacing:.5px;padding:6px 0}
+.skill .code-input{letter-spacing:4px}
+details.rules{margin-top:12px;font-size:13px;color:var(--text2)}
+details.rules summary{cursor:pointer;font-weight:700;color:var(--text);font-size:14px}
+details.rules p{margin:10px 0 0;line-height:1.55}
