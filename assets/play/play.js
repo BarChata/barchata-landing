@@ -169,6 +169,8 @@
     var s = await call('state', { session_id: game.session.id });
     if (s.status === 200 && s.data.me) { applyState(s.data); return; }
     if (s.status === 200 && s.data.session && !/^(lobby|live)$/.test(s.data.session.status)) { viewClosed(); return; }
+    // A guest from before avatars existed: pick one before joining (keeps the same guest and any prizes).
+    if (player.kind === 'guest' && !(player.pic && player.pic.a) && AVATARS.length) { viewGuest(); return; }
     viewTeam();
   }
 
@@ -521,7 +523,7 @@
     }
     if (pz && (pz.status === 'awarded' || pz.status === 'claimed')) {
       return '<div class="card cta prize"><div class="prize-amt">+' + fmt(pz.hearts) + ' Hearts</div><h2>Your Hearts are in!</h2>' +
-        '<p class="sub">' + fmt(pz.hearts) + ' Hearts were added to your BarChata balance. Use them for rewards at ' + venue + '.</p>' +
+        '<p class="sub">' + fmt(pz.hearts) + ' Hearts were added to your Hearts at ' + venue + '. Use them for rewards there.</p>' +
         '<div class="gap"></div><a class="btn secondary" href="/app">See my Hearts</a></div>';
     }
     // A winning place that should have paid Hearts but didn't (venue pool or budget ran out, or the daily limit).
@@ -543,7 +545,7 @@
     if (!s) return;
     try {
       var r = await call('claim', {});
-      if (r.status === 200 && r.data.hearts > 0) toast(fmt(r.data.hearts) + ' Hearts from Arena were added to your BarChata balance!');
+      if (r.status === 200 && r.data.hearts > 0) toast(fmt(r.data.hearts) + ' Hearts from Arena were added to your account!');
       if (r.status === 200) setJSON(GUEST_KEY, null);
     } catch (e) { /* try again next visit */ }
   }
