@@ -6,6 +6,11 @@
  * Giveaways and free draws (Oct 25, 2026): the same TV code can open an instant giveaway ("first 10 to scan
  * win free wings": claim one, get a prize code) or a free draw (enter free; if you're drawn, answer the
  * skill-testing question within a few minutes to get your prize code). The rules are on the page.
+ *
+ * Call It (Oct 25, 2026): live predictions during a game on TV. Staff make calls ("Who scores next?",
+ * "Closest guess: total goals tonight?"); each one shows here with its answers or a number box until it locks.
+ * One answer per table or team: the first teammate to answer locks it in (trivia works the same way now).
+ * When staff settle a call, this page shows whether your team called it and the points.
  */
 (function () {
   var cfg = window.BC_CONFIG || {};
@@ -201,7 +206,7 @@
         '<div><div class="name">' + esc(v.title) + '</div><div class="muted">' + esc(v.venue_name || '') + ' · ' + (v.kind === 'giveaway' ? 'Instant giveaway' : 'Free draw') + (live ? ' · <b class="live-dot">Open now</b>' : '') + '</div></div></div></div>';
     }
     return '<div class="card arena-game"><div class="venue"><div class="img"' + (v.venue_logo ? ' style="background-image:url(\'' + esc(v.venue_logo) + '\')"' : '') + '>' + (v.venue_logo ? '' : esc((v.venue_name || 'B').charAt(0))) + '</div>' +
-      '<div><div class="name">' + esc(v.title) + '</div><div class="muted">' + esc(v.venue_name || '') + ' · ' + (live ? '<b class="live-dot">Live now</b>' : 'Starting soon') + '</div></div></div></div>';
+      '<div><div class="name">' + esc(v.title) + '</div><div class="muted">' + esc(v.venue_name || '') + ' · ' + (v.kind === 'callit' ? 'Call It · ' : '') + (live ? '<b class="live-dot">Live now</b>' : 'Starting soon') + '</div></div></div></div>';
   }
 
   function viewWho() {
@@ -364,6 +369,7 @@
       if (/^(lobby|live)$/.test(s.session.status)) { viewTeam(); return; }
       viewClosed(); return;
     }
+    if (s.session.kind === 'callit') { applyCallIt(s); return; }
     var q = s.question;
     var key = [s.session.status, s.session.current_index, q ? q.revealed : '', s.me.answer, s.teams, s.me.rank, s.me.team_points, s.me.prize ? s.me.prize.status : '', s.me.voucher ? s.me.voucher.status : ''].join('|');
     if (key !== lastKey) { lastKey = key; draw(); stateSounds(s); }
@@ -410,7 +416,7 @@
         (teamCode && s.me.kind !== 'solo' ? '<div class="card team-code"><p class="muted">Your team code</p><div class="code">' + esc(teamCode) + '</div>' +
           '<p class="muted">Friends at your table pick <b>' + esc(s.me.team_name) + '</b> and enter this code to join you.</p></div>' : '') +
         prizesCard(s.session) +
-        '<div class="gap"></div><p class="muted center-text">Waiting for the host to start · ' + s.teams + (s.teams === 1 ? ' team' : ' teams') + ' joined</p>');
+        '<div class="gap"></div><p class="muted center-text">' + (s.session.kind === 'callit' ? 'The calls start with the game. Keep this page open' : 'Waiting for the host to start') + ' · ' + s.teams + (s.teams === 1 ? ' team' : ' teams') + ' joined</p>');
       return;
     }
     if (status === 'live' && q) {
@@ -427,7 +433,7 @@
           var cls = picked == null ? '' : (picked === i ? ' picked' : ' dim');
           html += '<button class="answer' + cls + '" data-i="' + i + '" style="--c:' + COLORS[i] + '"' + (picked != null ? ' disabled' : '') + '><span class="l">' + LETTERS[i] + '</span><span class="t">' + esc(o) + '</span></button>';
         });
-        html += '</div>' + (picked != null ? '<p class="muted center-text">Locked in. Waiting for the answer...</p>' : '') + teamLine();
+        html += '</div>' + (picked != null ? '<p class="muted center-text">Locked in for your team. Waiting for the answer...</p>' : '') + teamLine();
         render(html);
         document.querySelectorAll('.answer[data-i]').forEach(function (b) { b.onclick = function () { answer(Number(b.dataset.i)); }; });
         return;
@@ -469,6 +475,7 @@
   }
 
   function updateClock() {
+    if (st && st.session && st.session.kind === 'callit') { callItClock(); return; }
     if (!st || !st.question || st.session.status !== 'live') return;
     var q = st.question, now = serverNow();
     var opens = new Date(q.opens_at).getTime(), closes = new Date(q.closes_at).getTime();
@@ -494,9 +501,171 @@
     try {
       var r = await call('answer', { question_id: st.question.id, choice: i });
       if (r.status !== 200) { toast(r.data.error || 'Too late for that one.'); }
-      else if (r.data.locked_in != null && r.data.locked_in !== i) { st.me.answer = r.data.locked_in; lastKey = ''; draw(); }
+      else if (r.data.locked_in != null && r.data.locked_in !== i) { st.me.answer = r.data.locked_in; lastKey = ''; draw(); if (r.data.team) toast('A teammate already answered ' + LETTERS[r.data.locked_in] + ' for your team.'); }
     } catch (e) { toast('No connection. Your answer may not have been sent.'); }
     sending = false;
+  }
+
+  // ------------------------------------------------------------------ Call It (Oct 25, 2026)
+  var guessDraft = {};   // guesses being typed, kept while the page redraws
+  var ciLockSig = '';    // which calls were locked at the last redraw
+  function fmtNum(n) { return n == null ? '' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+  function callLocked(c) { return !!(c.resolved || (c.closes_at && new Date(c.closes_at).getTime() <= serverNow())); }
+  function findCall(id) { return (st && st.calls || []).filter(function (c) { return c.id === id; })[0] || null; }
+
+  function applyCallIt(s) {
+    var calls = s.calls || [];
+    var key = ['ci', s.session.status, s.teams, s.me.rank, s.me.team_points, s.me.prize ? s.me.prize.status : '', s.me.voucher ? s.me.voucher.status : '',
+      calls.map(function (c) {
+        return [c.id, c.resolved ? 1 : 0, c.voided ? 1 : 0, callLocked(c) ? 1 : 0, c.closes_at || '', c.mine ? [c.mine.choice, c.mine.guess, c.mine.points].join(':') : ''].join(',');
+      }).join(';')].join('|');
+    if (key !== lastKey) {
+      lastKey = key;
+      if (s.session.status === 'live') drawCallIt(); else draw();
+      callItSounds(s);
+    }
+    if (s.session.status !== 'lobby' && s.session.status !== 'live') return;
+    ciLockSig = calls.map(function (c) { return callLocked(c) ? 1 : 0; }).join('');
+    clearInterval(tickTimer);
+    tickTimer = setInterval(updateClock, 250);
+    updateClock();
+    clearTimeout(pollTimer);
+    pollTimer = setTimeout(poll, s.session.status === 'lobby' ? 3500 : 3000);
+  }
+
+  function ptsTag(c) { return c.points >= 300 ? 'Triple · ' + c.points + ' pts' : c.points >= 200 ? 'Double · ' + c.points + ' pts' : c.points + ' pts'; }
+
+  function openCallHtml(c) {
+    var locked = callLocked(c), m = c.mine, body;
+    var head = '<div class="ci-top"><span class="ci-pts">' + ptsTag(c) + '</span><span class="ci-clock" data-clock="' + esc(c.id) + '"></span></div>' +
+      '<p class="prompt ci-prompt">' + esc(c.prompt) + '</p>';
+    if (m) {
+      var pick = c.qtype === 'guess'
+        ? '<b>' + fmtNum(m.guess) + (c.unit ? ' ' + esc(c.unit) : '') + '</b>'
+        : '<b style="color:' + COLORS[m.choice] + '">' + LETTERS[m.choice] + '. ' + esc(c.options[m.choice]) + '</b>';
+      body = '<div class="ci-mine">' + (m.by_me ? 'Your team called ' : 'Your teammate called ') + pick + '</div>' +
+        '<p class="muted">' + (locked ? 'Locked. Waiting for the result...' : 'Locked in for your team. Waiting for the result...') + '</p>';
+    } else if (locked) {
+      body = '<p class="muted">Locked. Your team didn’t call this one.</p>';
+    } else if (c.qtype === 'choice') {
+      body = '<div class="answers">' + c.options.map(function (o, i) {
+        return '<button class="answer" data-call="' + esc(c.id) + '" data-i="' + i + '" style="--c:' + COLORS[i] + '"><span class="l">' + LETTERS[i] + '</span><span class="t">' + esc(o) + '</span></button>';
+      }).join('') + '</div>';
+    } else {
+      body = '<form class="ci-guess" data-gf="' + esc(c.id) + '" novalidate><div class="field"><label for="g-' + esc(c.id) + '">Your guess' + (c.unit ? ' (' + esc(c.unit) + ')' : '') + '</label>' +
+        '<input id="g-' + esc(c.id) + '" data-guess="' + esc(c.id) + '" inputmode="decimal" autocomplete="off" maxlength="10" placeholder="e.g. 6"></div>' +
+        '<button class="btn">Lock in my guess</button><p class="muted small">Closest team wins ' + (c.points * 2) + ' pts, an exact hit ' + (c.points * 3) + '.</p></form>';
+    }
+    return '<div class="card ci-call' + (m || locked ? '' : ' ci-live') + '">' + head + body + '</div>';
+  }
+
+  function doneCallHtml(c) {
+    var m = c.mine, res, cls;
+    if (c.voided) { res = 'Voided · no points'; cls = 'none'; }
+    else if (c.qtype === 'choice') {
+      var ans = c.correct != null ? LETTERS[c.correct] + '. ' + esc(c.options[c.correct]) : '';
+      if (!m) { res = 'It was <b>' + ans + '</b>'; cls = 'none'; }
+      else if (m.is_correct) { res = '✓ Called it! <b>+' + fmt(m.points) + '</b> · ' + ans; cls = 'ok'; }
+      else { res = '✗ Missed · it was <b>' + ans + '</b>'; cls = 'no'; }
+    } else {
+      var val = fmtNum(c.answer_value) + (c.unit ? ' ' + esc(c.unit) : '');
+      if (!m) { res = 'The answer: <b>' + val + '</b>'; cls = 'none'; }
+      else if (m.is_correct) { res = (Number(m.guess) === Number(c.answer_value) ? '✓ Exact! ' : '✓ Closest! ') + '<b>+' + fmt(m.points) + '</b> · the answer: ' + val; cls = 'ok'; }
+      else { res = '✗ Not the closest · you said ' + fmtNum(m.guess) + ', the answer: <b>' + val + '</b>'; cls = 'no'; }
+    }
+    return '<div class="ci-res ' + cls + '"><span class="ci-res-q">' + esc(c.prompt) + '</span><span>' + res + '</span></div>';
+  }
+
+  function drawCallIt() {
+    var s = st, calls = s.calls || [];
+    var meta = s.session.meta || {};
+    var focusId = document.activeElement && document.activeElement.id;
+    $app.querySelectorAll('input[data-guess]').forEach(function (el) { guessDraft[el.getAttribute('data-guess')] = el.value; });
+    var open = calls.filter(function (c) { return !c.resolved; });
+    var done = calls.filter(function (c) { return c.resolved; }).slice(0, 4);
+    var html = '<div class="arena-qhead"><span>Call It · ' + esc(meta.home && meta.away ? meta.home + ' vs ' + meta.away : s.session.title) + '</span>' +
+      '<span class="ci-count">' + (open.length ? open.length + ' open' : '') + '</span></div><div class="gap"></div>';
+    if (!open.length) {
+      html += '<div class="card ci-wait"><b>Next call coming up</b><p class="muted">Watch the TV. When staff make a call, it shows here: tap your answer before it locks.</p></div>';
+    }
+    open.forEach(function (c) { html += openCallHtml(c); });
+    if (done.length) html += '<p class="muted ci-sec">Results</p>' + done.map(doneCallHtml).join('');
+    html += teamLine() + '<p class="muted small center-text">One answer per table or team: the first one in counts. Fewer teams right = bigger bonus.</p>';
+    render(html);
+    $app.querySelectorAll('input[data-guess]').forEach(function (el) {
+      var id = el.getAttribute('data-guess');
+      if (guessDraft[id] != null) el.value = guessDraft[id];
+      el.oninput = function () { el.value = el.value.replace(/[^\d.\-]/g, '').slice(0, 10); guessDraft[id] = el.value; };
+    });
+    if (focusId) {
+      var f = document.getElementById(focusId);
+      if (f && f.tagName === 'INPUT') { f.focus(); try { var n = f.value.length; f.setSelectionRange(n, n); } catch (e) { /* not a text box */ } }
+    }
+    $app.querySelectorAll('.answer[data-call]').forEach(function (b) {
+      b.onclick = function () { answerCall(b.getAttribute('data-call'), Number(b.getAttribute('data-i')), null); };
+    });
+    $app.querySelectorAll('form[data-gf]').forEach(function (f) {
+      f.onsubmit = function (e) {
+        e.preventDefault();
+        var id = f.getAttribute('data-gf'), box = document.getElementById('g-' + id), v = box ? box.value.trim() : '';
+        if (!/^-?\d{1,7}(\.\d{1,2})?$/.test(v)) { toast('Type your guess as a number.'); return; }
+        answerCall(id, null, Number(v));
+      };
+    });
+  }
+
+  async function answerCall(id, choice, guess) {
+    var c = findCall(id);
+    if (sending || !c || c.mine || callLocked(c)) return;
+    sending = true;
+    sfx.tap(); buzz(25);
+    c.mine = { choice: choice, guess: guess, by_me: true, is_correct: null, points: null };
+    delete guessDraft[id];
+    lastKey = ''; drawCallIt();
+    try {
+      var r = await call('callit_answer', choice != null ? { question_id: id, choice: choice } : { question_id: id, guess: guess });
+      if (r.status !== 200) {
+        c.mine = null;
+        if (guess != null) guessDraft[id] = String(guess);
+        lastKey = ''; drawCallIt();
+        toast(r.data.error || 'Too late for that one.');
+      } else if (r.data.team) {
+        c.mine = { choice: r.data.choice, guess: r.data.guess, by_me: false, is_correct: null, points: null };
+        lastKey = ''; drawCallIt();
+        toast('A teammate already called this one for your team.');
+      }
+    } catch (e) { toast('No connection. Your answer may not have been sent.'); }
+    sending = false;
+  }
+
+  // A new call (a ping and a buzz), and each result for your team.
+  function callItSounds(s) {
+    if (s.session.status !== 'live') { stateSounds(s); return; }
+    (s.calls || []).forEach(function (c) {
+      var opens = c.opens_at ? new Date(c.opens_at).getTime() : 0;
+      if (!c.resolved && serverNow() - opens < 5000) once(c.id + ':new', function () { sfx.go(); buzz([40, 40, 40]); });
+      if (c.resolved && !c.voided && c.mine && c.resolved_at && serverNow() - new Date(c.resolved_at).getTime() < 10000) {
+        once(c.id + ':res', function () { if (c.mine.is_correct) { sfx.right(); buzz(60); } else { sfx.wrong(); buzz([90, 60, 90]); } });
+      }
+    });
+  }
+
+  // Countdowns on open calls; redraw the moment one locks.
+  function callItClock() {
+    if (!st || st.session.status !== 'live') return;
+    var calls = st.calls || [], now = serverNow();
+    var sig = calls.map(function (c) { return callLocked(c) ? 1 : 0; }).join('');
+    if (sig !== ciLockSig) { ciLockSig = sig; applyCallIt(st); return; }
+    calls.forEach(function (c) {
+      var el = $app.querySelector('[data-clock="' + c.id + '"]');
+      if (!el) return;
+      if (callLocked(c)) { el.textContent = c.resolved ? '' : 'Locked'; el.classList.remove('low'); return; }
+      if (!c.closes_at) { el.textContent = 'Open'; return; }
+      var left = new Date(c.closes_at).getTime() - now;
+      el.textContent = clockText(left);
+      el.classList.toggle('low', left < 10000);
+      if (!c.mine && left > 0 && left <= 5000) once(c.id + ':t' + Math.ceil(left / 1000), sfx.tick);
+    });
   }
 
   function viewEnded() {
@@ -530,7 +699,7 @@
     }
     var date = until.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
     return '<div class="card voucher">' + head +
-      '<p class="muted">Show this code to staff</p><div class="voucher-code">' + esc(v.code) + '</div>' +
+      '<p class="muted">Show us this code</p><div class="voucher-code">' + esc(v.code) + '</div>' +
       '<p class="sub">One prize per team · valid until ' + esc(date) + '. Take a screenshot to keep it.</p></div>';
   }
 
@@ -653,7 +822,7 @@
     if (v.status === 'redeemed') return '<div class="card voucher done given">' + head + '<div class="voucher-state">✓ Given. Enjoy!</div></div>';
     if (v.status === 'void' || until.getTime() < Date.now()) return '<div class="card voucher done">' + head + '<div class="voucher-state">' + (v.status === 'void' ? 'This prize was cancelled.' : 'This prize has expired.') + '</div></div>';
     var when = until.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
-    return '<div class="card voucher">' + head + '<p class="muted">Show this code to staff</p><div class="voucher-code">' + esc(v.code) + '</div>' +
+    return '<div class="card voucher">' + head + '<p class="muted">Show us this code</p><div class="voucher-code">' + esc(v.code) + '</div>' +
       '<p class="sub">Valid until ' + esc(when) + '. Take a screenshot to keep it.</p></div>';
   }
 
@@ -668,7 +837,7 @@
     var html = '';
     if (m && m.voucher) {
       html = '<div class="center small"><div class="me-pic">' + picHtml(m.pic, 72) + '<span class="me-check">✓</span></div>' +
-        '<h1>' + (give ? 'It’s yours!' : 'You won!') + '</h1><p class="sub">' + (give ? 'You claimed one. ' : 'You answered correctly. ') + 'Show your code at the bar.</p></div>' +
+        '<h1>' + (give ? 'It’s yours!' : 'You won!') + '</h1><p class="sub">' + (give ? 'You claimed one. ' : 'You answered correctly. ') + 'Show us your code.</p></div>' +
         contestVoucher(m.voucher, !give) + rulesBox(c) + againButton();
       render(html); wireAgain(); return;
     }

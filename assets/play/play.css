@@ -92,3 +92,27 @@ body{font-family:"DM Sans",Inter,system-ui,-apple-system,sans-serif}
 details.rules{margin-top:12px;font-size:13px;color:var(--text2)}
 details.rules summary{cursor:pointer;font-weight:700;color:var(--text);font-size:14px}
 details.rules p{margin:10px 0 0;line-height:1.55}
+
+/* Call It (Oct 25, 2026) */
+.ci-count{color:var(--text2);text-transform:none;letter-spacing:0}
+.ci-call{margin-bottom:12px;display:flex;flex-direction:column;gap:6px}
+.ci-call.ci-live{border-color:rgba(242,125,38,.55);background:linear-gradient(160deg,rgba(242,125,38,.12),rgba(255,255,255,.03))}
+.ci-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ci-pts{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--brand)}
+.ci-clock{font-family:"DM Sans";font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.ci-clock.low{color:var(--err)}
+.prompt.ci-prompt{margin-bottom:8px}
+.ci-call .answers{margin-bottom:2px}
+.ci-mine{font-size:16px;font-weight:700;overflow-wrap:anywhere}
+.ci-call p.muted{margin:0}
+.ci-guess{display:flex;flex-direction:column;gap:10px}
+.ci-guess input{font-size:22px!important;font-weight:800;text-align:center}
+.ci-wait{text-align:center;display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.ci-wait b{font-family:"DM Sans";font-size:20px}
+.ci-wait p{margin:0}
+.ci-sec{margin:14px 0 6px;font-weight:700}
+.ci-res{display:flex;flex-direction:column;gap:3px;border-radius:14px;padding:10px 14px;margin-bottom:8px;border:1px solid var(--line);background:var(--card);font-size:15px;overflow-wrap:anywhere}
+.ci-res-q{font-size:13px;color:var(--text2)}
+.ci-res.ok{border-color:rgba(52,199,89,.45);background:rgba(52,199,89,.10)}
+.ci-res.ok>span:last-child{color:var(--ok);font-weight:700}
+.ci-res.no{border-color:rgba(255,55,95,.35);background:rgba(255,55,95,.07)}
