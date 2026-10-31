@@ -116,3 +116,14 @@ details.rules p{margin:10px 0 0;line-height:1.55}
 .ci-res.ok{border-color:rgba(52,199,89,.45);background:rgba(52,199,89,.10)}
 .ci-res.ok>span:last-child{color:var(--ok);font-weight:700}
 .ci-res.no{border-color:rgba(255,55,95,.35);background:rgba(255,55,95,.07)}
+
+/* Join our rewards (Oct 25, 2026) */
+.join-card{display:flex;flex-direction:column;gap:8px;margin:12px 0;border-color:rgba(242,125,38,.5);background:linear-gradient(160deg,rgba(242,125,38,.12),rgba(255,255,255,.03))}
+.join-card.voucher{text-align:center}
+.join-card p{margin:0}
+.join-eyebrow{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--brand)}
+.join-offer{font-family:"DM Sans";font-size:24px;font-weight:800;line-height:1.15;overflow-wrap:anywhere}
+.join-hearts{align-self:flex-start;font-size:13px;font-weight:800;color:var(--brand);background:rgba(242,125,38,.14);border:1px solid rgba(242,125,38,.45);border-radius:20px;padding:3px 10px}
+.join-card .check{font-size:14px}
+.join-card .sub a{color:var(--brand)}
+

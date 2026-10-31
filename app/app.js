@@ -1,6 +1,11 @@
 /* BarChata web app - for guests who scan a venue QR code or get a /join link.
  * Same accounts, Hearts and check-ins as the BarChata Social app (one Supabase project).
  * Plain JavaScript on purpose: the landing site is static, so there is no build step.
+ *
+ * Join our rewards (Oct 31, 2026): when a business has a welcome offer ("15% off your next visit"), the scan page shows
+ * a "Join <business> rewards" card. Signed-in members join in one tap; anyone else gives their name and email or mobile
+ * (no account needed) and gets a code to show the business. Bonus Hearts need a free account: they are added on the
+ * Home screen once the person has one (same confirmed email). Server: arena-play join_offer / join_rewards / claim.
  */
 (function () {
   const cfg = window.BC_CONFIG || {};
@@ -106,6 +111,116 @@
     return { ok: false, error: 'qr_not_recognised' };
   }
 
+  // ------------------------------------------------------------------ join our rewards (arena-play edge function)
+  async function callPlay(action, body) {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(cfg.url + '/functions/v1/arena-play', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + (session ? session.access_token : cfg.anonKey) },
+      body: JSON.stringify(Object.assign({ action }, body || {})),
+    });
+    let data = null;
+    try { data = await res.json(); } catch (e) { /* empty */ }
+    return { status: res.status, data: data || {} };
+  }
+  const fmt = (n) => Number(n || 0).toLocaleString();
+  const joinState = { code: null, st: null, signedIn: false, busy: false, draft: { name: '', contact: '', marketing: false } };
+
+  async function loadScanJoin(code, signedIn) {
+    joinState.code = code; joinState.signedIn = signedIn; joinState.st = null;
+    try {
+      const r = await callPlay('join_offer', { source: 'checkin', scan_code: code });
+      if (r.status === 200 && joinState.code === code) {
+        joinState.st = r.data;
+        // A quick join on this phone (no account): show the code again after a reload.
+        const v = r.data && r.data.venue;
+        if (v && !r.data.joined && !signedIn) {
+          try { const saved = JSON.parse(localStorage.getItem('bc_join_' + v.id) || 'null'); if (saved && saved.code) { joinState.st = Object.assign({}, r.data, { joined: saved, eligible: false }); } } catch (e) { /* none saved */ }
+        }
+        fillScanJoin();
+      }
+    } catch (e) { /* no offer card when offline */ }
+  }
+
+  function scanJoinHtml() {
+    const j = joinState.st, o = j && j.offer, v = (j && j.venue) || {};
+    const vname = esc(v.name || 'this business');
+    if (j && j.joined) {
+      const jn = j.joined;
+      const until = jn.expires_at ? new Date(jn.expires_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+      const state = jn.status === 'redeemed' ? '<p class="join-state">✓ Used. Thanks for joining!</p>'
+        : jn.status === 'expired' ? '<p class="join-state">This code has expired.</p>'
+        : '<p class="muted">Show us this code</p><div class="join-code">' + esc(jn.code || '') + '</div><p class="muted">Valid until ' + esc(until) + '. Take a screenshot to keep it.</p>';
+      let hearts = '';
+      if (jn.hearts_bonus > 0 && !jn.account) hearts = '<p class="sub">+' + fmt(jn.hearts_bonus) + ' Hearts are waiting. Join BarChata free with the same email to collect them.</p>';
+      else if (jn.hearts_paid > 0) hearts = '<p class="sub">+' + fmt(jn.hearts_paid) + ' Hearts were added to your Hearts at ' + vname + '.</p>';
+      return '<div class="card join-card join-done"><p class="join-eyebrow">Welcome to ' + vname + ' rewards</p><div class="join-offer">' + esc(jn.offer || '') + '</div>' + state + hearts + '</div>';
+    }
+    if (!o || !j.eligible) return '';
+    const head = '<p class="join-eyebrow">Join ' + vname + ' rewards</p><div class="join-offer">' + esc(o.offer) + '</div>' +
+      (o.bonus_hearts > 0 ? '<span class="join-hearts">+' + fmt(o.bonus_hearts) + ' Hearts' + (joinState.signedIn ? '' : ' with a free account') + '</span>' : '');
+    const consent = '<p class="muted">Joining shares your name and ' + (joinState.signedIn ? 'contact' : 'email or number') + ' with ' + vname + '.' + (o.fine_print ? ' ' + esc(o.fine_print) : '') + '</p>';
+    const mk = '<label class="check"><input type="checkbox" id="joinMk"' + (joinState.draft.marketing ? ' checked' : '') + '><span>Send me offers from ' + vname + ' (optional)</span></label>';
+    if (joinState.signedIn) {
+      return '<div class="card join-card">' + head + mk + '<button class="btn" type="button" id="joinGo"' + (joinState.busy ? ' disabled' : '') + '>Join free</button>' + consent + '</div>';
+    }
+    return '<div class="card join-card">' + head +
+      '<form id="joinForm" class="stack" novalidate>' +
+      '<div class="field"><label for="joinName">Your name</label><input id="joinName" maxlength="60" autocomplete="name" placeholder="First and last name"></div>' +
+      '<div class="field"><label for="joinContact">Email or mobile number</label><input id="joinContact" maxlength="254" autocomplete="email" inputmode="email" placeholder="you@email.com or 416 555 0199"></div>' +
+      mk + '<button class="btn" id="joinGo"' + (joinState.busy ? ' disabled' : '') + '>Join and get my code</button>' + consent +
+      '<p class="muted">No app needed. Have a BarChata account? Sign in below instead' + (o.bonus_hearts > 0 ? ' to also get your Hearts' : '') + '.</p></form></div>';
+  }
+
+  function fillScanJoin() {
+    const slot = document.getElementById('joinSlot');
+    if (!slot) return;
+    slot.innerHTML = scanJoinHtml();
+    const d = joinState.draft;
+    const nm = document.getElementById('joinName'), ct = document.getElementById('joinContact'), mk = document.getElementById('joinMk');
+    if (nm) { nm.value = d.name; nm.oninput = () => { d.name = nm.value; }; }
+    if (ct) { ct.value = d.contact; ct.oninput = () => { d.contact = ct.value; }; }
+    if (mk) mk.onchange = () => { d.marketing = mk.checked; };
+    const form = document.getElementById('joinForm');
+    if (form) form.onsubmit = (e) => { e.preventDefault(); scanJoinNow(); };
+    else { const go = document.getElementById('joinGo'); if (go) go.onclick = scanJoinNow; }
+  }
+
+  async function scanJoinNow() {
+    if (joinState.busy || !joinState.code) return;
+    const d = joinState.draft;
+    if (!joinState.signedIn) {
+      if (d.name.trim().length < 2) { toast('Type your name.'); return; }
+      if (d.contact.trim().length < 5) { toast('Add your email or mobile number.'); return; }
+    }
+    joinState.busy = true; fillScanJoin();
+    try {
+      const body = { source: 'checkin', scan_code: joinState.code, marketing: d.marketing };
+      if (!joinState.signedIn) { body.name = d.name.trim(); body.contact = d.contact.trim(); }
+      const r = await callPlay('join_rewards', body);
+      if (r.status === 200 && r.data && (r.data.joined || r.data.already_member)) {
+        joinState.st = r.data;
+        if (r.data.joined && r.data.venue && !joinState.signedIn) { try { localStorage.setItem('bc_join_' + r.data.venue.id, JSON.stringify(r.data.joined)); } catch (e) { /* private mode */ } }
+        if (r.data.already_member) toast('You’re already a member here.');
+      } else {
+        toast((r.data && r.data.error) || 'Could not join. Try again.');
+      }
+    } catch (e) { toast('No internet connection. Try again.'); }
+    joinState.busy = false; fillScanJoin();
+  }
+
+  // Signed in: link any quick joins made with this (confirmed) email and add their bonus Hearts. Once per visit.
+  async function claimJoins() {
+    try {
+      if (sessionStorage.getItem('bc_join_claimed')) return;
+      sessionStorage.setItem('bc_join_claimed', '1');
+    } catch (e) { /* private mode: try anyway */ }
+    try {
+      const r = await callPlay('claim', {});
+      if (r.status === 200 && Number(r.data.join_hearts || 0) > 0) toast('+' + fmt(r.data.join_hearts) + ' welcome Hearts were added to your account!');
+    } catch (e) { /* try again next visit */ }
+  }
+
   function venueCard(v) {
     const img = v.cover_image || v.logo_url;
     return '<div class="card venue"><div class="img"' + (img ? ' style="background-image:url(' + esc(img) + ')"' : '') + '>' + (img ? '' : initial(v.name)) + '</div>' +
@@ -130,12 +245,14 @@
     if (!session) {
       rememberScan(code);
       render(header() + '<h1>Check in and earn Hearts</h1><p class="sub">Join BarChata free to check in here, collect Hearts and unlock rewards.</p><div class="gap"></div>' +
-        venueCard(v) + closed + '<div class="gap"></div><div class="stack">' +
-        '<button class="btn" data-go="/join">Join free</button><button class="btn secondary" data-go="/app?mode=signin">I have an account</button></div>' + legal());
+        venueCard(v) + closed + '<div id="joinSlot"></div><div class="gap"></div><div class="stack">' +
+        '<button class="btn" data-go="/join">Join BarChata free</button><button class="btn secondary" data-go="/app?mode=signin">I have an account</button></div>' + legal());
+      if (v.is_active !== false) loadScanJoin(code, false);
       return;
     }
     render(header() + '<h1>You are at</h1><div class="gap"></div>' + venueCard(v) + closed + '<div class="gap"></div>' +
-      '<button class="btn" id="doCheckin"' + (v.is_active === false ? ' disabled' : '') + '>Check in</button><p class="muted" style="text-align:center;margin-top:10px">One tap. Hearts go straight to your account.</p>');
+      '<button class="btn" id="doCheckin"' + (v.is_active === false ? ' disabled' : '') + '>Check in</button><p class="muted" style="text-align:center;margin-top:10px">One tap. Hearts go straight to your account.</p><div id="joinSlot"></div>');
+    if (v.is_active !== false) loadScanJoin(code, true);
     document.getElementById('doCheckin').onclick = async (e) => {
       e.target.disabled = true; e.target.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px"></div>';
       try {
@@ -144,7 +261,8 @@
           const pts = Number((res.award && res.award.points_awarded) || res.points_awarded || res.points || 0);
           render(header() + '<div class="center"><div class="success">✓</div><h1>You are checked in</h1><p class="sub">' + esc(v.name) +
             (pts > 0 ? '<br><b style="color:var(--brand)">+' + pts + ' Hearts</b>' : '<br>Check-in saved. Hearts are limited per visit, so this one did not add more.') +
-            '</p><div class="stack" style="width:100%"><a class="btn" href="/app" data-link>See my Hearts</a></div></div>');
+            '</p><div class="stack" style="width:100%"><a class="btn" href="/app" data-link>See my Hearts</a></div></div><div id="joinSlot"></div>');
+          fillScanJoin();
         } else {
           const msg = { not_authenticated: 'Please sign in again.', qr_not_recognised: 'This code is not recognised.' }[res && res.error] || (res && (res.message || res.error)) || 'Could not check in.';
           toast(msg); e.target.disabled = false; e.target.textContent = 'Check in';
@@ -263,6 +381,7 @@
 
   async function viewHome(session) {
     claimPendingReferral().then((m) => { if (m) toast(m); });
+    claimJoins();
     loading();
     const uid = session.user.id;
     const [{ data: p }, { data: cks }] = await Promise.all([

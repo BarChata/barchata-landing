@@ -65,3 +65,15 @@ h2{font-family:"DM Sans";font-size:19px;font-weight:700;letter-spacing:-.2px}
 
 .check{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;color:var(--text2);cursor:pointer}
 .check input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--brand);flex:none}
+
+/* Join our rewards (Oct 31, 2026) */
+.join-card{display:flex;flex-direction:column;gap:10px;margin-top:16px;border-color:rgba(242,125,38,.5);background:linear-gradient(160deg,rgba(242,125,38,.12),rgba(255,255,255,.03))}
+.join-card p{margin:0}
+.join-card .sub{margin:0}
+.join-done{text-align:center;border-style:dashed;border-width:2px}
+.join-eyebrow{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--brand)}
+.join-offer{font-family:"DM Sans";font-size:24px;font-weight:800;line-height:1.15;overflow-wrap:anywhere}
+.join-hearts{align-self:flex-start;font-size:13px;font-weight:800;color:var(--brand);background:rgba(242,125,38,.14);border:1px solid rgba(242,125,38,.45);border-radius:20px;padding:3px 10px}
+.join-done .join-hearts{align-self:center}
+.join-code{font-family:"DM Sans";font-size:44px;font-weight:800;letter-spacing:8px;color:var(--brand);line-height:1.1}
+.join-state{font-weight:800;font-size:17px;color:var(--ok)}

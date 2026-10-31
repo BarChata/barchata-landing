@@ -11,6 +11,10 @@
  * "Closest guess: total goals tonight?"); each one shows here with its answers or a number box until it locks.
  * One answer per table or team: the first teammate to answer locks it in (trivia works the same way now).
  * When staff settle a call, this page shows whether your team called it and the points.
+ *
+ * Join our rewards (Oct 25, 2026): if the business has a welcome offer ("15% off your next visit"), players and
+ * entrants see a "Join <business> rewards" card. Members join in one tap; guests give their name and email or mobile.
+ * They get a code to show the business; bonus Hearts are added when they make a free BarChata account.
  */
 (function () {
   var cfg = window.BC_CONFIG || {};
@@ -93,7 +97,10 @@
       '<div class="arena-right">' + (v && v.venue_name ? '<span class="muted arena-venue">' + esc(v.venue_name) + '</span>' : '') +
       '<button class="snd' + (soundOn ? ' on' : '') + '" id="snd" type="button" aria-label="' + (soundOn ? 'Turn sound off' : 'Turn sound on') + '">' + speakerIcon() + '</button></div></div>';
   }
-  function render(html) { $app.innerHTML = header() + html; fixPics(); }
+  function render(html) {
+    var had = document.activeElement && document.activeElement.id;
+    $app.innerHTML = header() + html; fixPics(); fillJoin(had);
+  }
 
   // ------------------------------------------------------------------ pictures
   // Members show their BarChata profile photo; guests the avatar they picked; anyone else their first letter.
@@ -415,7 +422,7 @@
         '<div class="me-pic">' + picHtml(s.me.pic, 76) + '<span class="me-check">✓</span></div><h1>You’re in!</h1><p class="sub">Playing as <b>' + esc(s.me.team_name) + '</b></p></div>' +
         (teamCode && s.me.kind !== 'solo' ? '<div class="card team-code"><p class="muted">Your team code</p><div class="code">' + esc(teamCode) + '</div>' +
           '<p class="muted">Friends at your table pick <b>' + esc(s.me.team_name) + '</b> and enter this code to join you.</p></div>' : '') +
-        prizesCard(s.session) +
+        prizesCard(s.session) + joinSlot() +
         '<div class="gap"></div><p class="muted center-text">' + (s.session.kind === 'callit' ? 'The calls start with the game. Keep this page open' : 'Waiting for the host to start') + ' · ' + s.teams + (s.teams === 1 ? ' team' : ' teams') + ' joined</p>');
       return;
     }
@@ -590,7 +597,7 @@
     }
     open.forEach(function (c) { html += openCallHtml(c); });
     if (done.length) html += '<p class="muted ci-sec">Results</p>' + done.map(doneCallHtml).join('');
-    html += teamLine() + '<p class="muted small center-text">One answer per table or team: the first one in counts. Fewer teams right = bigger bonus.</p>';
+    html += teamLine() + '<p class="muted small center-text">One answer per table or team: the first one in counts. Fewer teams right = bigger bonus.</p>' + joinSlot();
     render(html);
     $app.querySelectorAll('input[data-guess]').forEach(function (el) {
       var id = el.getAttribute('data-guess');
@@ -668,6 +675,117 @@
     });
   }
 
+  // ------------------------------------------------------------------ Join our rewards (Oct 25, 2026)
+  var joinSt = null;      // { venue, offer, member, eligible, joined } for the current game or giveaway
+  var joinFor = '';       // which game or giveaway joinSt belongs to
+  var joinLoading = '';
+  var joinOpen = false;   // the quick-join form is showing
+  var joinBusy = false;
+  var joinDraft = { name: '', contact: '', marketing: false };
+
+  function joinSlot() { return '<div id="joinSlot"></div>'; }
+  function joinTarget() {
+    if (!game || !game.session) return null;
+    if (game.contest) return { source: (cst && cst.contest && cst.contest.kind) || game.session.kind || 'giveaway', source_id: game.session.id };
+    return { source: st && st.session && st.session.kind === 'callit' ? 'callit' : 'trivia', source_id: game.session.id };
+  }
+  async function loadJoin(t, key) {
+    if (joinLoading === key) return;
+    joinLoading = key;
+    try {
+      var r = await call('join_offer', t);
+      if (r.status === 200) { joinSt = r.data; joinFor = key; }
+      else { joinSt = null; joinFor = key; }
+    } catch (e) { joinLoading = ''; return; }
+    joinLoading = '';
+    fillJoin();
+  }
+
+  function joinCardHtml() {
+    var j = joinSt, o = j && j.offer, v = (j && j.venue) || {};
+    var vname = esc(v.name || 'this business');
+    if (j && j.joined) {
+      var jn = j.joined, until = jn.expires_at ? new Date(jn.expires_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+      var state = jn.status === 'redeemed' ? '<div class="voucher-state">✓ Used. Thanks for joining!</div>'
+        : jn.status === 'expired' ? '<div class="voucher-state">This code has expired.</div>'
+        : '<p class="muted">Show us this code</p><div class="voucher-code">' + esc(jn.code || '') + '</div><p class="sub">Valid until ' + esc(until) + '. Take a screenshot to keep it.</p>';
+      var hearts = '';
+      if (jn.hearts_bonus > 0 && !jn.account) hearts = '<p class="sub">+' + fmt(jn.hearts_bonus) + ' Hearts are waiting for you. <a href="#" id="joinAcct">Make your free BarChata account</a> to collect them.</p>';
+      else if (jn.hearts_paid > 0) hearts = '<p class="sub">+' + fmt(jn.hearts_paid) + ' Hearts were added to your Hearts at ' + vname + '.</p>';
+      return '<div class="card voucher join-card' + (jn.status === 'issued' ? '' : ' done') + '"><p class="muted">Welcome to ' + vname + ' rewards</p><div class="voucher-item">' + esc(jn.offer || '') + '</div>' + state + hearts + '</div>';
+    }
+    if (!o || !j.eligible) return '';
+    var isMember = player && player.kind === 'member';
+    var head = '<p class="join-eyebrow">Join ' + vname + ' rewards</p><div class="join-offer">' + esc(o.offer) + '</div>' +
+      (o.bonus_hearts > 0 ? '<span class="join-hearts">+' + fmt(o.bonus_hearts) + ' Hearts' + (isMember ? '' : ' with a free account') + '</span>' : '');
+    var consent = '<p class="muted small">Joining shares your name and ' + (isMember ? 'contact' : 'email or number') + ' with ' + vname + '.' + (o.fine_print ? ' ' + esc(o.fine_print) : '') + '</p>';
+    var mk = '<label class="check"><input type="checkbox" id="joinMk"' + (joinDraft.marketing ? ' checked' : '') + '><span>Send me offers from ' + vname + ' (optional)</span></label>';
+    if (isMember) {
+      return '<div class="card join-card">' + head + mk + '<button class="btn" id="joinGo" type="button"' + (joinBusy ? ' disabled' : '') + '>Join free</button>' + consent + '</div>';
+    }
+    if (!joinOpen) {
+      return '<div class="card join-card">' + head + '<button class="btn" id="joinShow" type="button">Join free</button><p class="muted small">Just your name and email or mobile. No app needed.</p></div>';
+    }
+    return '<div class="card join-card">' + head +
+      '<form id="joinForm" class="stack" novalidate>' +
+      '<div class="field"><label for="joinName">Your name</label><input id="joinName" maxlength="60" autocomplete="name" placeholder="First and last name"></div>' +
+      '<div class="field"><label for="joinContact">Email or mobile number</label><input id="joinContact" maxlength="254" autocomplete="email" inputmode="email" placeholder="you@email.com or 416 555 0199"></div>' +
+      mk + '<button class="btn" id="joinGo"' + (joinBusy ? ' disabled' : '') + '>Join and get my code</button>' + consent + '</form></div>';
+  }
+
+  function fillJoin(hadFocus) {
+    var slot = document.getElementById('joinSlot');
+    if (!slot) return;
+    var t = joinTarget();
+    if (!t) { slot.innerHTML = ''; return; }
+    var key = t.source + ':' + t.source_id;
+    if (joinFor !== key) { slot.innerHTML = ''; loadJoin(t, key); return; }
+    var focusId = hadFocus || (document.activeElement && document.activeElement.id);
+    slot.innerHTML = joinCardHtml();
+    var nm = document.getElementById('joinName'), ct = document.getElementById('joinContact'), mk = document.getElementById('joinMk');
+    if (nm) { nm.value = joinDraft.name || (player && player.kind !== 'member' ? player.name : '') || ''; nm.oninput = function () { joinDraft.name = nm.value; }; }
+    if (ct) { ct.value = joinDraft.contact; ct.oninput = function () { joinDraft.contact = ct.value; }; }
+    if (mk) mk.onchange = function () { joinDraft.marketing = mk.checked; };
+    if (focusId && (focusId === 'joinName' || focusId === 'joinContact')) {
+      var f = document.getElementById(focusId);
+      if (f) { f.focus(); try { var n = f.value.length; f.setSelectionRange(n, n); } catch (e) { /* not a text box */ } }
+    }
+    var show = document.getElementById('joinShow');
+    if (show) show.onclick = function () { joinOpen = true; fillJoin(); var x = document.getElementById('joinName'); if (x) x.focus(); };
+    var form = document.getElementById('joinForm');
+    if (form) form.onsubmit = function (e) { e.preventDefault(); joinNow(); };
+    else { var go = document.getElementById('joinGo'); if (go) go.onclick = joinNow; }
+    var acct = document.getElementById('joinAcct');
+    if (acct) acct.onclick = function (e) { e.preventDefault(); setJSON(RETURN_KEY, { path: game && game.code ? '/play/' + game.code : '/play', at: Date.now() }); location.href = '/join'; };
+  }
+
+  async function joinNow() {
+    if (joinBusy) return;
+    var t = joinTarget();
+    if (!t) return;
+    var isMember = player && player.kind === 'member';
+    var nm = document.getElementById('joinName'), ct = document.getElementById('joinContact'), mk = document.getElementById('joinMk');
+    if (nm) joinDraft.name = nm.value;
+    if (ct) joinDraft.contact = ct.value;
+    if (mk) joinDraft.marketing = mk.checked;
+    if (!isMember) {
+      if (joinDraft.name.trim().length < 2) { toast('Type your name.'); return; }
+      if (joinDraft.contact.trim().length < 5) { toast('Add your email or mobile number.'); return; }
+    }
+    joinBusy = true; fillJoin();
+    try {
+      var r = await call('join_rewards', Object.assign({}, t, isMember ? { marketing: joinDraft.marketing } : { name: joinDraft.name.trim(), contact: joinDraft.contact.trim(), marketing: joinDraft.marketing }));
+      if (r.status === 200 && r.data && (r.data.joined || r.data.already_member)) {
+        joinSt = r.data;
+        if (r.data.already_member) toast('You’re already a member here.');
+        else { sfx.right(); buzz(60); }
+      } else {
+        toast((r.data && r.data.error) || 'Could not join. Try again.');
+      }
+    } catch (e) { toast('No internet connection. Try again.'); }
+    joinBusy = false; fillJoin();
+  }
+
   function viewEnded() {
     stopTimers();
     var m = st.me, s = st.session;
@@ -678,6 +796,7 @@
       (top && !won ? '<p class="muted center-text">Winner: <b>' + esc(top.name) + '</b> with ' + fmt(top.points) + ' points</p>' : '') +
       '<div class="gap"></div>' +
       voucherCard(m.voucher) +
+      joinSlot() +
       endCard(m, s) +
       '<button class="btn ghost" id="again">Join another game</button>');
     document.getElementById('again').onclick = function () { setJSON(GAME_KEY, null); history.replaceState({}, '', '/play'); viewCode(); };
@@ -736,7 +855,7 @@
     if (!s) return;
     try {
       var r = await call('claim', {});
-      if (r.status === 200 && r.data.hearts > 0) toast(fmt(r.data.hearts) + ' Hearts from Arena were added to your account!');
+      if (r.status === 200 && r.data.hearts > 0) toast(fmt(r.data.hearts) + ' Hearts were added to your account!');
       if (r.status === 200) setJSON(GUEST_KEY, null);
     } catch (e) { /* try again next visit */ }
   }
@@ -838,7 +957,7 @@
     if (m && m.voucher) {
       html = '<div class="center small"><div class="me-pic">' + picHtml(m.pic, 72) + '<span class="me-check">✓</span></div>' +
         '<h1>' + (give ? 'It’s yours!' : 'You won!') + '</h1><p class="sub">' + (give ? 'You claimed one. ' : 'You answered correctly. ') + 'Show us your code.</p></div>' +
-        contestVoucher(m.voucher, !give) + rulesBox(c) + againButton();
+        contestVoucher(m.voucher, !give) + joinSlot() + rulesBox(c) + againButton();
       render(html); wireAgain(); return;
     }
     if (give) {
@@ -871,7 +990,7 @@
       var drawing = c.status !== 'open';
       html = '<div class="center small"><div class="me-pic">' + picHtml(m.pic, 72) + '<span class="me-check">✓</span></div><h1>' + (drawing ? 'Drawing now...' : 'You’re in!') + '</h1>' +
         '<p class="sub">' + (drawing ? 'Watch the TV.' : 'Draw in <b id="cclock">–</b>') + '</p></div>' + contestHead(s) +
-        '<p class="muted center-text">Keep this page open: if you win, you’ll answer ' + (c.skill_test ? 'a skill-testing question' : 'here') + ' to claim. ' + fmt(s.entries) + (s.entries === 1 ? ' entry' : ' entries') + ' so far.</p>' + rulesBox(c);
+        '<p class="muted center-text">Keep this page open: if you win, you’ll answer ' + (c.skill_test ? 'a skill-testing question' : 'here') + ' to claim. ' + fmt(s.entries) + (s.entries === 1 ? ' entry' : ' entries') + ' so far.</p>' + joinSlot() + rulesBox(c);
       render(html); return;
     }
     if (m.won && m.outcome === 'pending' && m.skill_q) {
@@ -899,7 +1018,7 @@
     } else {
       html = '<div class="verdict none"><b>Not this time</b><span>' + (winners.length ? 'Congrats to ' + winners.join(', ') + '!' : 'Thanks for entering!') + '</span></div>';
     }
-    render(contestHead(s) + html + againButton());
+    render(contestHead(s) + html + joinSlot() + againButton());
     wireAgain();
   }
 
