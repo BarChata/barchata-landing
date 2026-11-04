@@ -584,13 +584,24 @@ section{padding:4.5rem 0}
 @media(max-width:600px){
 .ind-grid,.pr-grid{grid-template-columns:1fr}
 .hero-btns .btn{width:100%}
-.signin{display:none}
+/* Nov 3, 2026: Sign in stays visible on phones (Jericho: "Can't see the sign in page"). */
+.nav-inner{padding:0 1rem;gap:.5rem}
+.nav-brand{font-size:18px;gap:8px;margin-right:0}
+.nav-right{gap:.5rem}
+.signin{font-size:14px;font-weight:600;color:var(--text);padding:8px 4px}
+.theme-btn{width:34px;height:34px}
+.nav-right .btn{padding:9px 13px;font-size:13.5px}
+/* Footer columns were 3px wider than a phone, so the page slid sideways. */
+.f-grid{gap:1.75rem 1.25rem}
+.f-grid>*{min-width:0}
+.f-col a{overflow-wrap:anywhere}
 .demo-stats b{font-size:16px}
 .dir form{flex-direction:column}
 .proof .wrap{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
 .nav-cta-long{display:none}
 .nav-cta-short{display:inline}
 }
+@media(max-width:360px){.theme-btn{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
