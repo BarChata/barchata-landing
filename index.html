@@ -229,7 +229,7 @@ section{padding:6.5rem 0}
 .pcard ul{list-style:none;display:grid;gap:8px}
 .pcard li{font-size:14.5px;display:flex;gap:10px}
 .pcard li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--orange);margin-top:9px;flex-shrink:0}
-.addons{margin-top:1.25rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+.addons{margin-top:1.25rem;display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem}
 .addon{padding:22px 24px;border-radius:16px;border:1px dashed var(--border-2)}
 .addon small{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--text-3)}
 .addon h4{font-size:17px;margin:6px 0}
@@ -565,6 +565,47 @@ footer{background:var(--panel);border-top:1px solid var(--panel-border);padding:
 .f-bottom-links a{font-size:12.5px;color:rgba(255,255,255,0.3);transition:color .15s}
 .f-bottom-links a:hover{color:#fff}
 
+/* ═══ BARTV (Nov 4, 2026) — game-time band between the platform and the customer app ═══
+   Photo and text sit together in the page's 1160px column, so the layout holds on any screen width. */
+.bartv{position:relative;overflow:hidden;background:#0B0A09;color:#fff;isolation:isolate}
+.bartv::before{content:"";position:absolute;right:-10%;top:10%;width:70%;height:90%;background:radial-gradient(closest-side,rgba(242,125,38,.16),rgba(242,125,38,0));z-index:-1;pointer-events:none}
+.btv-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(2rem,4.5vw,4.5rem);align-items:center}
+.btv-copy{max-width:560px}
+.btv-photo{margin:0;position:relative;border-radius:24px;overflow:hidden;aspect-ratio:988/1024;max-height:640px;box-shadow:0 40px 90px -35px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.07)}
+.btv-photo img{width:100%;height:100%;object-fit:cover;object-position:center 30%;display:block}
+.btv-photo::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,rgba(11,10,9,.35) 0%,rgba(11,10,9,0) 32%)}
+.bartv .eyebrow{margin-bottom:1.1rem}
+.bartv h2{font-size:clamp(34px,4vw,54px);line-height:1;letter-spacing:-.035em;margin-bottom:1.35rem;color:#fff}
+.bartv h2 em{font-style:normal;color:var(--orange)}
+.btv-lead{color:rgba(255,255,255,.74);font-size:16.5px;line-height:1.6;margin-bottom:1.6rem}
+.btv-where{list-style:none;display:flex;flex-wrap:wrap;gap:7px;margin:-.4rem 0 1.7rem;padding:0}
+.btv-where li{font-size:12px;font-weight:600;color:rgba(255,255,255,.82);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:4px 11px}
+.btv-feats{list-style:none;display:grid;gap:12px;margin:0 0 1.8rem;padding:0}
+.btv-feats li{display:flex;gap:14px;align-items:center}
+.btv-ico{width:40px;height:40px;border-radius:12px;border:1px solid rgba(242,125,38,.5);background:rgba(242,125,38,.1);color:var(--orange);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btv-ico svg{width:20px;height:20px}
+.btv-feats b{display:block;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);line-height:1.3}
+.btv-feats small{display:block;font-size:14.5px;color:rgba(255,255,255,.72);line-height:1.45}
+.btv-ctas{display:flex;gap:12px;flex-wrap:wrap}
+.bartv .btv-ghost{border-color:rgba(255,255,255,.24);color:#fff;background:rgba(255,255,255,.04)}
+.bartv .btv-ghost:hover{border-color:var(--orange);color:var(--orange)}
+.btv-note{margin-top:1.1rem;font-size:13.5px;color:rgba(255,255,255,.55)}
+.btv-note b{color:rgba(255,255,255,.85);font-weight:600}
+.btv-tag{margin-top:1.6rem;font-size:12px;font-weight:700;letter-spacing:.42em;color:var(--orange);text-transform:uppercase}
+@media(max-width:960px){
+.btv-grid{grid-template-columns:1fr}
+.btv-photo{order:-1;aspect-ratio:4/3;max-height:none}
+.btv-photo img{object-position:58% 22%}
+.btv-copy{max-width:640px}
+}
+@media(max-width:600px){
+.btv-photo{aspect-ratio:1/1;border-radius:18px}
+.btv-photo img{object-position:62% 20%}
+.btv-lead{font-size:16px}
+.btv-ctas .btn{width:100%}
+}
+@media (prefers-reduced-motion:reduce){.bartv *{transition:none!important}}
+
 /* ═══ STORE BADGES ═══ */
 .stores{display:flex;gap:14px;margin-top:1.5rem}
 .stores a{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 16px;font-size:12px;color:rgba(255,255,255,0.65);font-weight:500;transition:all .15s}
@@ -829,7 +870,34 @@ section{padding:4.5rem 0}
       <div class="addon fx rv" style="--ic:#F27D26"><div class="ad-head"><div class="ind-ico sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div><small class="t-or">Add-on</small></div><h4>BarStock AI</h4><p>Photograph your shelves and AI counts your inventory. On every plan, including Freemium, from <span data-cat="barstock.from">$50</span>/mo with a <span data-cat="trial">30</span>-day free trial.</p></div>
       <div class="addon fx rv" style="--ic:#10B981"><div class="ad-head"><div class="ind-ico sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/></svg></div><small class="t-gr">Included</small></div><h4>Bookings &amp; appointments</h4><p>Reservations with deposits and automatic confirmations.</p></div>
       <div class="addon fx rv" style="--ic:#3B82F6"><div class="ad-head"><div class="ind-ico sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><small class="t-bl">Pro &amp; Elite</small></div><h4>BarCard</h4><p>Instant staff tips and business expense cards. <a href="#barcard">Learn more</a></p></div>
+      <div class="addon fx rv" style="--ic:#F27D26"><div class="ad-head"><div class="ind-ico sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m10 8.5 4 2-4 2z"/></svg></div><small class="t-or">Add-on</small></div><h4>BarTV</h4><p>Trivia, giveaways and live predictions on the TVs you already have. People play from their phone. <a href="#bartv">Learn more</a></p></div>
     </div>
+  </div>
+</section>
+
+<section id="bartv" class="bartv" aria-labelledby="bartv-h">
+  <div class="wrap btv-grid">
+    <div class="btv-copy rv">
+      <span class="eyebrow">BarTV by BarChata</span>
+      <h2 id="bartv-h">More than a screen.<br>It's game time,<br><em>anywhere.</em></h2>
+      <p class="btv-lead">BarTV turns the TVs you already have into live trivia, instant giveaways and rewards. At the bar, in the salon chair, at the gym, in the waiting room or the office break room.</p>
+      <ul class="btv-where" aria-label="Where BarTV works"><li>Bars</li><li>Restaurants</li><li>Salons &amp; spas</li><li>Gyms</li><li>Offices</li><li>Waiting rooms</li></ul>
+      <ul class="btv-feats">
+        <li><span class="btv-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span><div><b>Live trivia</b><small>Play solo, with your table or with your team.</small></div></li>
+        <li><span class="btv-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></span><div><b>Win prizes</b><small>Free wings, a free blowout, a free class. You choose.</small></div></li>
+        <li><span class="btv-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2A5 5 0 0 1 21 19"/></svg></span><div><b>For everyone</b><small>Customers, guests and staff. Fun, fast, no app to download.</small></div></li>
+      </ul>
+      <div class="btv-ctas">
+        <a class="btn btn-primary" href="https://biz.barchata.com/tv/demo" target="_blank" rel="noopener">Watch the live demo</a>
+        <a class="btn btn-ghost btv-ghost" href="mailto:hello@barchata.com?subject=BarTV%20demo">Book a BarTV demo</a>
+      </div>
+      <p class="btv-note">People scan the code on your TV and play at <b>barchata.com/play</b>.</p>
+      <p class="btv-tag">Watch. Play. Win.</p>
+    </div>
+    <figure class="btv-photo rv" style="--d:120ms">
+      <img src="/assets/bartv/bartv-night.webp" srcset="/assets/bartv/bartv-night-640.webp 640w, /assets/bartv/bartv-night.webp 988w" sizes="(max-width:960px) 100vw, 600px" width="988" height="1024" loading="lazy" decoding="async"
+         alt="BarTV on game night: people answer a live trivia question on the big screen">
+    </figure>
   </div>
 </section>
 
