@@ -258,9 +258,19 @@
       try {
         const res = await checkIn(code);
         if (res && res.ok) {
-          const pts = Number((res.award && res.award.points_awarded) || res.points_awarded || res.points || 0);
-          render(header() + '<div class="center"><div class="success">✓</div><h1>You are checked in</h1><p class="sub">' + esc(v.name) +
-            (pts > 0 ? '<br><b style="color:var(--brand)">+' + pts + ' Hearts</b>' : '<br>Check-in saved. Hearts are limited per visit, so this one did not add more.') +
+          // Say what really happened (Nov 5, 2026): a repeat scan saves nothing, and a
+          // venue with no Hearts left gives none - neither is "limited per visit".
+          const award = (res && res.award) || {};
+          const pts = Number(award.points_awarded || res.points_awarded || res.points || 0);
+          const again = res.status === 'already_checked_in';
+          let line;
+          if (again) line = esc(res.message || 'You already checked in here today. You can check in again tomorrow.');
+          else if (pts > 0) line = '<b style="color:var(--brand)">+' + pts + ' Hearts</b>';
+          else if (award.source === 'pool_empty' || award.points_enabled === false) line = 'Check-in saved. ' + esc(v.name) + ' isn\u2019t giving Hearts right now.';
+          else if (award.already_awarded_today) line = 'Check-in saved. Hearts here are once a day.';
+          else line = 'Check-in saved.';
+          render(header() + '<div class="center"><div class="success">✓</div><h1>' + (again ? 'Already checked in today' : 'You are checked in') + '</h1><p class="sub">' + esc(v.name) +
+            '<br>' + line +
             '</p><div class="stack" style="width:100%"><a class="btn" href="/app" data-link>See my Hearts</a></div></div><div id="joinSlot"></div>');
           fillScanJoin();
         } else {
