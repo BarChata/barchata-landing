@@ -102,9 +102,25 @@
     return null;
   }
 
+  // Where the phone is (Nov 10, 2026): a venue's printed code is its public BarCode, so the server only pays
+  // Hearts for it when the phone is near the venue. Null if location is refused or slow (the check-in is still saved).
+  function scanPosition() {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) { resolve(null); return; }
+      let done = false;
+      const finish = (v) => { if (!done) { done = true; resolve(v); } };
+      setTimeout(() => finish(null), 9000);
+      navigator.geolocation.getCurrentPosition(
+        (p) => finish({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        () => finish(null),
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 120000 });
+    });
+  }
+
   async function checkIn(code) {
+    const pos = await scanPosition();
     for (const form of codeForms(code)) {
-      const { data, error } = await sb.rpc('verify_checkin_qr', { p_qr: form });
+      const { data, error } = await sb.rpc('verify_checkin_qr', { p_qr: form, p_lat: pos ? pos.lat : null, p_lng: pos ? pos.lng : null });
       if (error) throw error;
       if ((data && data.ok) || (data && data.error !== 'qr_not_recognised')) return data;
     }
@@ -263,13 +279,16 @@
           const award = (res && res.award) || {};
           const pts = Number(award.points_awarded || res.points_awarded || res.points || 0);
           const again = res.status === 'already_checked_in';
+          // Saved, but the phone wasn't shown to be at the venue: Hearts wait for a scan there.
+          const held = res.status === 'pending_verification';
           let line;
-          if (again) line = esc(res.message || 'You already checked in here today. You can check in again tomorrow.');
+          if (held) line = esc(res.message || 'Your check-in is saved. Scan again at the venue to collect your Hearts.');
+          else if (again) line = esc(res.message || 'You already checked in here today. You can check in again tomorrow.');
           else if (pts > 0) line = '<b style="color:var(--brand)">+' + pts + ' Hearts</b>';
           else if (award.source === 'pool_empty' || award.points_enabled === false) line = 'Check-in saved. ' + esc(v.name) + ' isn\u2019t giving Hearts right now.';
           else if (award.already_awarded_today) line = 'Check-in saved. Hearts here are once a day.';
           else line = 'Check-in saved.';
-          render(header() + '<div class="center"><div class="success">✓</div><h1>' + (again ? 'Already checked in today' : 'You are checked in') + '</h1><p class="sub">' + esc(v.name) +
+          render(header() + '<div class="center"><div class="success">✓</div><h1>' + (held ? 'Check-in saved' : again ? 'Already checked in today' : 'You are checked in') + '</h1><p class="sub">' + esc(v.name) +
             '<br>' + line +
             '</p><div class="stack" style="width:100%"><a class="btn" href="/app" data-link>See my Hearts</a></div></div><div id="joinSlot"></div>');
           fillScanJoin();
