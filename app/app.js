@@ -15,8 +15,8 @@
   const $app = document.getElementById('app');
   const MIN_AGE = 18;
   const PENDING = 'bc_pending_scan';
-  const APP_STORE_LIVE = false; // flip when the App Store listing is approved
-  const PLAY_STORE_LIVE = false; // flip when the Google Play listing is live
+  const APP_STORE_LIVE = true; // flip when the App Store listing is approved
+  const PLAY_STORE_LIVE = true; // flip when the Google Play listing is live
 
   // ------------------------------------------------------------------ helpers
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
