@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /index-backup
+Disallow: /_to_delete/
+
+Sitemap: https://www.barchata.com/sitemap.xml
