@@ -127,8 +127,16 @@
   }
   function loading(text) { render('<div class="center"><div class="spinner"></div>' + (text ? '<p class="muted">' + esc(text) + '</p>' : '') + '</div>'); }
 
+  // Inside the BarChata app (Nov 21, 2026): the app opens this page in its own window and hands over the
+  // member's session token (window.BC_APP_TOKEN), so they play as themselves and their Hearts land in their
+  // account. The app keeps the token fresh. Nothing is stored on this page.
+  function appToken() {
+    try { var t = window.BC_APP_TOKEN; return typeof t === 'string' && t.split('.').length === 3 ? t : null; } catch (e) { return null; }
+  }
+
   async function call(action, body) {
-    var s = (await sb.auth.getSession()).data.session;
+    var at = appToken();
+    var s = at ? { access_token: at } : (await sb.auth.getSession()).data.session;
     var guest = getJSON(GUEST_KEY);
     var payload = Object.assign({ action: action }, body || {});
     if (guest && guest.token) payload.guest_token = guest.token;
@@ -278,7 +286,7 @@
     var f = teamForm;
     var who = player ? (player.kind === 'member' ? '@' + player.name : player.name + ' (guest)') : '';
     render(gameCard() + '<div class="gap"></div><h1>Who are you with?</h1>' +
-      '<div class="playing-as">' + picHtml(player && player.pic, 36) + '<p class="sub">Playing as <b>' + esc(who) + '</b> · <a href="#" id="switch">' + (player && player.kind === 'member' ? 'Sign out' : 'Change') + '</a></p></div><div class="gap"></div>' +
+      '<div class="playing-as">' + picHtml(player && player.pic, 36) + '<p class="sub">Playing as <b>' + esc(who) + '</b>' + (appToken() ? '' : ' · <a href="#" id="switch">' + (player && player.kind === 'member' ? 'Sign out' : 'Change') + '</a>') + '</p></div><div class="gap"></div>' +
       '<div class="tabs" role="tablist">' +
       '<button data-m="table" class="' + (f.mode === 'table' ? 'on' : '') + '">Table number</button>' +
       '<button data-m="name" class="' + (f.mode === 'name' ? 'on' : '') + '">Team name</button>' +
@@ -295,7 +303,8 @@
     document.querySelectorAll('[data-m]').forEach(function (b) {
       b.onclick = function () { saveTeamForm(); teamForm.mode = b.dataset.m; teamForm.taken = null; teamForm.pin = ''; viewTeam(); };
     });
-    document.getElementById('switch').onclick = async function (e) {
+    var sw = document.getElementById('switch');
+    if (sw) sw.onclick = async function (e) {
       e.preventDefault();
       if (player && player.kind === 'member') { await sb.auth.signOut(); player = null; viewWho(); return; }
       viewGuest();
@@ -844,7 +853,7 @@
     if (m.is_guest) {
       return '<div class="card cta"><h2>Win Hearts next time</h2>' + note + '<p class="sub">Create your free BarChata account to keep your scores, win Hearts at ' + venue + ' and get rewards.</p><div class="gap"></div><a class="btn" href="/join">Join BarChata free</a></div>';
     }
-    return '<div class="card cta"><h2>Thanks for playing</h2>' + note + '<p class="sub">Check in at ' + venue + ' in the BarChata app to earn Hearts on every visit.</p><div class="gap"></div><a class="btn secondary" href="/app">Open BarChata</a></div>';
+    return '<div class="card cta"><h2>Thanks for playing</h2>' + note + '<p class="sub">Check in at ' + venue + ' in the BarChata app to earn Hearts on every visit.</p>' + (appToken() ? '' : '<div class="gap"></div><a class="btn secondary" href="/app">Open BarChata</a>') + '</div>';
   }
 
   // A guest who just created an account on this phone: move the Hearts they won into it.
