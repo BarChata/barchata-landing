@@ -29,8 +29,10 @@
   const loading = () => render('<div class="center"><div class="spinner"></div></div>');
   const initial = (name) => esc((name || '?').trim().charAt(0).toUpperCase());
 
+  // Official BarChata mark (assets/barchata-icon.png, same file) inside the page, so the header logo can't fail to load.
+  const LOGO = 'data:image/png;base64,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';
   function header(right) {
-    return '<div class="top"><a class="logo" href="/app" data-link><img src="/assets/barchata-icon.png" alt=""><span>Bar<b>Chata</b></span></a>' + (right || '') + '</div>';
+    return '<div class="top"><a class="logo" href="/app" data-link><img src="' + LOGO + '" alt="BarChata"><span>Bar<b>Chata</b></span></a>' + (right || '') + '</div>';
   }
 
   function scanCodeFromPath() {
@@ -122,7 +124,9 @@
         lastFix = { lat: p.coords.latitude, lng: p.coords.longitude, acc, at: Date.now() };
         finish(lastFix);
       };
-      const fail = (e) => finish({ error: e && e.code === 1 ? 'denied' : 'unavailable' });
+      const started = Date.now();
+      // Refused faster than a person can tap "Don't Allow": the phone or browser settings block location.
+      const fail = (e) => finish({ error: e && e.code === 1 ? 'denied' : 'unavailable', blocked: !!(e && e.code === 1 && Date.now() - started < 900) });
       navigator.geolocation.getCurrentPosition(ok, (e) => {
         if (e && e.code === 1) { fail(e); return; }
         navigator.geolocation.getCurrentPosition(ok, fail, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
@@ -487,7 +491,7 @@
   const COASTER_NEAR_M = 3000;
   const COASTER_LIST_MAX = 500;  // more places than this: search on the server instead of in the page
   const COASTER_FLAG = 'bc_from_coaster';
-  const VENUE_COLS = 'id, name, address, city, category, cover_image, logo_url, is_active, primary_barcode, lat, lng';
+  const VENUE_COLS = 'id, name, address, city, country, category, cover_image, logo_url, is_active, primary_barcode, lat, lng';
   const cst = { all: null, capped: false, loadErr: false, pos: null, near: null, loc: 'locating', noAuto: false, q: '', touched: false, remote: null, refused: 0 };
 
   function metres(a, b) {
@@ -504,6 +508,30 @@
   function fromCoaster() {
     try { const at = Number(sessionStorage.getItem(COASTER_FLAG) || 0); return Date.now() - at < 30 * 60 * 1000; } catch (e) { return false; }
   }
+  // Without location, put the places most likely to be close first, from the phone's time zone (no permission needed):
+  // the time zone's city (America/Toronto -> Toronto), then the same country, then everything else, A-Z in each.
+  const TZ_COUNTRY = { Toronto: 'canada', Vancouver: 'canada', Edmonton: 'canada', Winnipeg: 'canada', Halifax: 'canada', Regina: 'canada', St_Johns: 'canada', Moncton: 'canada',
+    New_York: 'united states', Chicago: 'united states', Denver: 'united states', Los_Angeles: 'united states', Phoenix: 'united states', Detroit: 'united states', Anchorage: 'united states',
+    Sao_Paulo: 'brazil', Fortaleza: 'brazil', Recife: 'brazil', Manaus: 'brazil', Bahia: 'brazil', London: 'united kingdom', Manila: 'philippines', Mexico_City: 'mexico' };
+  function homeRank() {
+    let tz = '';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { /* none */ }
+    const city = tz.split('/').pop() || '';
+    const country = TZ_COUNTRY[city] || '';
+    const aliases = { 'united states': ['united states', 'usa', 'us'], canada: ['canada', 'ca'], brazil: ['brazil', 'brasil', 'br'], 'united kingdom': ['united kingdom', 'uk', 'gb'] };
+    const names = aliases[country] || (country ? [country] : []);
+    const c = city.replace(/_/g, ' ').toLowerCase();
+    return (v) => {
+      if (c && norm(v.city) === c) return 0;
+      if (names.length && names.indexOf(norm(v.country)) >= 0) return 1;
+      return 2;
+    };
+  }
+  function byHome(arr) {
+    const r = homeRank();
+    return arr.slice().sort((a, b) => r(a) - r(b) || String(a.name).localeCompare(String(b.name)));
+  }
+
   function withDist(arr) {
     if (!cst.pos) return arr;
     return arr.map((v) => Object.assign({}, v, { dist: v.lat != null && v.lng != null ? metres(cst.pos, { lat: Number(v.lat), lng: Number(v.lng) }) : null }))
@@ -598,7 +626,7 @@
     if (!onCoasterPage()) return;
     if (p.error) {
       cst.loc = p.error === 'denied' ? 'denied' : 'unavailable';
-      if (p.error === 'denied') cst.refused++;
+      if (p.error === 'denied') { cst.refused++; cst.blocked = !!p.blocked; }
       coasterPaint();
       return;
     }
@@ -622,6 +650,7 @@
     if (cst.loc === 'locating') s = '<div class="spinner sm"></div><span>Finding the place you’re in…</span>';
     else if (cst.loc === 'here') s = pinIcon() + '<span><b>Which place are you at?</b> Closest first.</span>';
     else if (cst.loc === 'far') s = pinIcon() + '<span>No BarChata place right here. Closest first.</span>';
+    else if (cst.loc === 'denied' && cst.blocked) s = '<span>' + (isIOS() ? 'Your iPhone is blocking location for Safari' : 'Location is blocked in your browser settings') + ', so pick your place below. <button type="button" class="linkbtn" id="cHow">Show me how to fix it</button> \u00b7 <button type="button" class="linkbtn" id="cAgain">Try again</button></span>';
     else if (cst.loc === 'denied' && cst.refused >= 2) s = '<span>Location is still off. If you just turned it on, refresh this page. <button type="button" class="linkbtn" id="cReload">Refresh</button> \u00b7 <button type="button" class="linkbtn" id="cHow">How to turn it on</button></span>';
     else if (cst.loc === 'denied') s = '<span>Location is off for this browser, so pick your place below. <button type="button" class="linkbtn" id="cHow">Turn location on</button> \u00b7 <button type="button" class="linkbtn" id="cAgain">Try again</button></span>';
     else s = '<span>We couldn’t get your location. Pick your place below. <button type="button" class="linkbtn" id="cAgain">Try again</button></span>';
@@ -636,14 +665,15 @@
       if (cst.capped) list = q.length >= 2 ? cst.remote : null;
       else if (cst.all) {
         const n = norm(q);
-        list = withDist(cst.all.filter((v) => [v.name, v.city, v.address, v.primary_barcode].some((x) => norm(x).includes(n))));
+        const hits = cst.all.filter((v) => [v.name, v.city, v.address, v.primary_barcode].some((x) => norm(x).includes(n)));
+        list = cst.pos ? withDist(hits) : byHome(hits);
       }
       empty = 'No BarChata place matches “' + esc(q) + '”. Check the spelling, or ask the staff for their @BarCode.';
     } else if (cst.pos) {
       const here = (cst.near || []).filter((v) => v.dist <= COASTER_HERE_M);
       list = here.length ? here : (cst.near && cst.near.length ? cst.near.slice(0, 6) : (cst.all ? withDist(cst.all).slice(0, 6) : null));
     } else if (cst.loc !== 'locating') {
-      list = cst.capped ? [] : cst.all;
+      list = cst.capped ? [] : (cst.all ? byHome(cst.all) : null);
       empty = cst.capped ? 'Type the name of the place above.' : '';
     } else {
       list = [];
@@ -658,7 +688,11 @@
 
   function showLocationHelp() {
     const steps = isIOS()
-      ? '<ol class="steps"><li>Open the <b>Settings</b> app › <b>Privacy & Security</b> › <b>Location Services</b>. Make sure it is <b>On</b>.</li><li>In the same list, tap <b>Safari Websites</b> and choose <b>While Using the App</b>.</li><li>Back in Safari, tap the page menu next to the address (<b>≡</b>, <b>aA</b> or <b>⋯</b>) › <b>Website Settings</b> › <b>Location</b> › <b>Allow</b>.</li><li>Come back to this page. It finds your place by itself.</li></ol>'
+      ? '<ol class="steps"><li>Open the <b>Settings</b> app › <b>Privacy & Security</b> › <b>Location Services</b>. Turn it <b>On</b>.</li>' +
+        '<li>In that list, tap <b>Safari Websites</b> › <b>While Using the App</b>, and turn on <b>Precise Location</b>.</li>' +
+        '<li>Go back to <b>Settings</b> › <b>Apps</b> › <b>Safari</b> › <b>Location</b> (under Settings for Websites) and choose <b>Ask</b> or <b>Allow</b>.</li>' +
+        '<li>Back in Safari, tap the page menu next to the address (<b>≡</b>, <b>aA</b> or <b>⋯</b>) › <b>Website Settings</b> › <b>Location</b> › <b>Allow</b>.</li>' +
+        '<li>Come back to this page and tap <b>Try again</b>.</li></ol>'
       : isAndroid()
         ? '<ol class="steps"><li>Tap the icon to the left of the address.</li><li>Tap <b>Permissions</b> (or <b>Site settings</b>) and set <b>Location</b> to <b>Allow</b>.</li><li>Make sure <b>Location</b> is on in your quick settings.</li><li>Come back to this page. It finds your place by itself.</li></ol>'
         : '<ol class="steps"><li>Click the icon to the left of the address.</li><li>Set <b>Location</b> to <b>Allow</b>.</li><li>Come back to this page. It finds your place by itself.</li></ol>';
@@ -889,7 +923,7 @@
     if (standalone()) return '';
     const text = isMobile() ? 'Add BarChata to your home screen for one-tap check-ins.' : 'Open BarChata on your phone and add it to your home screen.';
     return '<button type="button" class="banner" id="installBanner" style="width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit">' +
-      '<img src="/assets/barchata-icon.png" width="40" height="40" style="border-radius:10px" alt="">' +
+      '<img src="' + LOGO + '" width="40" height="40" style="border-radius:10px" alt="">' +
       '<div style="flex:1"><div class="t">Install BarChata</div><div class="d">' + text + '</div></div>' +
       '<span class="btn" style="width:auto;height:36px;padding:0 14px;font-size:14px;display:inline-flex;align-items:center">' + (isMobile() ? 'Install' : 'Show me') + '</span></button><div class="gap"></div>';
   }
