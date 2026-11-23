@@ -90,16 +90,17 @@
     return sb.from('profiles').update({ username: h, full_name: h }).eq('id', uid);
   }
 
+  const SCAN_COLS = 'id, name, address, city, cover_image, logo_url, is_active, primary_barcode, owner_id, wifi_ssid, country';
   async function findVenue(code) {
     for (const form of codeForms(code)) {
-      const { data, error } = await sb.from('venues').select('id, name, address, city, cover_image, logo_url, is_active, primary_barcode').eq('primary_barcode', form).limit(1).maybeSingle();
+      const { data, error } = await sb.from('venues').select(SCAN_COLS).eq('primary_barcode', form).limit(1).maybeSingle();
       if (error) throw error;
       if (data) return data;
     }
     // Printed before the owner renamed their handle.
     const { data: r } = await sb.rpc('resolve_handle', { p_handle: code }).then((x) => x, () => ({ data: null }));
     if (r && r.venue_id) {
-      const { data } = await sb.from('venues').select('id, name, address, city, cover_image, logo_url, is_active, primary_barcode').eq('id', r.venue_id).maybeSingle();
+      const { data } = await sb.from('venues').select(SCAN_COLS).eq('id', r.venue_id).maybeSingle();
       return data;
     }
     return null;
@@ -254,10 +255,166 @@
     } catch (e) { /* try again next visit */ }
   }
 
+  // ------------------------------------------------------------------ what the business offers (Nov 23, 2026)
+  // On the check-in page: Rewards (with the member's Hearts there), Wi-Fi and Menu, each only when the business has it
+  // and has it switched on (venue_features: hearts_loyalty, wifi_access, menu; no row = on). Every part loads on its own
+  // and just stays hidden if it can't load, so the check-in never waits for these or breaks because of them.
+  // rewards.venue_id is the OWNER's profile id; place_ids (null = all the owner's places) says where a reward shows.
+  // The Wi-Fi password comes only from get_venue_wifi: staff, or a member who checked in here in the last 8 hours.
+  const CURRENCY = { canada: ['CAD', 'en-CA'], ca: ['CAD', 'en-CA'], 'united states': ['USD', 'en-US'], usa: ['USD', 'en-US'], us: ['USD', 'en-US'],
+    brazil: ['BRL', 'pt-BR'], brasil: ['BRL', 'pt-BR'], br: ['BRL', 'pt-BR'], 'united kingdom': ['GBP', 'en-GB'], uk: ['GBP', 'en-GB'],
+    mexico: ['MXN', 'es-MX'], philippines: ['PHP', 'en-PH'] };
+  function money(n, country) {
+    const x = Number(n);
+    if (n == null || n === '' || !isFinite(x)) return '';
+    const c = CURRENCY[String(country || '').trim().toLowerCase()];
+    try { if (c) return new Intl.NumberFormat(c[1], { style: 'currency', currency: c[0] }).format(x); } catch (e) { /* old browser */ }
+    return '$' + x.toFixed(2);
+  }
+  const shortDate = (d) => { try { return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
+  const ext = { v: null, opts: {}, feat: null, menu: null, rewards: null, loyalty: false, wifi: null, hearts: null, busy: false };
+
+  async function loadExtras(v, opts) {
+    Object.assign(ext, { v, opts: opts || {}, feat: null, menu: null, rewards: null, loyalty: false, wifi: null, hearts: null, busy: false });
+    const mine = v.id;
+    const get = (q) => Promise.resolve(q).then((r) => (r && !r.error ? r.data : null), () => null);
+    const o = ext.opts;
+    const [feat, cats, items, rewards, wifi, member] = await Promise.all([
+      get(sb.from('venue_features').select('feature, is_enabled').eq('venue_id', v.id).in('feature', ['menu', 'wifi_access', 'hearts_loyalty'])),
+      get(sb.from('menu_categories').select('id, name, sort_order, is_active').eq('venue_id', v.id).order('sort_order').limit(100)),
+      get(sb.from('menu_items').select('id, category_id, name, description, price, image_url, is_available, is_featured, sort_order').eq('venue_id', v.id).order('sort_order').limit(400)),
+      v.owner_id ? get(sb.from('rewards').select('id, title, description, hearts_cost, quantity_available, quantity_redeemed, expires_at, place_ids').eq('venue_id', v.owner_id).eq('active', true).order('hearts_cost').limit(60)) : null,
+      o.signedIn ? get(sb.rpc('get_venue_wifi', { p_venue_id: v.id })) : null,
+      o.uid ? get(sb.from('members').select('hearts').eq('venue_id', v.id).eq('profile_id', o.uid).maybeSingle()) : null,
+    ]);
+    if (!ext.v || ext.v.id !== mine) return; // moved to another place meanwhile
+    ext.feat = feat || [];
+    const on = (f) => !ext.feat.some((r) => r.feature === f && r.is_enabled === false);
+    // Menu: active categories in order, available items; items without a (live) category go under "More".
+    if (on('menu') && items && items.length) {
+      const live = (cats || []).filter((c) => c.is_active !== false);
+      const byCat = {};
+      const offCats = (cats || []).filter((c) => c.is_active === false).map((c) => c.id); // the business hid these
+      items.filter((i) => i.is_available !== false && i.name && offCats.indexOf(i.category_id) < 0).forEach((i) => {
+        const k = live.some((c) => c.id === i.category_id) ? i.category_id : '_more';
+        (byCat[k] = byCat[k] || []).push(i);
+      });
+      const groups = live.filter((c) => byCat[c.id]).map((c) => ({ name: c.name, items: byCat[c.id] }));
+      if (byCat._more) groups.push({ name: groups.length ? 'More' : 'Menu', items: byCat._more });
+      ext.menu = groups.length ? groups : null;
+    }
+    // Rewards: still running, shown at this place, not sold out; identical copies shown once.
+    if (on('hearts_loyalty') && rewards) {
+      const now = Date.now(), seen = {};
+      ext.rewards = rewards.filter((r) => (!r.expires_at || new Date(r.expires_at).getTime() > now)
+          && (!r.place_ids || !r.place_ids.length || r.place_ids.indexOf(v.id) >= 0)
+          && (r.quantity_available == null || Number(r.quantity_redeemed || 0) < Number(r.quantity_available)))
+        .filter((r) => { const k = [r.title, r.hearts_cost, r.description || ''].join('|').toLowerCase(); if (seen[k]) return false; seen[k] = 1; return true; });
+      ext.loyalty = true;
+    }
+    if (on('wifi_access')) ext.wifi = wifi || (v.wifi_ssid ? { ssid: v.wifi_ssid, unknown: true } : null);
+    ext.hearts = member ? Number(member.hearts || 0) : (o.uid ? 0 : null);
+    paintExtras();
+  }
+
+  function paintExtras() {
+    const slot = document.getElementById('extras');
+    if (!slot || !ext.v) return;
+    const v = ext.v, o = ext.opts, out = [];
+    // Rewards + Hearts
+    if (ext.loyalty) {
+      const mine = ext.hearts;
+      const head = '<div class="xhead"><h2>Rewards</h2>' + (mine != null ? '<span class="pill">' + fmt(mine) + ' Hearts here</span>' : '') + '</div>' +
+        '<p class="muted">Earn Hearts every time you check in at ' + esc(v.name) + ', then trade them for rewards.</p>';
+      const rows = (ext.rewards || []).map((r) => {
+        const cost = Number(r.hearts_cost || 0);
+        const left = r.quantity_available != null ? Math.max(0, Number(r.quantity_available) - Number(r.quantity_redeemed || 0)) : null;
+        const meta = [left != null ? left + ' left' : '', r.expires_at ? 'until ' + shortDate(r.expires_at) : ''].filter(Boolean).join(' · ');
+        let act = '';
+        if (o.signedIn && mine != null) {
+          act = mine >= cost
+            ? '<button class="btn sm" type="button" data-redeem="' + esc(r.id) + '"' + (ext.busy ? ' disabled' : '') + '>Redeem</button>'
+            : '<span class="muted xneed">' + fmt(cost - mine) + ' more</span>';
+        }
+        return '<div class="xrow"><div class="xmain"><div class="t">' + esc(r.title) + '</div>' +
+          (r.description ? '<div class="muted">' + esc(r.description) + '</div>' : '') + (meta ? '<div class="muted">' + esc(meta) + '</div>' : '') +
+          '</div><div class="xside"><span class="pill">' + fmt(cost) + ' Hearts</span>' + act + '</div></div>';
+      }).join('');
+      const foot = !o.signedIn ? '<p class="muted xfoot">Join free to start earning Hearts here.</p>' : '';
+      out.push('<div class="card xcard" id="xRewards">' + head + (rows ? '<div class="xlist">' + rows + '</div>' : '') + foot + '</div>');
+    }
+    // Wi-Fi
+    const w = ext.wifi;
+    if (w && (w.ssid || w.password)) {
+      let body;
+      if (w.password) {
+        body = '<div class="xrow"><div class="xmain"><div class="muted">Password</div><div class="wifi-pw">' + esc(w.password) + '</div></div>' +
+          '<div class="xside"><button class="btn sm secondary" type="button" data-copy="' + esc(w.password) + '">Copy</button></div></div>';
+      } else if (w.unknown) {
+        body = '<p class="muted">Join free and check in to get the password.</p>';
+      } else if (w.has_password === false) {
+        body = '<p class="muted">No password needed.</p>';
+      } else {
+        body = '<p class="muted">' + (o.checkedIn ? 'The password shows here once your check-in is confirmed at ' + esc(v.name) + '.' : 'Check in to see the password.') + '</p>';
+      }
+      out.push('<div class="card xcard"><div class="xhead"><h2>Wi-Fi</h2></div>' +
+        (w.ssid ? '<div class="xrow"><div class="xmain"><div class="muted">Network</div><div class="t">' + esc(w.ssid) + '</div></div></div>' : '') + body + '</div>');
+    }
+    // Menu
+    if (ext.menu) {
+      const groups = ext.menu.map((g, i) => '<details class="mgroup"' + (i === 0 ? ' open' : '') + '><summary>' + esc(g.name) + '<span class="muted">' + g.items.length + '</span></summary>' +
+        g.items.map((it) => '<div class="mitem">' + (it.image_url ? '<img src="' + esc(it.image_url) + '" alt="" loading="lazy">' : '') +
+          '<div class="xmain"><div class="t">' + esc(it.name) + (it.is_featured ? ' <span class="pill">Popular</span>' : '') + '</div>' +
+          (it.description ? '<div class="muted">' + esc(it.description) + '</div>' : '') + '</div>' +
+          (money(it.price, v.country) ? '<div class="price">' + esc(money(it.price, v.country)) + '</div>' : '') + '</div>').join('') + '</details>').join('');
+      out.push('<div class="card xcard"><div class="xhead"><h2>Menu</h2></div>' + groups + '</div>');
+    }
+    slot.innerHTML = out.join('');
+    slot.querySelectorAll('[data-copy]').forEach((b) => { b.onclick = async () => {
+      try { await navigator.clipboard.writeText(b.dataset.copy); toast('Copied'); } catch (e) { toast('Press and hold the password to copy it.'); }
+    }; });
+    slot.querySelectorAll('[data-redeem]').forEach((b) => { b.onclick = () => askRedeem(b.dataset.redeem); });
+  }
+
+  function askRedeem(id) {
+    const r = (ext.rewards || []).find((x) => x.id === id);
+    if (!r || ext.busy) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'sheetwrap';
+    wrap.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-label="Redeem reward"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2>Redeem this reward?</h2><button class="iconbtn" data-close aria-label="Close">✕</button></div>' +
+      '<div class="join-offer">' + esc(r.title) + '</div><p class="sub">' + fmt(r.hearts_cost) + ' Hearts from your Hearts at ' + esc(ext.v.name) + '. Show the next screen to the staff.</p><div class="gap"></div>' +
+      '<div class="stack"><button class="btn" type="button" id="xGo">Redeem for ' + fmt(r.hearts_cost) + ' Hearts</button><button class="btn secondary" type="button" data-close>Not now</button></div></div>';
+    wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-close]')) wrap.remove(); });
+    document.body.appendChild(wrap);
+    document.getElementById('xGo').onclick = async (e) => {
+      e.target.disabled = true; e.target.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px"></div>';
+      ext.busy = true;
+      let res = null;
+      try { const { data, error } = await sb.rpc('redeem_reward', { p_venue_id: ext.v.id, p_reward_id: r.id }); res = error ? { ok: false, error: error.message } : data; }
+      catch (err) { res = { ok: false, error: 'offline' }; }
+      ext.busy = false;
+      const sheet = wrap.querySelector('.sheet');
+      if (res && res.ok) {
+        if (res.new_balance != null) ext.hearts = Number(res.new_balance);
+        sheet.innerHTML = '<div class="center" style="min-height:0;padding:8px 0"><div class="success">✓</div><h2>Show this to the staff</h2>' +
+          '<div class="join-offer">' + esc(res.reward_title || r.title) + '</div><p class="muted">' + esc(ext.v.name) + ' · ' + new Date().toLocaleString() + '</p>' +
+          '<p class="sub">' + fmt(res.hearts_spent || r.hearts_cost) + ' Hearts used. You have ' + fmt(ext.hearts) + ' Hearts here now.</p>' +
+          '<button class="btn" type="button" data-close>Done</button></div>';
+      } else {
+        const why = { not_authenticated: 'Please sign in again.', not_a_member: 'Check in here first to start collecting Hearts at ' + ext.v.name + '.',
+          insufficient_hearts: 'You don’t have enough Hearts here yet.', reward_sold_out: 'This reward has run out.',
+          reward_unavailable: 'This reward isn’t available any more.', offline: 'No internet connection. Try again.' }[res && res.error] || 'Could not redeem. Try again.';
+        toast(why);
+        wrap.remove();
+      }
+      paintExtras();
+    };
+  }
+
   function venueCard(v) {
     const img = v.cover_image || v.logo_url;
     return '<div class="card venue"><div class="img"' + (img ? ' style="background-image:url(' + esc(img) + ')"' : '') + '>' + (img ? '' : initial(v.name)) + '</div>' +
-      '<div><div class="name">' + esc(v.name) + '</div><div class="muted">' + esc([v.address, v.city].filter(Boolean).join(', ')) + '</div></div></div>';
+      '<div><div class="name">' + esc(v.name) + '</div><div class="muted">' + esc(placeLine(v)) + '</div></div></div>';
   }
 
   // ------------------------------------------------------------------ views
@@ -279,13 +436,14 @@
       rememberScan(code);
       render(header() + '<h1>Check in and earn Hearts</h1><p class="sub">Join BarChata free to check in here, collect Hearts and unlock rewards.</p><div class="gap"></div>' +
         venueCard(v) + notHere() + closed + '<div id="joinSlot"></div><div class="gap"></div><div class="stack">' +
-        '<button class="btn" data-go="/join">Join BarChata free</button><button class="btn secondary" data-go="/app?mode=signin">I have an account</button></div>' + legal());
-      if (v.is_active !== false) loadScanJoin(code, false);
+        '<button class="btn" data-go="/join">Join BarChata free</button><button class="btn secondary" data-go="/app?mode=signin">I have an account</button></div><div id="extras"></div>' + legal());
+      if (v.is_active !== false) { loadScanJoin(code, false); loadExtras(v, { signedIn: false }); }
       return;
     }
     render(header() + '<h1>You are at</h1><div class="gap"></div>' + venueCard(v) + notHere() + closed + '<div class="gap"></div>' +
-      '<button class="btn" id="doCheckin"' + (v.is_active === false ? ' disabled' : '') + '>Check in</button><p class="muted" style="text-align:center;margin-top:10px">One tap. Hearts go straight to your account.</p><div id="joinSlot"></div>');
-    if (v.is_active !== false) loadScanJoin(code, true);
+      '<button class="btn" id="doCheckin"' + (v.is_active === false ? ' disabled' : '') + '>Check in</button><p class="muted" style="text-align:center;margin-top:10px">One tap. Hearts go straight to your account.</p><div id="joinSlot"></div><div id="extras"></div>');
+    const uid = session.user && session.user.id;
+    if (v.is_active !== false) { loadScanJoin(code, true); loadExtras(v, { signedIn: true, uid }); }
     document.getElementById('doCheckin').onclick = async (e) => {
       e.target.disabled = true; e.target.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px"></div>';
       try {
@@ -307,8 +465,9 @@
           else line = 'Check-in saved.';
           render(header() + '<div class="center"><div class="success">✓</div><h1>' + (held ? 'Check-in saved' : again ? 'Already checked in today' : 'You are checked in') + '</h1><p class="sub">' + esc(v.name) +
             '<br>' + line +
-            '</p><div class="stack" style="width:100%"><a class="btn" href="/app" data-link>See my Hearts</a></div></div><div id="joinSlot"></div>');
+            '</p><div class="stack" style="width:100%"><a class="btn" href="/app" data-link>See my Hearts</a></div></div><div id="joinSlot"></div><div id="extras"></div>');
           fillScanJoin();
+          loadExtras(v, { signedIn: true, uid, checkedIn: true }); // after a check-in the Wi-Fi password can unlock
         } else {
           const msg = { not_authenticated: 'Please sign in again.', qr_not_recognised: 'This code is not recognised.' }[res && res.error] || (res && (res.message || res.error)) || 'Could not check in.';
           toast(msg); e.target.disabled = false; e.target.textContent = 'Check in';
@@ -329,7 +488,7 @@
   const COASTER_LIST_MAX = 500;  // more places than this: search on the server instead of in the page
   const COASTER_FLAG = 'bc_from_coaster';
   const VENUE_COLS = 'id, name, address, city, category, cover_image, logo_url, is_active, primary_barcode, lat, lng';
-  const cst = { all: null, capped: false, loadErr: false, pos: null, near: null, loc: 'locating', noAuto: false, q: '', touched: false, remote: null };
+  const cst = { all: null, capped: false, loadErr: false, pos: null, near: null, loc: 'locating', noAuto: false, q: '', touched: false, remote: null, refused: 0 };
 
   function metres(a, b) {
     const R = 6371000, rad = Math.PI / 180;
@@ -392,16 +551,22 @@
   const pinIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>';
   const searchIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 
+  function placeLine(v) {
+    const a = String(v.address || '').trim(), c = String(v.city || '').trim();
+    return a && c && a.toLowerCase().includes(c.toLowerCase()) ? a : [a, c].filter(Boolean).join(', ');
+  }
+
   function pickCard(v) {
     const img = v.cover_image || v.logo_url;
     return '<a class="card venue pick" href="' + esc(scanPath(v)) + '" data-link>' +
       '<div class="img"' + (img ? ' style="background-image:url(' + esc(img) + ')"' : '') + '>' + (img ? '' : initial(v.name)) + '</div>' +
-      '<div class="pick-body"><div class="name">' + esc(v.name) + '</div><div class="muted">' + esc([v.address, v.city].filter(Boolean).join(', ')) + '</div></div>' +
+      '<div class="pick-body"><div class="name">' + esc(v.name) + '</div><div class="muted">' + esc(placeLine(v)) + '</div></div>' +
       (v.dist != null ? '<span class="pill">' + distLabel(v.dist) + '</span>' : '<span class="chev" aria-hidden="true">›</span>') + '</a>';
   }
 
   function coasterView(noAuto) {
-    Object.assign(cst, { pos: null, near: null, loc: 'locating', noAuto: !!noAuto, q: '', touched: false, remote: null });
+    Object.assign(cst, { pos: null, near: null, loc: 'locating', noAuto: !!noAuto, q: '', touched: false, remote: null, refused: 0 });
+    watchLocationTurnedOn();
     render(header() + '<div class="coaster">' +
       '<h1 class="shout sm">Earn rewards<br><span>here.</span></h1>' +
       '<p class="sub">Pick the place you’re in to join free or check in. No app needed.</p><div class="gap"></div>' +
@@ -431,7 +596,13 @@
     cst.loc = 'locating'; coasterPaint();
     const p = await locate();
     if (!onCoasterPage()) return;
-    if (p.error) { cst.loc = p.error === 'denied' ? 'denied' : 'unavailable'; coasterPaint(); return; }
+    if (p.error) {
+      cst.loc = p.error === 'denied' ? 'denied' : 'unavailable';
+      if (p.error === 'denied') cst.refused++;
+      coasterPaint();
+      return;
+    }
+    cst.refused = 0;
     cst.pos = p;
     try { cst.near = await coasterNearby(p); } catch (e) { cst.near = []; }
     if (!onCoasterPage()) return;
@@ -451,12 +622,14 @@
     if (cst.loc === 'locating') s = '<div class="spinner sm"></div><span>Finding the place you’re in…</span>';
     else if (cst.loc === 'here') s = pinIcon() + '<span><b>Which place are you at?</b> Closest first.</span>';
     else if (cst.loc === 'far') s = pinIcon() + '<span>No BarChata place right here. Closest first.</span>';
-    else if (cst.loc === 'denied') s = '<span>Location is off for this browser, so pick your place below. <button type="button" class="linkbtn" id="cHow">Turn location on</button></span>';
+    else if (cst.loc === 'denied' && cst.refused >= 2) s = '<span>Location is still off. If you just turned it on, refresh this page. <button type="button" class="linkbtn" id="cReload">Refresh</button> \u00b7 <button type="button" class="linkbtn" id="cHow">How to turn it on</button></span>';
+    else if (cst.loc === 'denied') s = '<span>Location is off for this browser, so pick your place below. <button type="button" class="linkbtn" id="cHow">Turn location on</button> \u00b7 <button type="button" class="linkbtn" id="cAgain">Try again</button></span>';
     else s = '<span>We couldn’t get your location. Pick your place below. <button type="button" class="linkbtn" id="cAgain">Try again</button></span>';
     if (q) s = '<span>Results for “' + esc(q) + '”</span>';
     st.innerHTML = s;
     const how = document.getElementById('cHow'); if (how) how.onclick = showLocationHelp;
     const again = document.getElementById('cAgain'); if (again) again.onclick = () => { lastFix = null; coasterFind(); };
+    const reload = document.getElementById('cReload'); if (reload) reload.onclick = () => location.reload();
 
     let list = null, empty = '';
     if (q) {
@@ -485,10 +658,10 @@
 
   function showLocationHelp() {
     const steps = isIOS()
-      ? '<ol class="steps"><li>In Safari, tap the page menu (<b>aA</b> or <b>⋯</b>) next to the address.</li><li>Tap <b>Website Settings</b>, then set <b>Location</b> to <b>Allow</b>.</li><li>Not there? Open <b>Settings › Privacy & Security › Location Services</b>, turn it on, and set <b>Safari Websites</b> to <b>While Using the App</b>.</li></ol>'
+      ? '<ol class="steps"><li>Open the <b>Settings</b> app › <b>Privacy & Security</b> › <b>Location Services</b>. Make sure it is <b>On</b>.</li><li>In the same list, tap <b>Safari Websites</b> and choose <b>While Using the App</b>.</li><li>Back in Safari, tap the page menu next to the address (<b>≡</b>, <b>aA</b> or <b>⋯</b>) › <b>Website Settings</b> › <b>Location</b> › <b>Allow</b>.</li><li>Come back to this page. It finds your place by itself.</li></ol>'
       : isAndroid()
-        ? '<ol class="steps"><li>Tap the icon to the left of the address.</li><li>Tap <b>Permissions</b> (or <b>Site settings</b>) and set <b>Location</b> to <b>Allow</b>.</li><li>Make sure <b>Location</b> is on in your quick settings.</li></ol>'
-        : '<ol class="steps"><li>Click the icon to the left of the address.</li><li>Set <b>Location</b> to <b>Allow</b>.</li></ol>';
+        ? '<ol class="steps"><li>Tap the icon to the left of the address.</li><li>Tap <b>Permissions</b> (or <b>Site settings</b>) and set <b>Location</b> to <b>Allow</b>.</li><li>Make sure <b>Location</b> is on in your quick settings.</li><li>Come back to this page. It finds your place by itself.</li></ol>'
+        : '<ol class="steps"><li>Click the icon to the left of the address.</li><li>Set <b>Location</b> to <b>Allow</b>.</li><li>Come back to this page. It finds your place by itself.</li></ol>';
     const wrap = document.createElement('div');
     wrap.className = 'sheetwrap';
     wrap.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-label="Turn location on"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2>Turn location on</h2><button class="iconbtn" data-close aria-label="Close">✕</button></div>' +
@@ -496,6 +669,26 @@
     wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-close]')) wrap.remove(); });
     document.body.appendChild(wrap);
     document.getElementById('cRetry').onclick = () => { wrap.remove(); lastFix = null; coasterFind(); };
+  }
+
+  // Safari does not tell an open page that location was turned on. Ask again whenever the guest comes back to the
+  // page (from the Settings app or the site menu) or the browser reports the permission changed. Set up once.
+  let watchingLocation = false;
+  function watchLocationTurnedOn() {
+    if (watchingLocation) return;
+    watchingLocation = true;
+    const retry = () => {
+      if (!onCoasterPage() || (cst.loc !== 'denied' && cst.loc !== 'unavailable') || cst.touched && cst.q.trim()) return;
+      lastFix = null;
+      coasterFind();
+    };
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') retry(); });
+    window.addEventListener('pageshow', (e) => { if (e.persisted) retry(); });
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        navigator.permissions.query({ name: 'geolocation' }).then((ps) => { ps.onchange = () => { if (ps.state !== 'denied') retry(); }; }).catch(() => {});
+      }
+    } catch (e) { /* older browsers: the Try again button still works */ }
   }
 
   function viewCoaster(params) {

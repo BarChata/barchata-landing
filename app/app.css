@@ -102,3 +102,29 @@ h2{font-family:"DM Sans";font-size:19px;font-weight:700;letter-spacing:-.2px}
 .chev{color:var(--text3);font-size:24px;line-height:1}
 .not-here{text-align:center;margin-top:10px}
 .not-here a{color:var(--text2);text-decoration:underline}
+
+/* What the business offers: rewards, Wi-Fi, menu (Nov 23, 2026) */
+.xcard{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.xhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.xlist{display:flex;flex-direction:column}
+.xrow{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line)}
+.xlist .xrow:first-child{border-top:0}
+.xmain{flex:1;min-width:0}
+.xmain .t{font-weight:700;font-size:15px}
+.xmain .muted{margin-top:2px;line-height:1.4}
+.xside{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none}
+.xneed{font-size:12px}
+.xfoot{margin-top:4px}
+.btn.sm{height:36px;width:auto;padding:0 16px;font-size:14px;border-radius:18px}
+.wifi-pw{font-family:"DM Sans";font-size:22px;font-weight:800;letter-spacing:.5px;overflow-wrap:anywhere;user-select:all;-webkit-user-select:all}
+.mgroup{border-top:1px solid var(--line)}
+.mgroup summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px 0;font-weight:700;font-size:15px}
+.mgroup summary::-webkit-details-marker{display:none}
+.mgroup summary::after{content:"\203A";color:var(--text3);font-size:22px;line-height:1;transform:rotate(90deg);margin-left:10px}
+.mgroup[open] summary::after{transform:rotate(-90deg)}
+.mgroup summary .muted{margin-left:auto}
+.mitem{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.mitem img{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:var(--card2)}
+.mitem .price{font-weight:700;white-space:nowrap;font-size:15px}
+.mitem .pill{font-size:11px;padding:2px 6px;margin-left:4px;vertical-align:middle}
+
