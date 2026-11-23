@@ -107,17 +107,31 @@
 
   // Where the phone is (Nov 10, 2026): a venue's printed code is its public BarCode, so the server only pays
   // Hearts for it when the phone is near the venue. Null if location is refused or slow (the check-in is still saved).
-  function scanPosition() {
+  // Nov 23, 2026: Wi-Fi/cell location first (answers in a second or two indoors, accurate to about 20-100 m, which
+  // is plenty for the 300 m rule), GPS only if that fails. One fix is shared by the coaster page and the check-in.
+  let lastFix = null;
+  function locate() {
+    if (lastFix && Date.now() - lastFix.at < 120000) return Promise.resolve(lastFix);
     return new Promise((resolve) => {
-      if (!navigator.geolocation) { resolve(null); return; }
+      if (!navigator.geolocation) { resolve({ error: 'unsupported' }); return; }
       let done = false;
       const finish = (v) => { if (!done) { done = true; resolve(v); } };
-      setTimeout(() => finish(null), 9000);
-      navigator.geolocation.getCurrentPosition(
-        (p) => finish({ lat: p.coords.latitude, lng: p.coords.longitude }),
-        () => finish(null),
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 120000 });
+      const ok = (p) => {
+        const acc = typeof p.coords.accuracy === 'number' && p.coords.accuracy > 0 ? p.coords.accuracy : 50;
+        lastFix = { lat: p.coords.latitude, lng: p.coords.longitude, acc, at: Date.now() };
+        finish(lastFix);
+      };
+      const fail = (e) => finish({ error: e && e.code === 1 ? 'denied' : 'unavailable' });
+      navigator.geolocation.getCurrentPosition(ok, (e) => {
+        if (e && e.code === 1) { fail(e); return; }
+        navigator.geolocation.getCurrentPosition(ok, fail, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+      }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 });
+      setTimeout(() => finish({ error: 'unavailable' }), 60000); // the permission prompt was left open
     });
+  }
+  function scanPosition() {
+    const fix = locate().then((p) => (p && p.lat != null ? { lat: p.lat, lng: p.lng } : null));
+    return Promise.race([fix, new Promise((r) => setTimeout(() => r(null), 15000))]);
   }
 
   async function checkIn(code) {
@@ -304,14 +318,18 @@
   }
 
   // ------------------------------------------------------------------ coaster (barchata.com/s), Nov 23, 2026
-  // Every BarChata business gets the same printed coaster, so its QR has no business code in it. /s finds the
-  // business the guest is sitting in from the phone's location (or a name search), then hands over to the normal
-  // /scan/<code> page (join free / check in). Only businesses on BarChata (claimed, with a BarCode) are listed.
-  const COASTER_HERE_M = 400;   // "you are here" candidates (QR Hearts are paid within 300 m of the business)
-  const COASTER_SURE_M = 120;   // one place this close and nothing else near it: open it straight away
-  const COASTER_NEAR_M = 3000;  // suggestions when nothing is right here
+  // Every BarChata business gets the same printed coaster, so its QR has no business code in it. /s finds the business
+  // the guest is sitting in as soon as it opens: one BarChata place close by opens its check-in page straight away;
+  // several show as a list, closest first; with no location, every BarChata place is listed and the search box filters
+  // it as you type. Only businesses on BarChata (claimed, with a BarCode, active) are listed.
+  const COASTER_HERE_M = 400;    // "you are here" candidates (QR Hearts are paid within 300 m of the business)
+  const COASTER_SURE_M = 120;    // nearest this close and the next 3x farther: open it straight away
+  const COASTER_SURE_ACC = 250;  // only open straight away when the phone's own accuracy is this good
+  const COASTER_NEAR_M = 3000;
+  const COASTER_LIST_MAX = 500;  // more places than this: search on the server instead of in the page
   const COASTER_FLAG = 'bc_from_coaster';
   const VENUE_COLS = 'id, name, address, city, category, cover_image, logo_url, is_active, primary_barcode, lat, lng';
+  const cst = { all: null, capped: false, loadErr: false, pos: null, near: null, loc: 'locating', noAuto: false, q: '', touched: false, remote: null };
 
   function metres(a, b) {
     const R = 6371000, rad = Math.PI / 180;
@@ -319,11 +337,26 @@
     const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(h));
   }
-  const distLabel = (m) => (m < 1000 ? Math.max(10, Math.round(m / 10) * 10) + ' m' : (m / 1000).toFixed(1) + ' km');
+  const distLabel = (m) => (m < 1000 ? Math.max(10, Math.round(m / 10) * 10) + ' m' : m < 100000 ? (m / 1000).toFixed(1) + ' km' : Math.round(m / 1000) + ' km');
   const scanPath = (v) => '/scan/' + encodeURIComponent(String(v.primary_barcode || '').replace(/^@/, ''));
   const onBarChata = (v) => !!(v && v.primary_barcode && v.is_active !== false);
+  const onCoasterPage = () => /^\/s\/?$/i.test(location.pathname);
+  const norm = (x) => String(x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/^@+/, '').trim();
   function fromCoaster() {
     try { const at = Number(sessionStorage.getItem(COASTER_FLAG) || 0); return Date.now() - at < 30 * 60 * 1000; } catch (e) { return false; }
+  }
+  function withDist(arr) {
+    if (!cst.pos) return arr;
+    return arr.map((v) => Object.assign({}, v, { dist: v.lat != null && v.lng != null ? metres(cst.pos, { lat: Number(v.lat), lng: Number(v.lng) }) : null }))
+      .sort((a, b) => (a.dist == null) - (b.dist == null) || (a.dist || 0) - (b.dist || 0));
+  }
+
+  async function coasterLoadAll() {
+    const { data, error } = await sb.from('venues').select(VENUE_COLS)
+      .eq('is_claimed', true).not('primary_barcode', 'is', null).order('name').limit(COASTER_LIST_MAX + 1);
+    if (error) throw error;
+    cst.capped = (data || []).length > COASTER_LIST_MAX;
+    cst.all = (data || []).slice(0, COASTER_LIST_MAX).filter(onBarChata);
   }
 
   async function coasterNearby(pos) {
@@ -335,30 +368,29 @@
       .gte('lng', pos.lng - dLng).lte('lng', pos.lng + dLng)
       .limit(60);
     if (error) throw error;
-    return (data || []).filter(onBarChata)
-      .map((v) => Object.assign({}, v, { dist: metres(pos, { lat: Number(v.lat), lng: Number(v.lng) }) }))
-      .filter((v) => v.dist <= COASTER_NEAR_M)
-      .sort((a, b) => a.dist - b.dist);
+    return withDist((data || []).filter(onBarChata)).filter((v) => v.dist != null && v.dist <= COASTER_NEAR_M);
   }
 
+  // Only used when there are too many places to keep in the page.
   async function coasterSearch(q) {
     q = (q || '').trim();
     const out = [];
-    if (/^@?[a-z0-9_.-]{3,40}$/i.test(q)) { // someone typed the business's BarCode
+    if (/^@?[a-z0-9_.-]{3,40}$/i.test(q)) {
       try { const v = await findVenue(q.replace(/^@/, '')); if (onBarChata(v)) out.push(v); } catch (e) { /* keep searching by name */ }
     }
     const safe = q.replace(/[%_\\]/g, ' ').trim();
     if (safe.length >= 2) {
       const { data, error } = await sb.from('venues').select(VENUE_COLS)
         .eq('is_claimed', true).not('primary_barcode', 'is', null)
-        .ilike('name', '%' + safe + '%').order('name').limit(8);
+        .ilike('name', '%' + safe + '%').order('name').limit(12);
       if (error) throw error;
       (data || []).filter(onBarChata).forEach((v) => { if (!out.some((o) => o.id === v.id)) out.push(v); });
     }
-    return out;
+    return withDist(out);
   }
 
-  const pinIcon = () => '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+  const pinIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+  const searchIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 
   function pickCard(v) {
     const img = v.cover_image || v.logo_url;
@@ -368,88 +400,107 @@
       (v.dist != null ? '<span class="pill">' + distLabel(v.dist) + '</span>' : '<span class="chev" aria-hidden="true">›</span>') + '</a>';
   }
 
-  function coasterSearchBox(label) {
-    return '<form id="cs" class="stack" role="search" novalidate>' +
-      '<div class="field"><label for="csq">' + (label || 'Name of this place, or its @BarCode') + '</label>' +
-      '<input id="csq" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="Type the name"></div>' +
-      '<div id="csr" class="stack" aria-live="polite"></div></form>';
-  }
-  function wireCoasterSearch(focus) {
-    const f = document.getElementById('cs'); if (!f) return;
-    const q = document.getElementById('csq'), box = document.getElementById('csr');
+  function coasterView(noAuto) {
+    Object.assign(cst, { pos: null, near: null, loc: 'locating', noAuto: !!noAuto, q: '', touched: false, remote: null });
+    render(header() + '<div class="coaster">' +
+      '<h1 class="shout sm">Earn rewards<br><span>here.</span></h1>' +
+      '<p class="sub">Pick the place you’re in to join free or check in. No app needed.</p><div class="gap"></div>' +
+      '<form id="cs" class="searchbar" role="search" novalidate>' + searchIcon() +
+      '<input id="csq" type="search" name="bc-place-search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Search BarChata places" placeholder="Search places or @BarCode"></form>' +
+      '<div id="cStatus" class="cstatus" aria-live="polite"></div><div id="cList" class="stack"></div></div>' + legal());
+    const q = document.getElementById('csq');
     let t = null, seq = 0;
-    const run = async () => {
-      const mine = ++seq, val = q.value.trim();
-      if (val.length < 2) { box.innerHTML = ''; return; }
-      box.innerHTML = '<div class="spinner" style="margin:8px auto"></div>';
-      try {
-        const list = await coasterSearch(val);
-        if (mine !== seq) return;
-        box.innerHTML = list.length ? list.map(pickCard).join('')
-          : '<p class="muted">No BarChata place called “' + esc(val) + '”. Check the spelling, or ask the staff for their @BarCode.</p>';
-      } catch (e) { if (mine === seq) box.innerHTML = '<p class="err">We could not search right now. Check your connection and try again.</p>'; }
+    q.onfocus = () => { cst.touched = true; };
+    q.oninput = () => {
+      cst.touched = true; cst.q = q.value;
+      clearTimeout(t);
+      if (cst.capped && cst.q.trim().length >= 2) {
+        t = setTimeout(async () => {
+          const mine = ++seq;
+          try { const r = await coasterSearch(cst.q); if (mine === seq) { cst.remote = r; coasterPaint(); } } catch (e) { if (mine === seq) { cst.remote = []; coasterPaint(); } }
+        }, 300);
+      } else { t = setTimeout(coasterPaint, 60); }
     };
-    q.oninput = () => { clearTimeout(t); t = setTimeout(run, 300); };
-    f.onsubmit = (e) => { e.preventDefault(); clearTimeout(t); run(); q.blur(); };
-    if (focus) q.focus();
+    document.getElementById('cs').onsubmit = (e) => { e.preventDefault(); q.blur(); };
+    coasterPaint();
+    coasterLoadAll().then(coasterPaint).catch(() => { cst.loadErr = true; coasterPaint(); });
+    coasterFind();
   }
 
-  function coasterIntro() {
-    render(header() + '<div class="coaster"><p class="eyebrow">BarChata Rewards</p>' +
-      '<h1 class="shout">Earn<br>rewards<br><span>here.</span></h1>' +
-      '<p class="sub">Find the place you’re at, then join free or check in. No app needed.</p><div class="gap"></div>' +
-      '<div class="stack"><button class="btn" type="button" id="cFind">' + pinIcon() + 'Find this place</button>' +
-      '<button class="btn secondary" type="button" id="cSearch">Search by name instead</button></div>' +
-      '<p class="muted coaster-note">Location is only used to find this place.</p></div>' + legal());
-    document.getElementById('cFind').onclick = () => coasterLocate(false);
-    document.getElementById('cSearch').onclick = () => coasterSearchView();
+  async function coasterFind() {
+    cst.loc = 'locating'; coasterPaint();
+    const p = await locate();
+    if (!onCoasterPage()) return;
+    if (p.error) { cst.loc = p.error === 'denied' ? 'denied' : 'unavailable'; coasterPaint(); return; }
+    cst.pos = p;
+    try { cst.near = await coasterNearby(p); } catch (e) { cst.near = []; }
+    if (!onCoasterPage()) return;
+    const here = cst.near.filter((v) => v.dist <= COASTER_HERE_M);
+    cst.loc = here.length ? 'here' : 'far';
+    const sure = here.length > 0 && p.acc <= COASTER_SURE_ACC &&
+      (here.length === 1 || (here[0].dist <= COASTER_SURE_M && here[1].dist > 3 * here[0].dist));
+    if (sure && !cst.noAuto && !cst.touched && !cst.q.trim()) { history.replaceState({}, '', scanPath(here[0])); route(); return; }
+    coasterPaint();
   }
 
-  function coasterSearchView(lead) {
-    render(header() + '<h1>Find this place</h1>' +
-      '<p class="sub">' + esc(lead || 'Search for the business you’re in.') + '</p><div class="gap"></div>' +
-      coasterSearchBox() + '<div class="gap"></div>' +
-      '<button class="btn ghost" type="button" id="cRetry">' + pinIcon() + 'Use my location</button>');
-    wireCoasterSearch(true);
-    document.getElementById('cRetry').onclick = () => coasterLocate(false);
-  }
+  function coasterPaint() {
+    const st = document.getElementById('cStatus'), box = document.getElementById('cList');
+    if (!st || !box) return;
+    const q = cst.q.trim();
+    let s;
+    if (cst.loc === 'locating') s = '<div class="spinner sm"></div><span>Finding the place you’re in…</span>';
+    else if (cst.loc === 'here') s = pinIcon() + '<span><b>Which place are you at?</b> Closest first.</span>';
+    else if (cst.loc === 'far') s = pinIcon() + '<span>No BarChata place right here. Closest first.</span>';
+    else if (cst.loc === 'denied') s = '<span>Location is off for this browser, so pick your place below. <button type="button" class="linkbtn" id="cHow">Turn location on</button></span>';
+    else s = '<span>We couldn’t get your location. Pick your place below. <button type="button" class="linkbtn" id="cAgain">Try again</button></span>';
+    if (q) s = '<span>Results for “' + esc(q) + '”</span>';
+    st.innerHTML = s;
+    const how = document.getElementById('cHow'); if (how) how.onclick = showLocationHelp;
+    const again = document.getElementById('cAgain'); if (again) again.onclick = () => { lastFix = null; coasterFind(); };
 
-  function coasterPick(title, lead, list) {
-    render(header() + '<h1>' + esc(title) + '</h1><p class="sub">' + esc(lead) + '</p><div class="gap"></div>' +
-      '<div class="stack">' + list.map(pickCard).join('') + '</div><div class="gap"></div>' +
-      coasterSearchBox('Not listed? Search by name or @BarCode'));
-    wireCoasterSearch(false);
-  }
-
-  // noAuto: the guest said "not this place", so always show the list.
-  async function coasterLocate(noAuto) {
-    render(header() + '<div class="center"><div class="spinner"></div><h2>Finding where you are…</h2><p class="muted">Allow location if your phone asks.</p></div>');
-    const pos = await scanPosition();
-    if (!/^\/s\/?$/i.test(location.pathname)) return; // moved on meanwhile
-    if (!pos) return coasterSearchView('We couldn’t get your location. Search for the place instead, or turn on location for your browser and try again.');
-    let list;
-    try { list = await coasterNearby(pos); }
-    catch (e) {
-      render(header() + '<div class="center"><h1>Connection problem</h1><p class="sub">We could not reach BarChata. Check your connection and try again.</p><button class="btn" onclick="location.reload()">Try again</button></div>');
+    let list = null, empty = '';
+    if (q) {
+      if (cst.capped) list = q.length >= 2 ? cst.remote : null;
+      else if (cst.all) {
+        const n = norm(q);
+        list = withDist(cst.all.filter((v) => [v.name, v.city, v.address, v.primary_barcode].some((x) => norm(x).includes(n))));
+      }
+      empty = 'No BarChata place matches “' + esc(q) + '”. Check the spelling, or ask the staff for their @BarCode.';
+    } else if (cst.pos) {
+      const here = (cst.near || []).filter((v) => v.dist <= COASTER_HERE_M);
+      list = here.length ? here : (cst.near && cst.near.length ? cst.near.slice(0, 6) : (cst.all ? withDist(cst.all).slice(0, 6) : null));
+    } else if (cst.loc !== 'locating') {
+      list = cst.capped ? [] : cst.all;
+      empty = cst.capped ? 'Type the name of the place above.' : '';
+    } else {
+      list = [];
+    }
+    if (cst.loadErr && !list) {
+      box.innerHTML = '<p class="err">We could not load BarChata places. Check your connection.</p><button class="btn secondary" type="button" onclick="location.reload()">Try again</button>';
       return;
     }
-    if (!/^\/s\/?$/i.test(location.pathname)) return;
-    const here = list.filter((v) => v.dist <= COASTER_HERE_M);
-    const sure = here.length === 1 || (here.length > 1 && here[0].dist <= COASTER_SURE_M && here[1].dist > 3 * here[0].dist);
-    if (sure && !noAuto) { history.replaceState({}, '', scanPath(here[0])); route(); return; }
-    if (here.length) return coasterPick('Which place are you at?', 'Tap the business you’re in.', here);
-    if (list.length) return coasterPick('Nothing right here', 'These are the closest BarChata places. Tap yours, or search below.', list.slice(0, 5));
-    return coasterSearchView('We couldn’t find a BarChata place near you. Search for it by name.');
+    if (list == null) { box.innerHTML = '<div class="spinner" style="margin:12px auto"></div>'; return; }
+    box.innerHTML = list.length ? list.map(pickCard).join('') : (empty ? '<p class="muted">' + empty + '</p>' : '');
   }
 
-  async function viewCoaster(params) {
+  function showLocationHelp() {
+    const steps = isIOS()
+      ? '<ol class="steps"><li>In Safari, tap the page menu (<b>aA</b> or <b>⋯</b>) next to the address.</li><li>Tap <b>Website Settings</b>, then set <b>Location</b> to <b>Allow</b>.</li><li>Not there? Open <b>Settings › Privacy & Security › Location Services</b>, turn it on, and set <b>Safari Websites</b> to <b>While Using the App</b>.</li></ol>'
+      : isAndroid()
+        ? '<ol class="steps"><li>Tap the icon to the left of the address.</li><li>Tap <b>Permissions</b> (or <b>Site settings</b>) and set <b>Location</b> to <b>Allow</b>.</li><li>Make sure <b>Location</b> is on in your quick settings.</li></ol>'
+        : '<ol class="steps"><li>Click the icon to the left of the address.</li><li>Set <b>Location</b> to <b>Allow</b>.</li></ol>';
+    const wrap = document.createElement('div');
+    wrap.className = 'sheetwrap';
+    wrap.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-label="Turn location on"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2>Turn location on</h2><button class="iconbtn" data-close aria-label="Close">✕</button></div>' +
+      steps + '<div class="gap"></div><button class="btn" type="button" id="cRetry">' + pinIcon() + 'Try again</button></div>';
+    wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-close]')) wrap.remove(); });
+    document.body.appendChild(wrap);
+    document.getElementById('cRetry').onclick = () => { wrap.remove(); lastFix = null; coasterFind(); };
+  }
+
+  function viewCoaster(params) {
     try { sessionStorage.setItem(COASTER_FLAG, String(Date.now())); } catch (e) { /* private mode */ }
-    if (params.get('list')) return coasterLocate(true);
-    if (params.get('search')) return coasterSearchView();
-    // Location already allowed for this site: skip the intro and go straight to the place.
-    let granted = false;
-    try { if (navigator.permissions && navigator.permissions.query) granted = (await navigator.permissions.query({ name: 'geolocation' })).state === 'granted'; } catch (e) { /* older browsers */ }
-    return granted ? coasterLocate(false) : coasterIntro();
+    coasterView(!!params.get('list'));
   }
 
   const notHere = () => (fromCoaster() ? '<p class="muted not-here"><a href="/s?list=1" data-link>Not this place? Pick the right one</a></p>' : '');
