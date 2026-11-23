@@ -72,6 +72,10 @@
       "destination": "/app"
     },
     {
+      "source": "/s",
+      "destination": "/app"
+    },
+    {
       "source": "/play/:code((?!.*\\.).*)",
       "destination": "/play"
     },

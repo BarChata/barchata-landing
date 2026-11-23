@@ -77,3 +77,20 @@ h2{font-family:"DM Sans";font-size:19px;font-weight:700;letter-spacing:-.2px}
 .join-done .join-hearts{align-self:center}
 .join-code{font-family:"DM Sans";font-size:44px;font-weight:800;letter-spacing:8px;color:var(--brand);line-height:1.1}
 .join-state{font-weight:800;font-size:17px;color:var(--ok)}
+
+/* Coaster landing (barchata.com/s), Nov 23, 2026 */
+.coaster{padding-top:6px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--brand);margin-bottom:12px}
+.shout{font-size:clamp(48px,16vw,68px);line-height:.92;letter-spacing:-2px;text-transform:uppercase}
+.shout span{color:var(--brand)}
+.coaster-note{text-align:center;margin-top:14px}
+.btn svg{flex:none}
+.pick{color:inherit;cursor:pointer;transition:border-color .15s,background .15s}
+.pick:hover,.pick:focus-visible{border-color:var(--brand);background:var(--card2);outline:none}
+.pick-body{flex:1;min-width:0}
+.pick-body .muted{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick .pill,.chev{flex:none}
+.chev{color:var(--text3);font-size:24px;line-height:1}
+.not-here{text-align:center;margin-top:10px}
+.not-here a{color:var(--text2);text-decoration:underline}
+input[type=search]::-webkit-search-cancel-button{filter:invert(1)}
