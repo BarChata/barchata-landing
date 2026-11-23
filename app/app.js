@@ -491,7 +491,7 @@
   const COASTER_NEAR_M = 3000;
   const COASTER_LIST_MAX = 500;  // more places than this: search on the server instead of in the page
   const COASTER_FLAG = 'bc_from_coaster';
-  const VENUE_COLS = 'id, name, address, city, country, category, cover_image, logo_url, is_active, primary_barcode, lat, lng';
+  const VENUE_COLS = 'id, name, address, city, country, category, cover_image, logo_url, is_active, hidden_at, primary_barcode, lat, lng';
   const cst = { all: null, capped: false, loadErr: false, pos: null, near: null, loc: 'locating', noAuto: false, q: '', touched: false, remote: null, refused: 0 };
 
   function metres(a, b) {
@@ -502,7 +502,8 @@
   }
   const distLabel = (m) => (m < 1000 ? Math.max(10, Math.round(m / 10) * 10) + ' m' : m < 100000 ? (m / 1000).toFixed(1) + ' km' : Math.round(m / 1000) + ' km');
   const scanPath = (v) => '/scan/' + encodeURIComponent(String(v.primary_barcode || '').replace(/^@/, ''));
-  const onBarChata = (v) => !!(v && v.primary_barcode && v.is_active !== false);
+  // Hidden by BarChata admins (Venue Reports) or switched off: never listed.
+  const onBarChata = (v) => !!(v && v.primary_barcode && v.is_active !== false && !v.hidden_at);
   const onCoasterPage = () => /^\/s\/?$/i.test(location.pathname);
   const norm = (x) => String(x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/^@+/, '').trim();
   function fromCoaster() {
@@ -540,7 +541,7 @@
 
   async function coasterLoadAll() {
     const { data, error } = await sb.from('venues').select(VENUE_COLS)
-      .eq('is_claimed', true).not('primary_barcode', 'is', null).order('name').limit(COASTER_LIST_MAX + 1);
+      .eq('is_claimed', true).not('primary_barcode', 'is', null).is('hidden_at', null).order('name').limit(COASTER_LIST_MAX + 1);
     if (error) throw error;
     cst.capped = (data || []).length > COASTER_LIST_MAX;
     cst.all = (data || []).slice(0, COASTER_LIST_MAX).filter(onBarChata);
@@ -550,7 +551,7 @@
     const dLat = COASTER_NEAR_M / 111320;
     const dLng = dLat / Math.max(0.2, Math.cos(pos.lat * Math.PI / 180));
     const { data, error } = await sb.from('venues').select(VENUE_COLS)
-      .eq('is_claimed', true).not('primary_barcode', 'is', null)
+      .eq('is_claimed', true).not('primary_barcode', 'is', null).is('hidden_at', null)
       .gte('lat', pos.lat - dLat).lte('lat', pos.lat + dLat)
       .gte('lng', pos.lng - dLng).lte('lng', pos.lng + dLng)
       .limit(60);
@@ -568,7 +569,7 @@
     const safe = q.replace(/[%_\\]/g, ' ').trim();
     if (safe.length >= 2) {
       const { data, error } = await sb.from('venues').select(VENUE_COLS)
-        .eq('is_claimed', true).not('primary_barcode', 'is', null)
+        .eq('is_claimed', true).not('primary_barcode', 'is', null).is('hidden_at', null)
         .ilike('name', '%' + safe + '%').order('name').limit(12);
       if (error) throw error;
       (data || []).filter(onBarChata).forEach((v) => { if (!out.some((o) => o.id === v.id)) out.push(v); });
