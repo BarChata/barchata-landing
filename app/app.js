@@ -460,9 +460,15 @@
     return walletState;
   }
   const appleDevice = () => isIOS() || (/Macintosh/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Edg|Firefox/.test(navigator.userAgent));
+  // A Mac can't hold Wallet cards (it only shows a preview), so Macs get a pointer to the phone instead of the button.
+  // iPads report a Mac browser but have touch, so they keep the button.
+  const onMac = () => !isIOS() && /Macintosh/.test(navigator.userAgent) && !(navigator.maxTouchPoints > 1);
   function walletRow() {
     const w = ext.wallet;
     if (!w || !ext.opts.signedIn) return '';
+    if (onMac() && (w.apple || w.google)) {
+      return '<div class="vz-row"><span class="vz-main"><span class="vz-t">Your card in Wallet</span><span class="vz-s">Open this page on your ' + (w.apple ? 'iPhone' : 'phone') + ' to add your card to Wallet.</span></span></div>';
+    }
     const apple = w.apple && appleDevice(), google = w.google && !appleDevice();
     if (!apple && !google) return '';
     const btn = apple
