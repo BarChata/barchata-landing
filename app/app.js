@@ -578,30 +578,52 @@
   }
 
   const pinIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>';
-  const searchIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+  const searchIcon = () => '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+  const chevIcon = () => '<svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg>';
+  const checkIcon = () => '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 
   function placeLine(v) {
     const a = String(v.address || '').trim(), c = String(v.city || '').trim();
     return a && c && a.toLowerCase().includes(c.toLowerCase()) ? a : [a, c].filter(Boolean).join(', ');
   }
+  const placeImg = (v) => v.cover_image || v.logo_url || '';
+  function placeThumb(v, cls) {
+    const img = placeImg(v);
+    return img ? '<img class="' + cls + '" src="' + esc(img) + '" alt="" decoding="async">'
+      : '<span class="' + cls + ' none" aria-hidden="true">' + initial(v.name) + '</span>';
+  }
 
-  function pickCard(v) {
-    const img = v.cover_image || v.logo_url;
-    return '<a class="card venue pick" href="' + esc(scanPath(v)) + '" data-link>' +
-      '<div class="img"' + (img ? ' style="background-image:url(' + esc(img) + ')"' : '') + '>' + (img ? '' : initial(v.name)) + '</div>' +
-      '<div class="pick-body"><div class="name">' + esc(v.name) + '</div><div class="muted">' + esc(placeLine(v)) + '</div></div>' +
-      (v.dist != null ? '<span class="pill">' + distLabel(v.dist) + '</span>' : '<span class="chev" aria-hidden="true">›</span>') + '</a>';
+  // Coaster page, Spotlight design (Nov 23, 2026): places right here are big tiles (the closest one picked, one
+  // button to join); everything else is an iPhone-style grouped list under a search bar.
+  function placeRow(v) {
+    return '<a class="cz-row" href="' + esc(scanPath(v)) + '" data-link>' + placeThumb(v, 'cz-thumb') +
+      '<span class="cz-row-t"><span class="cz-row-n">' + esc(v.name) + '</span>' +
+      (placeLine(v) ? '<span class="cz-row-a">' + esc(placeLine(v)) + '</span>' : '') + '</span>' +
+      (v.dist != null ? '<span class="cz-row-d">' + distLabel(v.dist) + '</span>' : '') +
+      '<span class="cz-chev">' + chevIcon() + '</span></a>';
+  }
+  function placeTile(v, on) {
+    return '<button type="button" class="cz-tile' + (on ? ' on' : '') + '" aria-pressed="' + (on ? 'true' : 'false') + '" data-pick="' + esc(v.id) + '">' +
+      (on ? '<span class="cz-tick">' + checkIcon() + '</span>' : '') + placeThumb(v, 'cz-tile-img') +
+      '<span class="cz-tile-n">' + esc(v.name) + '</span>' +
+      ((v.address || v.city) ? '<span class="cz-tile-a">' + esc(String(v.address || v.city).trim()) + '</span>' : '') + '</button>';
+  }
+  function noteCard(text, buttons) {
+    return '<div class="cz-note">' + pinIcon() + '<div><p>' + text + '</p><div class="cz-note-b">' + buttons + '</div></div></div>';
   }
 
   function coasterView(noAuto) {
-    Object.assign(cst, { pos: null, near: null, loc: 'locating', noAuto: !!noAuto, q: '', touched: false, remote: null, refused: 0 });
+    Object.assign(cst, { pos: null, near: null, loc: 'locating', noAuto: !!noAuto, q: '', touched: false, remote: null, refused: 0, sel: null });
     watchLocationTurnedOn();
-    render(header() + '<div class="coaster">' +
-      '<h1 class="shout sm">Earn rewards<br><span>here.</span></h1>' +
-      '<p class="sub">Pick the place you’re in to join free or check in. No app needed.</p><div class="gap"></div>' +
-      '<form id="cs" class="searchbar" role="search" novalidate>' + searchIcon() +
+    render('<div class="cz"><div class="cz-glow" id="czGlow" aria-hidden="true"></div>' + header() +
+      '<p class="cz-eyebrow" id="czEyebrow" aria-live="polite"></p>' +
+      '<h1 class="cz-title" id="czTitle">Earn rewards here.</h1>' +
+      '<p class="cz-sub" id="czSub">Join free. No app needed.</p>' +
+      '<div id="czHere"></div><div id="czNote"></div>' +
+      '<p class="cz-sec" id="czSec" hidden></p>' +
+      '<form id="cs" class="cz-search" role="search" novalidate>' + searchIcon() +
       '<input id="csq" type="search" name="bc-place-search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Search BarChata places" placeholder="Search places or @BarCode"></form>' +
-      '<div id="cStatus" class="cstatus" aria-live="polite"></div><div id="cList" class="stack"></div></div>' + legal());
+      '<div id="cList" class="cz-group" hidden></div>' + legal() + '</div>');
     const q = document.getElementById('csq');
     let t = null, seq = 0;
     q.onfocus = () => { cst.touched = true; };
@@ -637,30 +659,74 @@
     if (!onCoasterPage()) return;
     const here = cst.near.filter((v) => v.dist <= COASTER_HERE_M);
     cst.loc = here.length ? 'here' : 'far';
+    // Open straight away only when there is no doubt. Two places in the same building (or closer together than the
+    // phone can tell apart) always ask.
     const sure = here.length > 0 && p.acc <= COASTER_SURE_ACC &&
-      (here.length === 1 || (here[0].dist <= COASTER_SURE_M && here[1].dist > 3 * here[0].dist));
+      (here.length === 1 || (here[0].dist <= COASTER_SURE_M && here[1].dist > 3 * here[0].dist &&
+        here[1].dist - here[0].dist > Math.max(p.acc || 0, 60)));
     if (sure && !cst.noAuto && !cst.touched && !cst.q.trim()) { history.replaceState({}, '', scanPath(here[0])); route(); return; }
     coasterPaint();
   }
 
   function coasterPaint() {
-    const st = document.getElementById('cStatus'), box = document.getElementById('cList');
-    if (!st || !box) return;
+    const el = (id) => document.getElementById(id);
+    const box = el('cList');
+    if (!box) return;
     const q = cst.q.trim();
-    let s;
-    if (cst.loc === 'locating') s = '<div class="spinner sm"></div><span>Finding the place you’re in…</span>';
-    else if (cst.loc === 'here') s = pinIcon() + '<span><b>Which place are you at?</b> Closest first.</span>';
-    else if (cst.loc === 'far') s = pinIcon() + '<span>No BarChata place right here. Closest first.</span>';
-    else if (cst.loc === 'denied' && cst.blocked) s = '<span>' + (isIOS() ? 'Your iPhone is blocking location for Safari' : 'Location is blocked in your browser settings') + ', so pick your place below. <button type="button" class="linkbtn" id="cHow">Show me how to fix it</button> \u00b7 <button type="button" class="linkbtn" id="cAgain">Try again</button></span>';
-    else if (cst.loc === 'denied' && cst.refused >= 2) s = '<span>Location is still off. If you just turned it on, refresh this page. <button type="button" class="linkbtn" id="cReload">Refresh</button> \u00b7 <button type="button" class="linkbtn" id="cHow">How to turn it on</button></span>';
-    else if (cst.loc === 'denied') s = '<span>Location is off for this browser, so pick your place below. <button type="button" class="linkbtn" id="cHow">Turn location on</button> \u00b7 <button type="button" class="linkbtn" id="cAgain">Try again</button></span>';
-    else s = '<span>We couldn’t get your location. Pick your place below. <button type="button" class="linkbtn" id="cAgain">Try again</button></span>';
-    if (q) s = '<span>Results for “' + esc(q) + '”</span>';
-    st.innerHTML = s;
-    const how = document.getElementById('cHow'); if (how) how.onclick = showLocationHelp;
-    const again = document.getElementById('cAgain'); if (again) again.onclick = () => { lastFix = null; coasterFind(); };
-    const reload = document.getElementById('cReload'); if (reload) reload.onclick = () => location.reload();
+    const off = cst.loc === 'denied' || cst.loc === 'unavailable';
+    const here = cst.pos ? (cst.near || []).filter((v) => v.dist <= COASTER_HERE_M) : [];
+    const tiles = !q && cst.loc === 'here' ? here.slice(0, 4) : [];
+    if (tiles.length && !tiles.some((v) => String(v.id) === String(cst.sel))) cst.sel = String(tiles[0].id);
+    const sel = tiles.find((v) => String(v.id) === String(cst.sel)) || null;
 
+    // Headline
+    let eyebrow = '', title = 'Earn rewards here.', sub = 'Join free. No app needed.';
+    if (cst.loc === 'locating') eyebrow = '<span class="spinner sm"></span><span>Finding your place</span>';
+    else if (tiles.length > 1) { eyebrow = tiles.length + ' places right here'; title = 'Which one are you in?'; sub = ''; }
+    else if (tiles.length === 1) { eyebrow = 'Right here'; title = 'Is this your place?'; sub = ''; }
+    else if (cst.loc === 'far') { eyebrow = 'No BarChata place right here'; title = 'Pick your place.'; sub = 'Join free. No app needed.'; }
+    else if (off) sub = 'Pick the place you’re in. Join free, no app needed.';
+    el('czEyebrow').innerHTML = eyebrow; el('czEyebrow').hidden = !eyebrow;
+    el('czTitle').textContent = title;
+    el('czSub').textContent = sub; el('czSub').hidden = !sub;
+
+    // Soft, blurred photo of the picked place behind the top of the page
+    const glow = el('czGlow'), src = sel ? placeImg(sel) : '';
+    if ((glow.dataset.src || '') !== src) { glow.dataset.src = src; glow.innerHTML = src ? '<img src="' + esc(src) + '" alt="">' : ''; }
+
+    // Places right here: tiles + one join button
+    const hereBox = el('czHere');
+    if (cst.loc === 'locating' && !q) {
+      hereBox.innerHTML = '<div class="cz-tiles" aria-hidden="true"><div class="cz-tile sk"></div><div class="cz-tile sk"></div></div>';
+    } else if (tiles.length) {
+      hereBox.innerHTML = '<div class="cz-tiles' + (tiles.length === 1 ? ' one' : '') + '">' + tiles.map((v) => placeTile(v, String(v.id) === String(cst.sel))).join('') + '</div>' +
+        '<a class="cz-cta" href="' + esc(scanPath(sel)) + '" data-link><span class="cz-cta-n">Join ' + esc(sel.name) + '</span><span>&nbsp;— it’s free</span></a>' +
+        '<p class="cz-fine">No app needed</p>';
+      hereBox.querySelectorAll('[data-pick]').forEach((b) => { b.onclick = () => { cst.sel = b.getAttribute('data-pick'); coasterPaint(); }; });
+    } else {
+      hereBox.innerHTML = '';
+    }
+
+    // Location off or failed
+    let note = '';
+    if (!q && cst.loc === 'denied' && cst.blocked) note = noteCard((isIOS() ? 'Your iPhone is blocking location for Safari' : 'Location is blocked in your browser settings') + ', so we can’t find your place for you.', '<button type="button" class="cz-pill on" id="cHow">Show me how</button><button type="button" class="cz-pill" id="cAgain">Try again</button>');
+    else if (!q && cst.loc === 'denied' && cst.refused >= 2) note = noteCard('Location is still off. If you just turned it on, refresh this page.', '<button type="button" class="cz-pill on" id="cReload">Refresh</button><button type="button" class="cz-pill" id="cHow">How to turn it on</button>');
+    else if (!q && cst.loc === 'denied') note = noteCard('Location is off, so we can’t find your place for you.', '<button type="button" class="cz-pill on" id="cHow">Turn location on</button><button type="button" class="cz-pill" id="cAgain">Try again</button>');
+    else if (!q && cst.loc === 'unavailable') note = noteCard('We couldn’t get your location.', '<button type="button" class="cz-pill on" id="cAgain">Try again</button>');
+    el('czNote').innerHTML = note;
+    const how = el('cHow'); if (how) how.onclick = showLocationHelp;
+    const again = el('cAgain'); if (again) again.onclick = () => { lastFix = null; coasterFind(); };
+    const reload = el('cReload'); if (reload) reload.onclick = () => location.reload();
+
+    // Section label above the search bar
+    let sec = '';
+    if (q) sec = 'Results';
+    else if (tiles.length) sec = 'Somewhere else?';
+    else if (cst.loc === 'far') sec = 'Closest to you';
+    else if (off) sec = 'All places';
+    el('czSec').textContent = sec; el('czSec').hidden = !sec;
+
+    // List
     let list = null, empty = '';
     if (q) {
       if (cst.capped) list = q.length >= 2 ? cst.remote : null;
@@ -671,8 +737,9 @@
       }
       empty = 'No BarChata place matches “' + esc(q) + '”. Check the spelling, or ask the staff for their @BarCode.';
     } else if (cst.pos) {
-      const here = (cst.near || []).filter((v) => v.dist <= COASTER_HERE_M);
-      list = here.length ? here : (cst.near && cst.near.length ? cst.near.slice(0, 6) : (cst.all ? withDist(cst.all).slice(0, 6) : null));
+      const notTile = (v) => !tiles.some((t2) => String(t2.id) === String(v.id));
+      const others = (cst.near || []).filter(notTile);
+      list = others.length ? others.slice(0, 6) : (cst.all ? withDist(cst.all).filter(notTile).slice(0, 6) : null);
     } else if (cst.loc !== 'locating') {
       list = cst.capped ? [] : (cst.all ? byHome(cst.all) : null);
       empty = cst.capped ? 'Type the name of the place above.' : '';
@@ -680,11 +747,14 @@
       list = [];
     }
     if (cst.loadErr && !list) {
-      box.innerHTML = '<p class="err">We could not load BarChata places. Check your connection.</p><button class="btn secondary" type="button" onclick="location.reload()">Try again</button>';
+      box.className = 'cz-bare'; box.hidden = false;
+      box.innerHTML = '<p class="err">We could not load BarChata places. Check your connection.</p><div class="gap"></div><button class="btn secondary" type="button" onclick="location.reload()">Try again</button>';
       return;
     }
-    if (list == null) { box.innerHTML = '<div class="spinner" style="margin:12px auto"></div>'; return; }
-    box.innerHTML = list.length ? list.map(pickCard).join('') : (empty ? '<p class="muted">' + empty + '</p>' : '');
+    if (list == null) { box.className = 'cz-bare'; box.hidden = false; box.innerHTML = '<div class="spinner" style="margin:12px auto"></div>'; return; }
+    if (list.length) { box.className = 'cz-group'; box.hidden = false; box.innerHTML = list.map(placeRow).join(''); }
+    else if (empty) { box.className = 'cz-bare'; box.hidden = false; box.innerHTML = '<p class="muted">' + empty + '</p>'; }
+    else { box.hidden = true; box.innerHTML = ''; }
   }
 
   function showLocationHelp() {
