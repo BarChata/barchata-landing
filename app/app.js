@@ -454,8 +454,11 @@
   let walletState = null;
   function walletStatus() {
     if (!walletState) {
-      walletState = fetch(cfg.url + '/functions/v1/wallet-pass', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + cfg.anonKey }, body: JSON.stringify({ action: 'status' }) })
-        .then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      // Sends the member's session when there is one: while Google Wallet is in Google's demo mode, only BarChata admins see its button.
+      walletState = sb.auth.getSession().catch(() => ({ data: {} })).then(({ data }) => {
+        const token = (data && data.session && data.session.access_token) || cfg.anonKey;
+        return fetch(cfg.url + '/functions/v1/wallet-pass', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + token }, body: JSON.stringify({ action: 'status' }) });
+      }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
     }
     return walletState;
   }
@@ -466,6 +469,10 @@
   function walletRow() {
     const w = ext.wallet;
     if (!w || !ext.opts.signedIn) return '';
+    if (onMac() && w.google_test) {
+      // Admin testing Google Wallet (demo mode) from a Mac: the Google card can be checked in a Mac browser.
+      return '<div class="vz-row"><span class="vz-main"><span class="vz-t">Your card in Wallet</span><span class="vz-s">Google Wallet test (admins only until Google approves).</span></span><button type="button" class="vz-wallet" data-wallet="google"' + (ext.walletBusy ? ' disabled' : '') + '>Add to Google Wallet</button></div>';
+    }
     if (onMac() && (w.apple || w.google)) {
       return '<div class="vz-row"><span class="vz-main"><span class="vz-t">Your card in Wallet</span><span class="vz-s">Open this page on your ' + (w.apple ? 'iPhone' : 'phone') + ' to add your card to Wallet.</span></span></div>';
     }
