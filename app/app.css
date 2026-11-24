@@ -199,6 +199,9 @@ a.cz-pill.on{color:#000}
 .vz-side{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .vz-cost{font-size:13px;font-weight:700;color:var(--brand)}
 .vz-when{flex:none;font-size:13px;color:rgba(255,255,255,.6);text-align:right}
+.vz-when.on{color:var(--brand);font-weight:700}
+.vz-later .vz-t{color:rgba(255,255,255,.75)}
+.vz-later .vz-ic{opacity:.6}
 .vz-sechead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
 .vz-sechead .cz-sec{margin-bottom:8px}
 .vz-hearts{margin:0 4px 8px;font-size:13px;font-weight:700;color:var(--brand)}

@@ -294,8 +294,13 @@
     get(sb.from('venue_specials').select('id, title, description, valid_from, valid_until, is_active').eq('venue_id', v.id).eq('is_active', true).limit(10))
       .then((rows) => {
         if (!ext.v || ext.v.id !== mine) return;
-        const now = Date.now();
-        ext.specials = (rows || []).filter((r) => r.title && (!r.valid_from || new Date(r.valid_from).getTime() <= now) && (!r.valid_until || new Date(r.valid_until).getTime() > now)).slice(0, 4);
+        const now = Date.now(), today = new Date().getDay();
+        // A special named for a day ("Wing Wednesday") is for that day: today's and every-day specials first,
+        // the others after, labelled with their day (next one first).
+        const live = (rows || []).filter((r) => r.title && (!r.valid_from || new Date(r.valid_from).getTime() <= now) && (!r.valid_until || new Date(r.valid_until).getTime() > now))
+          .map((r) => Object.assign({}, r, { day: specialDay(r) }));
+        const wait = (r) => (r.day === today ? -1 : r.day < 0 ? 0 : 1 + ((r.day - today + 7) % 7));
+        ext.specials = live.sort((a, b) => wait(a) - wait(b)).slice(0, 4);
         paintExtras();
       });
     if (v.owner_id) {
@@ -369,6 +374,14 @@
     paintExtras();
   }
 
+  const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  function specialDay(sp) {
+    const t = norm((sp.title || '') + ' ' + (sp.description || ''));
+    const hit = DAYS.filter((d) => t.includes(d));
+    return hit.length === 1 ? DAYS.indexOf(hit[0]) : -1;
+  }
+  const dayName = (i) => { try { const d = new Date(); d.setDate(d.getDate() + ((i - d.getDay() + 7) % 7)); return d.toLocaleDateString(undefined, { weekday: 'long' }) + 's'; } catch (e) { return ''; } };
+
   // Sections in the order that suits the time of day: dinner (Sip first), evening (what's live first), late (getting
   // home first). Only sections the business has are shown.
   function sectionOrder() {
@@ -431,10 +444,15 @@
 
     // SIP: specials running now
     if (ext.specials && ext.specials.length) {
-      part.specials = '<p class="cz-sec">Specials now</p><div class="cz-group">' + ext.specials.map((sp) =>
-        '<div class="vz-row"><span class="vz-ic sm">' + tagIcon() + '</span><span class="vz-main"><span class="vz-t">' + esc(sp.title) + '</span>' +
-        (sp.description ? '<span class="vz-s">' + esc(sp.description) + '</span>' : '') + '</span>' +
-        (sp.valid_until ? '<span class="vz-when">' + esc(untilLine(sp.valid_until)) + '</span>' : '') + '</div>').join('') + '</div>';
+      const today = new Date().getDay();
+      const nowOnly = ext.specials.every((sp) => sp.valid_until && (sp.day < 0 || sp.day === today));
+      part.specials = '<p class="cz-sec">' + (nowOnly ? 'Specials now' : 'Specials') + '</p><div class="cz-group">' + ext.specials.map((sp) => {
+        const other = sp.day >= 0 && sp.day !== today;
+        const when = other ? dayName(sp.day) : sp.day === today ? 'Today' : sp.valid_until ? untilLine(sp.valid_until) : '';
+        return '<div class="vz-row' + (other ? ' vz-later' : '') + '"><span class="vz-ic sm">' + tagIcon() + '</span><span class="vz-main"><span class="vz-t">' + esc(sp.title) + '</span>' +
+          (sp.description ? '<span class="vz-s">' + esc(sp.description) + '</span>' : '') + '</span>' +
+          (when ? '<span class="vz-when' + (sp.day === today ? ' on' : '') + '">' + esc(when) + '</span>' : '') + '</div>';
+      }).join('') + '</div>';
     }
 
     // SCAN: Hearts, progress to the next reward, rewards
