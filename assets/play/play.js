@@ -15,6 +15,10 @@
  * Join our rewards (Oct 25, 2026): if the business has a welcome offer ("15% off your next visit"), players and
  * entrants see a "Join <business> rewards" card. Members join in one tap; guests give their name and email or mobile.
  * They get a code to show the business; bonus Hearts are added when they make a free BarChata account.
+ *
+ * Online play (Nov 23, 2026): barchata.com/play/online/<game id>, opened from BarTV in the BarChata app when the
+ * business lets people play online. Signed-in members play solo from anywhere, on their own online leaderboard; the
+ * top online players win the business's "N% off your next visit". Someone checked in there plays in the room instead.
  */
 (function () {
   var cfg = window.BC_CONFIG || {};
@@ -150,6 +154,12 @@
     return { status: res.status, data: data || {} };
   }
 
+  function onlineFromUrl() {
+    var m = location.pathname.match(/^\/play\/online\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/?$/i);
+    return m ? m[1].toLowerCase() : null;
+  }
+  function isOnline() { return !!((st && st.me && st.me.online) || (game && game.online && !(st && st.me))); }
+
   function codeFromUrl() {
     var m = location.pathname.match(/^\/play\/([A-Za-z0-9]{6})\/?$/);
     if (m) return m[1].toUpperCase();
@@ -212,6 +222,71 @@
     viewTeam();
   }
 
+  // ------------------------------------------------------------------ play online (from BarTV in the app)
+  async function startOnline(sid) {
+    stopTimers();
+    loading('Finding the game...');
+    var me, s;
+    try {
+      me = await call('me', {});
+      s = await call('state', { session_id: sid });
+    } catch (e) { onlineMessage('No internet connection. Try again.'); return; }
+    if (s.status !== 200 || !s.data.session) { onlineMessage('This game isn’t on right now.'); return; }
+    player = me.data.player || null;
+    game = { session: s.data.session, pass: null, code: null, online: true };
+    setJSON(GAME_KEY, { session_id: sid, pass: null, code: null, session: game.session, contest: false, online: true, at: Date.now() });
+    if (s.data.me) { applyState(s.data); return; }
+    if (!/^(lobby|live)$/.test(s.data.session.status)) { viewClosed(); return; }
+    viewOnline(s.data);
+  }
+
+  function onlineMessage(text) {
+    stopTimers();
+    render('<div class="center small"><h1>Play online</h1><p class="sub">' + esc(text) + '</p></div>' + legal());
+  }
+
+  function viewOnline(s, message) {
+    stopTimers();
+    var o = s.online || {};
+    var venue = esc(s.session.venue_name || 'this business');
+    if (!o.allowed) {
+      render(gameCard() + '<div class="gap"></div><h1>Play in the room</h1><p class="sub">This game is for people at ' + venue + '. Check in there in the BarChata app to play.</p>' + legal());
+      return;
+    }
+    var member = player && player.kind === 'member';
+    render(gameCard() + '<div class="gap"></div><h1>Play online</h1>' +
+      (member
+        ? '<div class="playing-as">' + picHtml(player.pic, 36) + '<p class="sub">You play solo as <b>@' + esc(player.name) + '</b></p></div>'
+        : '<p class="sub">Sign in with BarChata to play online. It’s free.</p>') +
+      '<div class="gap"></div>' + onlinePrizeCard(s) +
+      '<p class="err" id="oe">' + esc(message || '') + '</p>' +
+      (member ? '<button class="btn" id="ob">Join the game</button>' : '<button class="btn" id="osi">Sign in with BarChata</button>') + legal());
+    var ob = document.getElementById('ob');
+    if (ob) ob.onclick = function () { joinOnline(s); };
+    var osi = document.getElementById('osi');
+    if (osi) osi.onclick = function () { setJSON(RETURN_KEY, { path: location.pathname, at: Date.now() }); location.href = '/app?mode=signin'; };
+  }
+
+  function onlinePrizeCard(s) {
+    var o = s.online || {};
+    if (!o.offer) return '';
+    return '<div class="card prizes-list"><p class="muted">Online prize</p><div class="prize-row"><b>Top 3</b><span>' + esc(o.offer) + ' at ' + esc(s.session.venue_name || 'this business') + '</span></div>' +
+      '<p class="muted small">Online players have their own leaderboard (needs 2 or more). Prizes in the room are for guests there.</p></div>';
+  }
+
+  async function joinOnline(s) {
+    var btn = document.getElementById('ob'); if (btn) btn.disabled = true;
+    var r;
+    try { r = await call('join', { session_id: game.session.id, online: true }); } catch (e) { viewOnline(s, 'No internet connection. Try again.'); return; }
+    var d = r.data || {};
+    if (r.status === 401) { player = null; viewOnline(s); return; }
+    // Checked in at the business: they're in the room, so they pick a table, team or solo like everyone there.
+    if (d.reason === 'here') { game.online = false; toast('You’re checked in here, so you play in the room.'); viewTeam(); return; }
+    if (r.status !== 200 || d.error) { viewOnline(s, d.error || 'Could not join. Try again.'); return; }
+    sfx.tap();
+    poll();
+  }
+
   // ------------------------------------------------------------------ who is playing
   function gameCard() {
     var v = game.session;
@@ -221,7 +296,7 @@
         '<div><div class="name">' + esc(v.title) + '</div><div class="muted">' + esc(v.venue_name || '') + ' · ' + (v.kind === 'giveaway' ? 'Instant giveaway' : 'Free draw') + (live ? ' · <b class="live-dot">Open now</b>' : '') + '</div></div></div></div>';
     }
     return '<div class="card arena-game"><div class="venue"><div class="img"' + (v.venue_logo ? ' style="background-image:url(\'' + esc(v.venue_logo) + '\')"' : '') + '>' + (v.venue_logo ? '' : esc((v.venue_name || 'B').charAt(0))) + '</div>' +
-      '<div><div class="name">' + esc(v.title) + '</div><div class="muted">' + esc(v.venue_name || '') + ' · ' + (v.kind === 'callit' ? 'Call It · ' : '') + (live ? '<b class="live-dot">Live now</b>' : 'Starting soon') + '</div></div></div></div>';
+      '<div><div class="name">' + esc(v.title) + '</div><div class="muted">' + esc(v.venue_name || '') + ' · ' + (v.kind === 'callit' ? 'Call It · ' : '') + (isOnline() ? 'Online · ' : '') + (live ? '<b class="live-dot">Live now</b>' : 'Starting soon') + '</div></div></div></div>';
   }
 
   function viewWho() {
@@ -431,8 +506,9 @@
         '<div class="me-pic">' + picHtml(s.me.pic, 76) + '<span class="me-check">✓</span></div><h1>You’re in!</h1><p class="sub">Playing as <b>' + esc(s.me.team_name) + '</b></p></div>' +
         (teamCode && s.me.kind !== 'solo' ? '<div class="card team-code"><p class="muted">Your team code</p><div class="code">' + esc(teamCode) + '</div>' +
           '<p class="muted">Friends at your table pick <b>' + esc(s.me.team_name) + '</b> and enter this code to join you.</p></div>' : '') +
-        prizesCard(s.session) + joinSlot() +
-        '<div class="gap"></div><p class="muted center-text">' + (s.session.kind === 'callit' ? 'The calls start with the game. Keep this page open' : 'Waiting for the host to start') + ' · ' + s.teams + (s.teams === 1 ? ' team' : ' teams') + ' joined</p>');
+        (s.me.online ? onlinePrizeCard(s) : prizesCard(s.session)) + joinSlot() +
+        '<div class="gap"></div><p class="muted center-text">' + (s.session.kind === 'callit' ? 'The calls start with the game. Keep this page open' : 'Waiting for the host to start') + ' · ' +
+        (s.me.online ? s.teams + ' playing online' : s.teams + (s.teams === 1 ? ' team' : ' teams') + ' joined') + '</p>');
       return;
     }
     if (status === 'live' && q) {
@@ -826,6 +902,11 @@
       return '<div class="card voucher done">' + head + '<div class="voucher-state">' + (expired ? 'This prize has expired.' : 'This prize was cancelled.') + '</div></div>';
     }
     var date = until.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    if (st && st.me && st.me.online) {
+      return '<div class="card voucher">' + head +
+        '<p class="muted">Show this code on your next visit</p><div class="voucher-code">' + esc(v.code) + '</div>' +
+        '<p class="sub">Valid until ' + esc(date) + '. It’s also in your BarChata notifications.</p></div>';
+    }
     return '<div class="card voucher">' + head +
       '<p class="muted">Show us this code</p><div class="voucher-code">' + esc(v.code) + '</div>' +
       '<p class="sub">One prize per team · valid until ' + esc(date) + '. Take a screenshot to keep it.</p></div>';
@@ -834,6 +915,9 @@
   // What the player won, and the next step (members: it's in your balance; guests: join to collect).
   function endCard(m, s) {
     var pz = m.prize, venue = esc(s.venue_name || 'this venue');
+    if (m.online) {
+      return '<div class="card cta"><h2>Thanks for playing online</h2><p class="sub">Come to ' + venue + ' to play in the room for their prizes, and check in on BarChata to earn Hearts.</p></div>';
+    }
     if (pz && pz.status === 'pending_claim') {
       var days = pz.expires_at ? Math.max(1, Math.ceil((new Date(pz.expires_at).getTime() - Date.now()) / 86400000)) : 7;
       return '<div class="card cta prize"><div class="prize-amt">+' + fmt(pz.hearts) + ' Hearts</div><h2>You won ' + fmt(pz.hearts) + ' Hearts!</h2>' +
@@ -1094,6 +1178,8 @@
   // ------------------------------------------------------------------ start
   async function boot() {
     await claimGuestHearts();
+    var onlineId = onlineFromUrl();
+    if (onlineId) { startOnline(onlineId); return; }
     var code = codeFromUrl();
     var saved = getJSON(GAME_KEY);
     if (code && saved && saved.code === code && Date.now() - saved.at < 15 * 60000) {
