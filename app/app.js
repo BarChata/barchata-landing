@@ -97,7 +97,7 @@
     return sb.from('profiles').update({ username: h, full_name: h }).eq('id', uid);
   }
 
-  const SCAN_COLS = 'id, name, address, city, cover_image, logo_url, is_active, primary_barcode, owner_id, wifi_ssid, country, lat, lng';
+  const SCAN_COLS = 'id, name, address, city, cover_image, logo_url, is_active, primary_barcode, owner_id, wifi_ssid, country, lat, lng, timezone';
   async function findVenue(code) {
     for (const form of codeForms(code)) {
       const { data, error } = await sb.from('venues').select(SCAN_COLS).eq('primary_barcode', form).limit(1).maybeSingle();
@@ -291,16 +291,14 @@
     const get = (q) => Promise.resolve(q).then((r) => (r && !r.error ? r.data : null), () => null);
     const o = ext.opts;
     // These four load on their own (a slow one never holds up the rest).
-    get(sb.from('venue_specials').select('id, title, description, valid_from, valid_until, is_active').eq('venue_id', v.id).eq('is_active', true).limit(10))
+    get(sb.from('venue_specials').select('*').eq('venue_id', v.id).eq('is_active', true).limit(12))
       .then((rows) => {
         if (!ext.v || ext.v.id !== mine) return;
-        const now = Date.now(), today = new Date().getDay();
-        // A special named for a day ("Wing Wednesday") is for that day: today's and every-day specials first,
-        // the others after, labelled with their day (next one first).
-        const live = (rows || []).filter((r) => r.title && (!r.valid_from || new Date(r.valid_from).getTime() <= now) && (!r.valid_until || new Date(r.valid_until).getTime() > now))
-          .map((r) => Object.assign({}, r, { day: specialDay(r) }));
-        const wait = (r) => (r.day === today ? -1 : r.day < 0 ? 0 : 1 + ((r.day - today + 7) % 7));
-        ext.specials = live.sort((a, b) => wait(a) - wait(b)).slice(0, 4);
+        const now = Date.now(), z = zonedNow(v.timezone);
+        // On now first, then later today, then the next days; each labelled (Now · until 7 PM / Today from 4 PM / Wednesdays).
+        ext.specials = (rows || []).filter((r) => r.title && (!r.valid_from || new Date(r.valid_from).getTime() <= now) && (!r.valid_until || new Date(r.valid_until).getTime() > now))
+          .map((r) => Object.assign({}, r, { st: specialState(r, z) }))
+          .sort((a, b) => a.st.rank - b.st.rank).slice(0, 4);
         paintExtras();
       });
     if (v.owner_id) {
@@ -374,6 +372,8 @@
     paintExtras();
   }
 
+  // Specials schedule (Nov 23, 2026): days (0 = Sunday) and hours in the business's time zone, set in Biz. A special
+  // with no schedule runs every day, all day, unless its name says a day ("Wing Wednesday").
   const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   function specialDay(sp) {
     const t = norm((sp.title || '') + ' ' + (sp.description || ''));
@@ -381,6 +381,43 @@
     return hit.length === 1 ? DAYS.indexOf(hit[0]) : -1;
   }
   const dayName = (i) => { try { const d = new Date(); d.setDate(d.getDate() + ((i - d.getDay() + 7) % 7)); return d.toLocaleDateString(undefined, { weekday: 'long' }) + 's'; } catch (e) { return ''; } };
+  const dayShort = (i) => { try { const d = new Date(); d.setDate(d.getDate() + ((i - d.getDay() + 7) % 7)); return d.toLocaleDateString(undefined, { weekday: 'short' }); } catch (e) { return ''; } };
+  function zonedNow(tz) {
+    try {
+      const f = new Intl.DateTimeFormat('en-US', { timeZone: tz || undefined, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+      const p = {}; f.formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; });
+      const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday);
+      if (day >= 0) return { day, mins: (Number(p.hour) % 24) * 60 + Number(p.minute) };
+    } catch (e) { /* unknown time zone: use the phone's */ }
+    const d = new Date();
+    return { day: d.getDay(), mins: d.getHours() * 60 + d.getMinutes() };
+  }
+  const toMins = (t) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+  const minsText = (m) => { try { return new Date(2000, 0, 1, Math.floor(m / 60) % 24, m % 60).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }).replace(':00', ''); } catch (e) { return ''; } };
+  // { rank, label, on }: rank orders the list (on now first); label says when; on = running right now.
+  function specialState(sp, z) {
+    let days = Array.isArray(sp.days) && sp.days.length ? sp.days.map(Number) : null;
+    const s = toMins(sp.time_start), e = toMins(sp.time_end);
+    const scheduled = !!days || s != null;
+    if (!days) { const named = specialDay(sp); if (named >= 0) days = [named]; }
+    const runs = (d) => !days || days.indexOf(d) >= 0;
+    const yday = (z.day + 6) % 7;
+    const single = days && days.length === 1;
+    if (s == null || e == null) {
+      if (runs(z.day)) return { rank: days ? -1 : 0, on: true, label: days ? 'Today' : '' };
+    } else if (e > s) {
+      if (runs(z.day) && z.mins >= s && z.mins < e) return { rank: -1, on: true, label: 'Now · until ' + minsText(e) };
+      if (runs(z.day) && z.mins < s) return { rank: 1, on: false, label: 'Today from ' + minsText(s) };
+    } else {
+      if (runs(z.day) && z.mins >= s) return { rank: -1, on: true, label: 'Now · until ' + minsText(e) };
+      if (runs(yday) && z.mins < e) return { rank: -1, on: true, label: 'Now · until ' + minsText(e) };
+      if (runs(z.day)) return { rank: 1, on: false, label: 'Tonight from ' + minsText(s) };
+    }
+    let k = 1; while (k < 7 && !runs((z.day + k) % 7)) k++;
+    const next = (z.day + k) % 7;
+    const at = s != null ? ' ' + minsText(s) : '';
+    return { rank: 1 + k, on: false, label: single ? dayName(next) : (k === 1 ? 'Tomorrow' : dayShort(next)) + at, later: true, scheduled };
+  }
 
   // Sections in the order that suits the time of day: dinner (Sip first), evening (what's live first), late (getting
   // home first). Only sections the business has are shown.
@@ -444,14 +481,12 @@
 
     // SIP: specials running now
     if (ext.specials && ext.specials.length) {
-      const today = new Date().getDay();
-      const nowOnly = ext.specials.every((sp) => sp.valid_until && (sp.day < 0 || sp.day === today));
-      part.specials = '<p class="cz-sec">' + (nowOnly ? 'Specials now' : 'Specials') + '</p><div class="cz-group">' + ext.specials.map((sp) => {
-        const other = sp.day >= 0 && sp.day !== today;
-        const when = other ? dayName(sp.day) : sp.day === today ? 'Today' : sp.valid_until ? untilLine(sp.valid_until) : '';
-        return '<div class="vz-row' + (other ? ' vz-later' : '') + '"><span class="vz-ic sm">' + tagIcon() + '</span><span class="vz-main"><span class="vz-t">' + esc(sp.title) + '</span>' +
+      part.specials = '<p class="cz-sec">Specials</p><div class="cz-group">' + ext.specials.map((sp) => {
+        const st = sp.st || { rank: 0, on: true, label: '' };
+        const when = st.label || (sp.valid_until ? untilLine(sp.valid_until) : '');
+        return '<div class="vz-row' + (st.later ? ' vz-later' : '') + '"><span class="vz-ic sm">' + tagIcon() + '</span><span class="vz-main"><span class="vz-t">' + esc(sp.title) + '</span>' +
           (sp.description ? '<span class="vz-s">' + esc(sp.description) + '</span>' : '') + '</span>' +
-          (when ? '<span class="vz-when' + (sp.day === today ? ' on' : '') + '">' + esc(when) + '</span>' : '') + '</div>';
+          (when ? '<span class="vz-when' + (st.on && st.label ? ' on' : '') + '">' + esc(when) + '</span>' : '') + '</div>';
       }).join('') + '</div>';
     }
 
