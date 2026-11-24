@@ -221,3 +221,5 @@ a.cz-pill.on{color:#000}
 .vz-menu{padding:0 16px}
 .vz-menu .mgroup:first-child{border-top:0}
 .vz .wifi-pw{font-size:20px}
+.vz-wallet{flex:none;height:40px;padding:0 14px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#000;color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.vz-wallet:disabled{opacity:.5}

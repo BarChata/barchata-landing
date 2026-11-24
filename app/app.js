@@ -282,7 +282,7 @@
   }
   const shortDate = (d) => { try { return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
   const ext = { v: null, opts: {}, feat: null, menu: null, rewards: null, loyalty: false, wifi: null, hearts: null, busy: false,
-    specials: null, events: null, live: null, join: null, rated: null };
+    specials: null, events: null, live: null, join: null, rated: null, wallet: null, walletBusy: false };
 
   async function loadExtras(v, opts) {
     Object.assign(ext, { v, opts: opts || {}, feat: null, menu: null, rewards: null, loyalty: false, wifi: null, hearts: null, busy: false,
@@ -316,6 +316,7 @@
           paintExtras();
         });
     }
+    if (o.signedIn) walletStatus().then((w) => { if (ext.v && ext.v.id === mine) { ext.wallet = w; paintExtras(); } });
     get(sb.rpc('bartv_live', { p_venue: v.id })).then(async (rows) => {
       if (!ext.v || ext.v.id !== mine) return;
       const live = (rows || []).find((r) => r.what && r.what !== 'screens') || null;
@@ -448,6 +449,44 @@
   const carIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M6 17v2M18 17v2M4 13l2-5a2 2 0 0 1 1.9-1.4h8.2A2 2 0 0 1 18 8l2 5v4H4z"/><circle cx="8" cy="14" r="1"/><circle cx="16" cy="14" r="1"/></svg>';
   const starPath = 'M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z';
 
+  // Wallet card (Nov 23, 2026): the member's rewards card for this business in Apple Wallet or Google Wallet
+  // (edge function wallet-pass). Buttons show only once that wallet is set up.
+  let walletState = null;
+  function walletStatus() {
+    if (!walletState) {
+      walletState = fetch(cfg.url + '/functions/v1/wallet-pass', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + cfg.anonKey }, body: JSON.stringify({ action: 'status' }) })
+        .then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    }
+    return walletState;
+  }
+  const appleDevice = () => isIOS() || (/Macintosh/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Edg|Firefox/.test(navigator.userAgent));
+  function walletRow() {
+    const w = ext.wallet;
+    if (!w || !ext.opts.signedIn) return '';
+    const apple = w.apple && appleDevice(), google = w.google && !appleDevice();
+    if (!apple && !google) return '';
+    const btn = apple
+      ? '<button type="button" class="vz-wallet" data-wallet="apple"' + (ext.walletBusy ? ' disabled' : '') + '>Add to Apple Wallet</button>'
+      : '<button type="button" class="vz-wallet" data-wallet="google"' + (ext.walletBusy ? ' disabled' : '') + '>Add to Google Wallet</button>';
+    return '<div class="vz-row"><span class="vz-main"><span class="vz-t">Your card in Wallet</span><span class="vz-s">Hearts and rewards on your phone, and a reminder when you’re here.</span></span>' + btn + '</div>';
+  }
+  async function addToWallet(kind) {
+    if (ext.walletBusy || !ext.v) return;
+    ext.walletBusy = true; paintExtras();
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) throw new Error('Sign in to add your card.');
+      const r = await fetch(cfg.url + '/functions/v1/wallet-pass', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: kind === 'apple' ? 'apple_link' : 'google_link', venue_id: ext.v.id }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.url) throw new Error(d.error || 'Could not make your card. Try again.');
+      if (kind === 'apple') location.href = d.url; else window.open(d.url, '_blank', 'noopener');
+    } catch (e) { toast(e.message || 'Could not make your card. Try again.'); }
+    ext.walletBusy = false; paintExtras();
+  }
+
   function rideLinks(v) {
     if (v.lat == null || v.lng == null) return '';
     const lat = Number(v.lat), lng = Number(v.lng);
@@ -523,7 +562,8 @@
       }).join('');
       const head = '<div class="vz-sechead"><p class="cz-sec">Rewards</p>' + (mine != null ? '<span class="vz-hearts">' + fmt(mine) + ' Hearts here</span>' : '') + '</div>';
       const intro = !o.signedIn ? '<p class="vz-note">Join free to earn Hearts every visit to ' + esc(v.name) + ', then trade them for rewards.</p>' : '';
-      part.rewards = head + intro + (progress || rows ? '<div class="cz-group">' + progress + rows + '</div>' : (o.signedIn ? '<p class="vz-note">Earn Hearts every time you check in here.</p>' : ''));
+      const wrow = walletRow();
+      part.rewards = head + intro + (progress || rows || wrow ? '<div class="cz-group">' + progress + rows + wrow + '</div>' : (o.signedIn ? '<p class="vz-note">Earn Hearts every time you check in here.</p>' : ''));
     }
 
     // SIP: Wi-Fi
@@ -587,6 +627,7 @@
     slot.querySelectorAll('[data-redeem]').forEach((b) => { b.onclick = () => askRedeem(b.dataset.redeem); });
     slot.querySelectorAll('[data-checkin]').forEach((b) => { b.onclick = () => { const c = document.getElementById('doCheckin'); if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.click(); } }; });
     slot.querySelectorAll('[data-rate]').forEach((b) => { b.onclick = () => rateTonight(Number(b.dataset.rate)); });
+    slot.querySelectorAll('[data-wallet]').forEach((b) => { b.onclick = () => addToWallet(b.dataset.wallet); });
   }
 
   // How was tonight: the member's star rating of this business (venue_ratings, one per person, can be changed).
