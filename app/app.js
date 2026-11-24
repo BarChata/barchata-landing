@@ -9,6 +9,11 @@
  *
  * Coaster (Nov 23, 2026): barchata.com/s is the QR on the generic coaster every business gets. It finds the business
  * from the phone's location (or a name search) and opens that business's /scan/<code> page.
+ *
+ * Place page (Nov 23, 2026, "Sip. Scan. Spark."): /scan/<code> is the guest's home for the night at that business:
+ * check in, join offer, what's live on BarTV (Play now), specials running now, Hearts progress and rewards, menu,
+ * Wi-Fi, what's coming up, and at the end of the night a ride home and "How was tonight?". Sections only show when
+ * the business has them; their order follows the time of day.
  */
 (function () {
   const cfg = window.BC_CONFIG || {};
@@ -92,7 +97,7 @@
     return sb.from('profiles').update({ username: h, full_name: h }).eq('id', uid);
   }
 
-  const SCAN_COLS = 'id, name, address, city, cover_image, logo_url, is_active, primary_barcode, owner_id, wifi_ssid, country';
+  const SCAN_COLS = 'id, name, address, city, cover_image, logo_url, is_active, primary_barcode, owner_id, wifi_ssid, country, lat, lng';
   async function findVenue(code) {
     for (const form of codeForms(code)) {
       const { data, error } = await sb.from('venues').select(SCAN_COLS).eq('primary_barcode', form).limit(1).maybeSingle();
@@ -276,13 +281,56 @@
     return '$' + x.toFixed(2);
   }
   const shortDate = (d) => { try { return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
-  const ext = { v: null, opts: {}, feat: null, menu: null, rewards: null, loyalty: false, wifi: null, hearts: null, busy: false };
+  const ext = { v: null, opts: {}, feat: null, menu: null, rewards: null, loyalty: false, wifi: null, hearts: null, busy: false,
+    specials: null, events: null, live: null, join: null, rated: null };
 
   async function loadExtras(v, opts) {
-    Object.assign(ext, { v, opts: opts || {}, feat: null, menu: null, rewards: null, loyalty: false, wifi: null, hearts: null, busy: false });
+    Object.assign(ext, { v, opts: opts || {}, feat: null, menu: null, rewards: null, loyalty: false, wifi: null, hearts: null, busy: false,
+      specials: null, events: null, live: null, join: null, rated: ext.v && ext.v.id === v.id ? ext.rated : null });
     const mine = v.id;
     const get = (q) => Promise.resolve(q).then((r) => (r && !r.error ? r.data : null), () => null);
     const o = ext.opts;
+    // These four load on their own (a slow one never holds up the rest).
+    get(sb.from('venue_specials').select('id, title, description, valid_from, valid_until, is_active').eq('venue_id', v.id).eq('is_active', true).limit(10))
+      .then((rows) => {
+        if (!ext.v || ext.v.id !== mine) return;
+        const now = Date.now();
+        ext.specials = (rows || []).filter((r) => r.title && (!r.valid_from || new Date(r.valid_from).getTime() <= now) && (!r.valid_until || new Date(r.valid_until).getTime() > now)).slice(0, 4);
+        paintExtras();
+      });
+    if (v.owner_id) {
+      get(sb.from('events').select('id, title, starts_at, ends_at, is_free, ticket_price, price, ticket_url, venue_name, lat, lng')
+        .eq('created_by', v.owner_id).eq('active', true)
+        .gte('starts_at', new Date(Date.now() - 6 * 3600000).toISOString()).lte('starts_at', new Date(Date.now() + 21 * 86400000).toISOString())
+        .order('starts_at').limit(20))
+        .then((rows) => {
+          if (!ext.v || ext.v.id !== mine) return;
+          // Owners with several places: keep the events at this place (same name, or within 250 m).
+          const here = (e) => norm(e.venue_name) === norm(v.name) ||
+            (e.lat != null && e.lng != null && v.lat != null && v.lng != null && metres({ lat: Number(e.lat), lng: Number(e.lng) }, { lat: Number(v.lat), lng: Number(v.lng) }) <= 250);
+          const now = Date.now();
+          ext.events = (rows || []).filter((e) => here(e) && new Date(e.ends_at || new Date(e.starts_at).getTime() + 6 * 3600000).getTime() > now).slice(0, 3);
+          paintExtras();
+        });
+    }
+    get(sb.rpc('bartv_live', { p_venue: v.id })).then(async (rows) => {
+      if (!ext.v || ext.v.id !== mine) return;
+      const live = (rows || []).find((r) => r.what && r.what !== 'screens') || null;
+      ext.live = live;
+      paintExtras();
+      // Play now: the code to play comes back only for a member with a confirmed check-in here in the last 6 hours.
+      if (live && o.signedIn) {
+        try {
+          const { data: { session } } = await sb.auth.getSession();
+          const res = await fetch(cfg.url + '/functions/v1/arena-screen', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + (session ? session.access_token : cfg.anonKey) },
+            body: JSON.stringify({ action: 'watch', venue_id: v.id }),
+          });
+          const d = res.ok ? await res.json() : null;
+          if (ext.v && ext.v.id === mine && d && d.join && d.join.url) { ext.join = d.join; paintExtras(); }
+        } catch (e) { /* the card still shows: scan the code on the TV */ }
+      }
+    });
     const [feat, cats, items, rewards, wifi, member] = await Promise.all([
       get(sb.from('venue_features').select('feature, is_enabled').eq('venue_id', v.id).in('feature', ['menu', 'wifi_access', 'hearts_loyalty'])),
       get(sb.from('menu_categories').select('id, name, sort_order, is_active').eq('venue_id', v.id).order('sort_order').limit(100)),
@@ -321,63 +369,190 @@
     paintExtras();
   }
 
+  // Sections in the order that suits the time of day: dinner (Sip first), evening (what's live first), late (getting
+  // home first). Only sections the business has are shown.
+  function sectionOrder() {
+    const h = new Date().getHours();
+    if (h >= 23 || h < 5) return ['live', 'home', 'rewards', 'wifi', 'specials', 'menu', 'events'];
+    if (h >= 17) return ['live', 'specials', 'rewards', 'menu', 'wifi', 'events', 'home'];
+    return ['specials', 'menu', 'live', 'rewards', 'wifi', 'events', 'home'];
+  }
+  const timeShort = (d) => { try { return new Date(d).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
+  function untilLine(d) {
+    if (!d) return '';
+    const t = new Date(d), now = new Date();
+    const sameDay = t.toDateString() === now.toDateString();
+    return 'Until ' + (sameDay ? timeShort(t) : shortDate(t));
+  }
+  function eventWhen(e) {
+    const t = new Date(e.starts_at), now = new Date();
+    if (t.getTime() <= now.getTime()) return 'On now';
+    const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
+    const day = t.toDateString() === now.toDateString() ? 'Tonight' : t.toDateString() === tomorrow.toDateString() ? 'Tomorrow'
+      : t.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    return day + ' · ' + timeShort(t);
+  }
+  const tvIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>';
+  const tagIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>';
+  const calIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+  const carIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M6 17v2M18 17v2M4 13l2-5a2 2 0 0 1 1.9-1.4h8.2A2 2 0 0 1 18 8l2 5v4H4z"/><circle cx="8" cy="14" r="1"/><circle cx="16" cy="14" r="1"/></svg>';
+  const starPath = 'M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z';
+
+  function rideLinks(v) {
+    if (v.lat == null || v.lng == null) return '';
+    const lat = Number(v.lat), lng = Number(v.lng);
+    const e = encodeURIComponent;
+    // Pickup = this place; the guest picks where they're going in the ride app.
+    const uber = 'https://m.uber.com/ul/?action=setPickup&' + e('pickup[latitude]') + '=' + lat + '&' + e('pickup[longitude]') + '=' + lng +
+      '&' + e('pickup[nickname]') + '=' + e(v.name || '') + '&' + e('pickup[formatted_address]') + '=' + e(placeLine(v));
+    const lyft = 'https://lyft.com/ride?id=lyft&' + e('pickup[latitude]') + '=' + lat + '&' + e('pickup[longitude]') + '=' + lng;
+    return '<div class="vz-ride"><a class="cz-pill" href="' + esc(uber) + '" target="_blank" rel="noopener">Uber</a>' +
+      '<a class="cz-pill" href="' + esc(lyft) + '" target="_blank" rel="noopener">Lyft</a></div>';
+  }
+
   function paintExtras() {
     const slot = document.getElementById('extras');
     if (!slot || !ext.v) return;
-    const v = ext.v, o = ext.opts, out = [];
-    // Rewards + Hearts
+    const v = ext.v, o = ext.opts, part = {};
+
+    // SPARK: live on BarTV
+    const L = ext.live;
+    if (L) {
+      const what = { game: 'Trivia is on', callit: 'Call It is on', giveaway: 'Giveaway now', draw: 'Free draw now' }[L.what] || 'Live on BarTV';
+      const sub = L.title ? esc(L.title) : 'Play on your phone. No app needed.';
+      let act;
+      if (ext.join) act = '<a class="cz-pill on" href="' + esc(ext.join.url) + '">Play now</a>';
+      else if (o.signedIn && !o.checkedIn) act = '<button type="button" class="cz-pill on" data-checkin>Check in to play</button>';
+      else if (!o.signedIn) act = '<button type="button" class="cz-pill on" data-go="/join">Join free to play</button>';
+      else act = '<span class="vz-hint">Scan the code on the TV to play</span>';
+      part.live = '<div class="vz-card vz-live"><div class="vz-ic">' + tvIcon() + '</div><div class="vz-main"><p class="vz-t">' + what + '</p><p class="vz-s">' + sub + '</p>' +
+        '<div class="vz-acts">' + act + '<a class="cz-pill" href="https://biz.barchata.com/tv?watch=' + esc(v.id) + '" target="_blank" rel="noopener">Watch</a></div></div></div>';
+    }
+
+    // SIP: specials running now
+    if (ext.specials && ext.specials.length) {
+      part.specials = '<p class="cz-sec">Specials now</p><div class="cz-group">' + ext.specials.map((sp) =>
+        '<div class="vz-row"><span class="vz-ic sm">' + tagIcon() + '</span><span class="vz-main"><span class="vz-t">' + esc(sp.title) + '</span>' +
+        (sp.description ? '<span class="vz-s">' + esc(sp.description) + '</span>' : '') + '</span>' +
+        (sp.valid_until ? '<span class="vz-when">' + esc(untilLine(sp.valid_until)) + '</span>' : '') + '</div>').join('') + '</div>';
+    }
+
+    // SCAN: Hearts, progress to the next reward, rewards
     if (ext.loyalty) {
       const mine = ext.hearts;
-      const head = '<div class="xhead"><h2>Rewards</h2>' + (mine != null ? '<span class="pill">' + fmt(mine) + ' Hearts here</span>' : '') + '</div>' +
-        '<p class="muted">Earn Hearts every time you check in at ' + esc(v.name) + ', then trade them for rewards.</p>';
-      const rows = (ext.rewards || []).map((r) => {
+      const list = ext.rewards || [];
+      let progress = '';
+      if (mine != null && list.length) {
+        const next = list.filter((r) => Number(r.hearts_cost || 0) > mine).sort((a, b) => a.hearts_cost - b.hearts_cost)[0];
+        const ready = list.filter((r) => Number(r.hearts_cost || 0) <= mine).length;
+        if (next) {
+          const pct = Math.max(4, Math.min(100, Math.round(mine / Number(next.hearts_cost) * 100)));
+          progress = '<div class="vz-prog"><div class="vz-prog-top"><span>' + fmt(Number(next.hearts_cost) - mine) + ' Hearts to <b>' + esc(next.title) + '</b></span></div>' +
+            '<div class="vz-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div>' +
+            (ready ? '<p class="vz-s">' + ready + ' reward' + (ready === 1 ? '' : 's') + ' ready to redeem now</p>' : '') + '</div>';
+        } else if (ready) {
+          progress = '<div class="vz-prog"><p class="vz-t">You can redeem ' + (ready === 1 ? 'a reward' : 'any reward') + ' here</p></div>';
+        }
+      }
+      const rows = list.map((r) => {
         const cost = Number(r.hearts_cost || 0);
         const left = r.quantity_available != null ? Math.max(0, Number(r.quantity_available) - Number(r.quantity_redeemed || 0)) : null;
         const meta = [left != null ? left + ' left' : '', r.expires_at ? 'until ' + shortDate(r.expires_at) : ''].filter(Boolean).join(' · ');
         let act = '';
         if (o.signedIn && mine != null) {
           act = mine >= cost
-            ? '<button class="btn sm" type="button" data-redeem="' + esc(r.id) + '"' + (ext.busy ? ' disabled' : '') + '>Redeem</button>'
-            : '<span class="muted xneed">' + fmt(cost - mine) + ' more</span>';
+            ? '<button class="cz-pill on" type="button" data-redeem="' + esc(r.id) + '"' + (ext.busy ? ' disabled' : '') + '>Redeem</button>'
+            : '<span class="vz-hint">' + fmt(cost - mine) + ' more</span>';
         }
-        return '<div class="xrow"><div class="xmain"><div class="t">' + esc(r.title) + '</div>' +
-          (r.description ? '<div class="muted">' + esc(r.description) + '</div>' : '') + (meta ? '<div class="muted">' + esc(meta) + '</div>' : '') +
-          '</div><div class="xside"><span class="pill">' + fmt(cost) + ' Hearts</span>' + act + '</div></div>';
+        return '<div class="vz-row"><span class="vz-main"><span class="vz-t">' + esc(r.title) + '</span>' +
+          (r.description ? '<span class="vz-s">' + esc(r.description) + '</span>' : '') + (meta ? '<span class="vz-s">' + esc(meta) + '</span>' : '') +
+          '</span><span class="vz-side"><span class="vz-cost">' + fmt(cost) + ' Hearts</span>' + act + '</span></div>';
       }).join('');
-      const foot = !o.signedIn ? '<p class="muted xfoot">Join free to start earning Hearts here.</p>' : '';
-      out.push('<div class="card xcard" id="xRewards">' + head + (rows ? '<div class="xlist">' + rows + '</div>' : '') + foot + '</div>');
+      const head = '<div class="vz-sechead"><p class="cz-sec">Rewards</p>' + (mine != null ? '<span class="vz-hearts">' + fmt(mine) + ' Hearts here</span>' : '') + '</div>';
+      const intro = !o.signedIn ? '<p class="vz-note">Join free to earn Hearts every visit to ' + esc(v.name) + ', then trade them for rewards.</p>' : '';
+      part.rewards = head + intro + (progress || rows ? '<div class="cz-group">' + progress + rows + '</div>' : (o.signedIn ? '<p class="vz-note">Earn Hearts every time you check in here.</p>' : ''));
     }
-    // Wi-Fi
+
+    // SIP: Wi-Fi
     const w = ext.wifi;
     if (w && (w.ssid || w.password)) {
       let body;
       if (w.password) {
-        body = '<div class="xrow"><div class="xmain"><div class="muted">Password</div><div class="wifi-pw">' + esc(w.password) + '</div></div>' +
-          '<div class="xside"><button class="btn sm secondary" type="button" data-copy="' + esc(w.password) + '">Copy</button></div></div>';
+        body = '<div class="vz-row"><span class="vz-main"><span class="vz-s">Password</span><span class="wifi-pw">' + esc(w.password) + '</span></span>' +
+          '<span class="vz-side"><button class="cz-pill" type="button" data-copy="' + esc(w.password) + '">Copy</button></span></div>';
       } else if (w.unknown) {
-        body = '<p class="muted">Join free and check in to get the password.</p>';
+        body = '<div class="vz-row"><span class="vz-s">Join free and check in to get the password.</span></div>';
       } else if (w.has_password === false) {
-        body = '<p class="muted">No password needed.</p>';
+        body = '<div class="vz-row"><span class="vz-s">No password needed.</span></div>';
       } else {
-        body = '<p class="muted">' + (o.checkedIn ? 'The password shows here once your check-in is confirmed at ' + esc(v.name) + '.' : 'Check in to see the password.') + '</p>';
+        body = '<div class="vz-row"><span class="vz-s">' + (o.checkedIn ? 'The password shows here once your check-in is confirmed at ' + esc(v.name) + '.' : 'Check in to see the password.') + '</span></div>';
       }
-      out.push('<div class="card xcard"><div class="xhead"><h2>Wi-Fi</h2></div>' +
-        (w.ssid ? '<div class="xrow"><div class="xmain"><div class="muted">Network</div><div class="t">' + esc(w.ssid) + '</div></div></div>' : '') + body + '</div>');
+      part.wifi = '<p class="cz-sec">Wi-Fi</p><div class="cz-group">' +
+        (w.ssid ? '<div class="vz-row"><span class="vz-main"><span class="vz-s">Network</span><span class="vz-t">' + esc(w.ssid) + '</span></span></div>' : '') + body + '</div>';
     }
-    // Menu
+
+    // SIP: menu
     if (ext.menu) {
       const groups = ext.menu.map((g, i) => '<details class="mgroup"' + (i === 0 ? ' open' : '') + '><summary>' + esc(g.name) + '<span class="muted">' + g.items.length + '</span></summary>' +
         g.items.map((it) => '<div class="mitem">' + (it.image_url ? '<img src="' + esc(it.image_url) + '" alt="" loading="lazy">' : '') +
           '<div class="xmain"><div class="t">' + esc(it.name) + (it.is_featured ? ' <span class="pill">Popular</span>' : '') + '</div>' +
           (it.description ? '<div class="muted">' + esc(it.description) + '</div>' : '') + '</div>' +
           (money(it.price, v.country) ? '<div class="price">' + esc(money(it.price, v.country)) + '</div>' : '') + '</div>').join('') + '</details>').join('');
-      out.push('<div class="card xcard"><div class="xhead"><h2>Menu</h2></div>' + groups + '</div>');
+      part.menu = '<p class="cz-sec">Menu</p><div class="cz-group vz-menu">' + groups + '</div>';
     }
-    slot.innerHTML = out.join('');
+
+    // SPARK: coming up
+    if (ext.events && ext.events.length) {
+      part.events = '<p class="cz-sec">Coming up</p><div class="cz-group">' + ext.events.map((ev) => {
+        const price = ev.is_free ? 'Free' : (money(ev.ticket_price != null ? ev.ticket_price : ev.price, v.country) || '');
+        return '<div class="vz-row"><span class="vz-ic sm">' + calIcon() + '</span><span class="vz-main"><span class="vz-t">' + esc(ev.title) + '</span>' +
+          '<span class="vz-s">' + esc(eventWhen(ev)) + (price ? ' · ' + esc(price) : '') + '</span></span>' +
+          (ev.ticket_url && /^https:\/\//i.test(ev.ticket_url) ? '<span class="vz-side"><a class="cz-pill" href="' + esc(ev.ticket_url) + '" target="_blank" rel="noopener">Tickets</a></span>' : '') + '</div>';
+      }).join('') + '</div>';
+    }
+
+    // End of the night: a ride home, and how was tonight (members who checked in here now)
+    const ride = rideLinks(v);
+    let rate = '';
+    if (o.signedIn && o.checkedIn) {
+      const r = ext.rated;
+      rate = '<div class="vz-row vz-rate"><span class="vz-main"><span class="vz-t">' + (r ? 'Thanks for rating ' + esc(v.name) : 'How was tonight?') + '</span>' +
+        '<span class="vz-stars" role="group" aria-label="Rate ' + esc(v.name) + '">' + [1, 2, 3, 4, 5].map((n) =>
+          '<button type="button" class="vz-star' + (r && n <= r ? ' on' : '') + '" data-rate="' + n + '" aria-label="' + n + ' star' + (n > 1 ? 's' : '') + '">' +
+          '<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="' + starPath + '"/></svg></button>').join('') + '</span></span></div>';
+    }
+    if (ride || rate) {
+      part.home = '<p class="cz-sec">Heading home?</p><div class="cz-group">' +
+        (ride ? '<div class="vz-row"><span class="vz-ic sm">' + carIcon() + '</span><span class="vz-main"><span class="vz-t">Get a ride</span><span class="vz-s">Pickup at ' + esc(v.name) + '</span></span>' + ride + '</div>' : '') +
+        rate + '</div>';
+    }
+
+    slot.innerHTML = sectionOrder().map((k) => part[k] || '').join('');
     slot.querySelectorAll('[data-copy]').forEach((b) => { b.onclick = async () => {
       try { await navigator.clipboard.writeText(b.dataset.copy); toast('Copied'); } catch (e) { toast('Press and hold the password to copy it.'); }
     }; });
     slot.querySelectorAll('[data-redeem]').forEach((b) => { b.onclick = () => askRedeem(b.dataset.redeem); });
+    slot.querySelectorAll('[data-checkin]').forEach((b) => { b.onclick = () => { const c = document.getElementById('doCheckin'); if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.click(); } }; });
+    slot.querySelectorAll('[data-rate]').forEach((b) => { b.onclick = () => rateTonight(Number(b.dataset.rate)); });
+  }
+
+  // How was tonight: the member's star rating of this business (venue_ratings, one per person, can be changed).
+  // Owners and staff can't rate their own business (the database refuses it).
+  async function rateTonight(n) {
+    if (!ext.v || !(n >= 1 && n <= 5)) return;
+    const prev = ext.rated;
+    ext.rated = n; paintExtras();
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const uid = session && session.user && session.user.id;
+      if (!uid) throw new Error('Please sign in again.');
+      const { error } = await sb.from('venue_ratings').upsert({ user_id: uid, venue_id: ext.v.id, rating: n, updated_at: new Date().toISOString() }, { onConflict: 'user_id,venue_id' });
+      if (error) throw error;
+      toast('Thanks! Your rating is saved.');
+    } catch (e) {
+      ext.rated = prev; paintExtras();
+      toast(/own business/i.test(e.message || '') ? 'You can’t rate your own business.' : (e.message || 'Could not save your rating. Try again.'));
+    }
   }
 
   function askRedeem(id) {
@@ -415,10 +590,13 @@
     };
   }
 
-  function venueCard(v) {
+  // The place page's top: the business's photo softly blurred behind, its picture, name and address.
+  function placeTop(v, eyebrow) {
     const img = v.cover_image || v.logo_url;
-    return '<div class="card venue"><div class="img"' + (img ? ' style="background-image:url(' + esc(img) + ')"' : '') + '>' + (img ? '' : initial(v.name)) + '</div>' +
-      '<div><div class="name">' + esc(v.name) + '</div><div class="muted">' + esc(placeLine(v)) + '</div></div></div>';
+    return '<div class="cz-glow" aria-hidden="true">' + (img ? '<img src="' + esc(img) + '" alt="">' : '') + '</div>' + header() +
+      '<p class="cz-eyebrow" id="vzEyebrow">' + eyebrow + '</p>' +
+      '<div class="vz-hero">' + placeThumb(v, 'vz-hero-img') + '<div class="vz-hero-t"><h1 class="cz-title">' + esc(v.name) + '</h1>' +
+      (placeLine(v) ? '<p class="cz-sub">' + esc(placeLine(v)) + '</p>' : '') + '</div></div>';
   }
 
   // ------------------------------------------------------------------ views
@@ -438,18 +616,24 @@
     const closed = v.is_active === false ? '<p class="err">This place is no longer listed on BarChata.</p>' : '';
     if (!session) {
       rememberScan(code);
-      render(header() + '<h1>Check in and earn Hearts</h1><p class="sub">Join BarChata free to check in here, collect Hearts and unlock rewards.</p><div class="gap"></div>' +
-        venueCard(v) + notHere() + closed + '<div id="joinSlot"></div><div class="gap"></div><div class="stack">' +
-        '<button class="btn" data-go="/join">Join BarChata free</button><button class="btn secondary" data-go="/app?mode=signin">I have an account</button></div><div id="extras"></div>' + legal());
+      render('<div class="cz vz">' + placeTop(v, 'Earn rewards here') + notHere() + closed +
+        '<div class="vz-action"><button class="cz-cta" type="button" data-go="/join">Join BarChata free</button>' +
+        '<button class="cz-ghost" type="button" data-go="/app?mode=signin">I have an account</button>' +
+        '<p class="cz-fine">Check in, collect Hearts, unlock rewards. No app needed.</p></div>' +
+        '<div id="joinSlot"></div><div id="extras"></div>' + legal() + '</div>');
       if (v.is_active !== false) { loadScanJoin(code, false); loadExtras(v, { signedIn: false }); }
       return;
     }
-    render(header() + '<h1>You are at</h1><div class="gap"></div>' + venueCard(v) + notHere() + closed + '<div class="gap"></div>' +
-      '<button class="btn" id="doCheckin"' + (v.is_active === false ? ' disabled' : '') + '>Check in</button><p class="muted" style="text-align:center;margin-top:10px">One tap. Hearts go straight to your account.</p><div id="joinSlot"></div><div id="extras"></div>');
+    render('<div class="cz vz">' + placeTop(v, 'You’re at') + notHere() + closed +
+      '<div class="vz-action" id="vzAction"><button class="cz-cta" type="button" id="doCheckin"' + (v.is_active === false ? ' disabled' : '') + '>Check in</button>' +
+      '<p class="cz-fine">One tap. Hearts go straight to your account.</p></div>' +
+      '<div id="joinSlot"></div><div id="extras"></div>' + legal() + '</div>');
     const uid = session.user && session.user.id;
     if (v.is_active !== false) { loadScanJoin(code, true); loadExtras(v, { signedIn: true, uid }); }
     document.getElementById('doCheckin').onclick = async (e) => {
-      e.target.disabled = true; e.target.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px"></div>';
+      const btn = e.currentTarget;
+      if (btn.disabled) return;
+      btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;border-top-color:#000"></div>';
       try {
         const res = await checkIn(code);
         if (res && res.ok) {
@@ -463,20 +647,24 @@
           let line;
           if (held) line = esc(res.message || 'Your check-in is saved. Scan again at the venue to collect your Hearts.');
           else if (again) line = esc(res.message || 'You already checked in here today. You can check in again tomorrow.');
-          else if (pts > 0) line = '<b style="color:var(--brand)">+' + pts + ' Hearts</b>';
-          else if (award.source === 'pool_empty' || award.points_enabled === false) line = 'Check-in saved. ' + esc(v.name) + ' isn\u2019t giving Hearts right now.';
+          else if (pts > 0) line = '<b class="vz-plus">+' + pts + ' Hearts</b>';
+          else if (award.source === 'pool_empty' || award.points_enabled === false) line = 'Check-in saved. ' + esc(v.name) + ' isn’t giving Hearts right now.';
           else if (award.already_awarded_today) line = 'Check-in saved. Hearts here are once a day.';
           else line = 'Check-in saved.';
-          render(header() + '<div class="center"><div class="success">✓</div><h1>' + (held ? 'Check-in saved' : again ? 'Already checked in today' : 'You are checked in') + '</h1><p class="sub">' + esc(v.name) +
-            '<br>' + line +
-            '</p><div class="stack" style="width:100%"><a class="btn" href="/app" data-link>See my Hearts</a></div></div><div id="joinSlot"></div><div id="extras"></div>');
+          const eb = document.getElementById('vzEyebrow'); if (eb) eb.textContent = held ? 'Check-in saved' : again ? 'Already checked in today' : 'You’re checked in';
+          const act = document.getElementById('vzAction');
+          if (act) {
+            act.innerHTML = '<div class="vz-done"><span class="vz-check" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+              '<div class="vz-main"><p class="vz-t">' + (held ? 'Check-in saved' : again ? 'Already checked in today' : 'You’re checked in') + '</p><p class="vz-s">' + line + '</p></div>' +
+              '<a class="cz-pill" href="/app" data-link>My Hearts</a></div>';
+          }
           fillScanJoin();
-          loadExtras(v, { signedIn: true, uid, checkedIn: true }); // after a check-in the Wi-Fi password can unlock
+          loadExtras(v, { signedIn: true, uid, checkedIn: true }); // after a check-in the Wi-Fi password and Play now can unlock
         } else {
           const msg = { not_authenticated: 'Please sign in again.', qr_not_recognised: 'This code is not recognised.' }[res && res.error] || (res && (res.message || res.error)) || 'Could not check in.';
-          toast(msg); e.target.disabled = false; e.target.textContent = 'Check in';
+          toast(msg); btn.disabled = false; btn.textContent = 'Check in';
         }
-      } catch (err) { toast(err.message || 'Could not check in.'); e.target.disabled = false; e.target.textContent = 'Check in'; }
+      } catch (err) { toast(err.message || 'Could not check in.'); btn.disabled = false; btn.textContent = 'Check in'; }
     };
   }
 

@@ -165,3 +165,56 @@ h2{font-family:"DM Sans";font-size:19px;font-weight:700;letter-spacing:-.2px}
 .mitem .price{font-weight:700;white-space:nowrap;font-size:15px}
 .mitem .pill{font-size:11px;padding:2px 6px;margin-left:4px;vertical-align:middle}
 
+
+/* Place page (/scan/<code>), Spotlight design, Nov 23, 2026: Sip. Scan. Spark. */
+.vz .cz-glow{height:420px}
+.cz-ghost{margin-top:10px;width:100%;height:50px;border-radius:16px;border:0;background:rgba(255,255,255,.12);color:#fff;font:inherit;font-size:17px;font-weight:700;cursor:pointer}
+button.cz-cta{width:100%;border:0;font-family:inherit;cursor:pointer}
+button.cz-cta:disabled{opacity:.6}
+.vz-hero{margin-top:10px;display:flex;align-items:center;gap:16px}
+.vz-hero .cz-title{margin-top:0;overflow-wrap:anywhere}
+.vz-hero .cz-sub{margin-top:4px;font-size:15px}
+.vz-hero-t{min-width:0;flex:1}
+.vz-hero-img{width:76px;height:76px;border-radius:18px;object-fit:cover;flex:none;background:rgba(255,255,255,.08);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.vz-hero-img.none{display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:var(--brand)}
+.vz .not-here{margin-top:14px;text-align:left}
+.vz-action{margin-top:4px}
+.vz-done{margin-top:20px;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12)}
+.vz-check{width:34px;height:34px;border-radius:17px;background:var(--ok);display:flex;align-items:center;justify-content:center;flex:none}
+.vz-plus{color:var(--brand)}
+.vz .join-card{border-radius:16px}
+.vz-card{margin-top:28px;display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:16px;background:#1C1C1E}
+.vz-live{background:linear-gradient(160deg,rgba(242,125,38,.22),rgba(242,125,38,.06));border:1px solid rgba(242,125,38,.45)}
+.vz-ic{width:36px;height:36px;border-radius:10px;background:rgba(242,125,38,.16);color:var(--brand);display:flex;align-items:center;justify-content:center;flex:none}
+.vz-ic.sm{width:32px;height:32px;border-radius:9px}
+.vz-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.vz-t{font-size:17px;font-weight:600;line-height:1.3}
+.vz-s{font-size:14px;line-height:1.4;color:rgba(255,255,255,.6)}
+.vz-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.vz-hint{font-size:13px;color:rgba(255,255,255,.6)}
+a.cz-pill{display:inline-flex;align-items:center;color:#fff}
+a.cz-pill.on{color:#000}
+.vz-row{position:relative;display:flex;align-items:center;gap:14px;min-height:56px;padding:12px 16px}
+.vz-row+.vz-row::before,.vz-prog+.vz-row::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;transform:scaleY(.5);transform-origin:top;background:rgba(255,255,255,.2)}
+.vz-side{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.vz-cost{font-size:13px;font-weight:700;color:var(--brand)}
+.vz-when{flex:none;font-size:13px;color:rgba(255,255,255,.6);text-align:right}
+.vz-sechead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.vz-sechead .cz-sec{margin-bottom:8px}
+.vz-hearts{margin:0 4px 8px;font-size:13px;font-weight:700;color:var(--brand)}
+.vz-note{margin:0 4px 8px;font-size:14px;line-height:1.4;color:rgba(255,255,255,.6)}
+.vz-prog{padding:14px 16px}
+.vz-prog-top{font-size:15px;line-height:1.35}
+.vz-prog-top b{font-weight:700}
+.vz-bar{margin:10px 0 4px;height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}
+.vz-bar span{display:block;height:100%;border-radius:4px;background:var(--brand)}
+.vz-ride{display:flex;gap:8px;flex:none}
+.vz-rate .vz-main{gap:8px}
+.vz-stars{display:flex;gap:4px}
+.vz-star{width:44px;height:44px;border:0;background:none;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.vz-star svg{fill:rgba(255,255,255,.18);transition:fill .15s,transform .1s}
+.vz-star.on svg{fill:var(--brand)}
+.vz-star:active svg{transform:scale(.9)}
+.vz-menu{padding:0 16px}
+.vz-menu .mgroup:first-child{border-top:0}
+.vz .wifi-pw{font-size:20px}
