@@ -470,6 +470,7 @@
       : '<button type="button" class="vz-wallet" data-wallet="google"' + (ext.walletBusy ? ' disabled' : '') + '>Add to Google Wallet</button>';
     return '<div class="vz-row"><span class="vz-main"><span class="vz-t">Your card in Wallet</span><span class="vz-s">Hearts and rewards on your phone, and a reminder when you’re here.</span></span>' + btn + '</div>';
   }
+  const phoneLook = () => { try { return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; } catch (e) { return 'dark'; } };
   async function addToWallet(kind) {
     if (ext.walletBusy || !ext.v) return;
     ext.walletBusy = true; paintExtras();
@@ -478,7 +479,8 @@
       if (!session) throw new Error('Sign in to add your card.');
       const r = await fetch(cfg.url + '/functions/v1/wallet-pass', {
         method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + session.access_token },
-        body: JSON.stringify({ action: kind === 'apple' ? 'apple_link' : 'google_link', venue_id: ext.v.id }),
+        // The card is made in the phone's light/dark look at this moment (Wallet cards keep one look).
+        body: JSON.stringify({ action: kind === 'apple' ? 'apple_link' : 'google_link', venue_id: ext.v.id, theme: phoneLook() }),
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.url) throw new Error(d.error || 'Could not make your card. Try again.');
