@@ -282,11 +282,11 @@
   }
   const shortDate = (d) => { try { return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
   const ext = { v: null, opts: {}, feat: null, menu: null, rewards: null, loyalty: false, wifi: null, hearts: null, busy: false,
-    specials: null, events: null, live: null, join: null, rated: null, wallet: null, walletBusy: false };
+    specials: null, events: null, live: null, join: null, rated: null, wallet: null, walletBusy: false, collect: null };
 
   async function loadExtras(v, opts) {
     Object.assign(ext, { v, opts: opts || {}, feat: null, menu: null, rewards: null, loyalty: false, wifi: null, hearts: null, busy: false,
-      specials: null, events: null, live: null, join: null, rated: ext.v && ext.v.id === v.id ? ext.rated : null });
+      specials: null, events: null, live: null, join: null, collect: null, rated: ext.v && ext.v.id === v.id ? ext.rated : null });
     const mine = v.id;
     const get = (q) => Promise.resolve(q).then((r) => (r && !r.error ? r.data : null), () => null);
     const o = ext.opts;
@@ -317,6 +317,7 @@
         });
     }
     if (o.signedIn) walletStatus().then((w) => { if (ext.v && ext.v.id === mine) { ext.wallet = w; paintExtras(); } });
+    if (o.signedIn) loadCollect(mine);
     get(sb.rpc('bartv_live', { p_venue: v.id })).then(async (rows) => {
       if (!ext.v || ext.v.id !== mine) return;
       const live = (rows || []).find((r) => r.what && r.what !== 'screens') || null;
@@ -445,6 +446,7 @@
   }
   const tvIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>';
   const tagIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>';
+  const giftIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>';
   const calIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
   const carIcon = () => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14M6 17v2M18 17v2M4 13l2-5a2 2 0 0 1 1.9-1.4h8.2A2 2 0 0 1 18 8l2 5v4H4z"/><circle cx="8" cy="14" r="1"/><circle cx="16" cy="14" r="1"/></svg>';
   const starPath = 'M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z';
@@ -545,7 +547,7 @@
     }
 
     // SCAN: Hearts, progress to the next reward, rewards
-    if (ext.loyalty) {
+    if (ext.loyalty || (ext.collect && ext.collect.length)) {
       const mine = ext.hearts;
       const list = ext.rewards || [];
       let progress = '';
@@ -578,7 +580,9 @@
       const head = '<div class="vz-sechead"><p class="cz-sec">Rewards</p>' + (mine != null ? '<span class="vz-hearts">' + fmt(mine) + ' Hearts here</span>' : '') + '</div>';
       const intro = !o.signedIn ? '<p class="vz-note">Join free to earn Hearts every visit to ' + esc(v.name) + ', then trade them for rewards.</p>' : '';
       const wrow = walletRow();
-      part.rewards = head + intro + (progress || rows || wrow ? '<div class="cz-group">' + progress + rows + wrow + '</div>' : (o.signedIn ? '<p class="vz-note">Earn Hearts every time you check in here.</p>' : ''));
+      const crow = collectRows();
+      part.rewards = head + intro + (crow ? '<div class="cz-group rd-group">' + crow + '</div>' : '') +
+        (progress || rows || wrow ? '<div class="cz-group">' + progress + rows + wrow + '</div>' : (o.signedIn ? '<p class="vz-note">Earn Hearts every time you check in here.</p>' : ''));
     }
 
     // SIP: Wi-Fi
@@ -640,6 +644,7 @@
       try { await navigator.clipboard.writeText(b.dataset.copy); toast('Copied'); } catch (e) { toast('Press and hold the password to copy it.'); }
     }; });
     slot.querySelectorAll('[data-redeem]').forEach((b) => { b.onclick = () => askRedeem(b.dataset.redeem); });
+    slot.querySelectorAll('[data-collect]').forEach((b) => { b.onclick = () => showCollect(b.dataset.collect); });
     slot.querySelectorAll('[data-checkin]').forEach((b) => { b.onclick = () => { const c = document.getElementById('doCheckin'); if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.click(); } }; });
     slot.querySelectorAll('[data-rate]').forEach((b) => { b.onclick = () => rateTonight(Number(b.dataset.rate)); });
     slot.querySelectorAll('[data-wallet]').forEach((b) => { b.onclick = () => addToWallet(b.dataset.wallet); });
@@ -670,7 +675,7 @@
     const wrap = document.createElement('div');
     wrap.className = 'sheetwrap';
     wrap.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-label="Redeem reward"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2>Redeem this reward?</h2><button class="iconbtn" data-close aria-label="Close">✕</button></div>' +
-      '<div class="join-offer">' + esc(r.title) + '</div><p class="sub">' + fmt(r.hearts_cost) + ' Hearts from your Hearts at ' + esc(ext.v.name) + '. Show the next screen to the staff.</p><div class="gap"></div>' +
+      '<div class="join-offer">' + esc(r.title) + '</div><p class="sub">' + fmt(r.hearts_cost) + ' Hearts from your Hearts at ' + esc(ext.v.name) + '. You get a code and a QR to show the staff. Not collected in 24 hours? Your Hearts come back.</p><div class="gap"></div>' +
       '<div class="stack"><button class="btn" type="button" id="xGo">Redeem for ' + fmt(r.hearts_cost) + ' Hearts</button><button class="btn secondary" type="button" data-close>Not now</button></div></div>';
     wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-close]')) wrap.remove(); });
     document.body.appendChild(wrap);
@@ -684,10 +689,12 @@
       const sheet = wrap.querySelector('.sheet');
       if (res && res.ok) {
         if (res.new_balance != null) ext.hearts = Number(res.new_balance);
-        sheet.innerHTML = '<div class="center" style="min-height:0;padding:8px 0"><div class="success">✓</div><h2>Show this to the staff</h2>' +
-          '<div class="join-offer">' + esc(res.reward_title || r.title) + '</div><p class="muted">' + esc(ext.v.name) + ' · ' + new Date().toLocaleString() + '</p>' +
-          '<p class="sub">' + fmt(res.hearts_spent || r.hearts_cost) + ' Hearts used. You have ' + fmt(ext.hearts) + ' Hearts here now.</p>' +
-          '<button class="btn" type="button" data-close>Done</button></div>';
+        const item = { id: res.redemption_id, code: res.code, status: 'pending', reward_title: res.reward_title || r.title, hearts: res.hearts_spent || r.hearts_cost,
+          venue_id: ext.v.id, venue_name: res.venue_name || ext.v.name, expires_at: res.expires_at, created_at: new Date().toISOString() };
+        ext.collect = [item].concat((ext.collect || []).filter((x) => x.id !== item.id));
+        if (item.code) collectView(wrap, item, fmt(item.hearts) + ' Hearts used. You have ' + fmt(ext.hearts) + ' Hearts here now.');
+        else sheet.innerHTML = '<div class="center" style="min-height:0;padding:8px 0"><div class="success">✓</div><h2>Redeemed</h2>' +
+          '<div class="join-offer">' + esc(item.reward_title) + '</div><p class="sub">Show this screen to the staff.</p><button class="btn" type="button" data-close>Done</button></div>';
       } else {
         const why = { not_authenticated: 'Please sign in again.', not_a_member: 'Check in here first to start collecting Hearts at ' + ext.v.name + '.',
           insufficient_hearts: 'You don’t have enough Hearts here yet.', reward_sold_out: 'This reward has run out.',
@@ -697,6 +704,93 @@
       }
       paintExtras();
     };
+  }
+
+  // Rewards to collect (Nov 25, 2026): every redemption has a code (R-XXXXX) and a QR. Staff scan it or type the
+  // code in Biz → Rewards and mark it Given. Not collected in 24 hours → expired and the Hearts come back (server).
+  async function loadCollect(venueId) {
+    try {
+      const { data, error } = await sb.rpc('my_reward_redemptions', { p_venue_id: venueId });
+      if (error || !ext.v || ext.v.id !== venueId) return;
+      ext.collect = Array.isArray(data) ? data : [];
+      paintExtras();
+    } catch (e) { /* the rest of the page still works */ }
+  }
+  function untilText(d) {
+    if (!d) return '';
+    try {
+      const t = new Date(d), now = new Date();
+      const time = t.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      if (t.toDateString() === now.toDateString()) return 'Good until ' + time + ' today';
+      if (t.toDateString() === new Date(now.getTime() + 86400000).toDateString()) return 'Good until ' + time + ' tomorrow';
+      return 'Good until ' + shortDate(d) + ' ' + time;
+    } catch (e) { return ''; }
+  }
+  function collectRows() {
+    const list = ext.collect || [];
+    return list.map((c) => {
+      if (c.status === 'pending') {
+        return '<div class="vz-row"><span class="vz-ic sm rd-ic">' + giftIcon() + '</span><span class="vz-main"><span class="vz-t">' + esc(c.reward_title || 'Reward') + '</span>' +
+          '<span class="vz-s rd-ready">Ready to collect · ' + esc(c.code || '') + '</span><span class="vz-s">' + esc(untilText(c.expires_at)) + '</span></span>' +
+          '<span class="vz-side"><button class="cz-pill on" type="button" data-collect="' + esc(c.id) + '">Show code</button></span></div>';
+      }
+      const msg = c.status === 'approved' ? 'Given · enjoy!'
+        : (c.status === 'expired' ? 'Not collected in time' : 'Not given') + ' · ' + fmt(c.hearts) + ' Hearts back';
+      return '<div class="vz-row"><span class="vz-ic sm">' + giftIcon() + '</span><span class="vz-main"><span class="vz-t">' + esc(c.reward_title || 'Reward') + '</span>' +
+        '<span class="vz-s">' + esc(msg) + '</span></span></div>';
+    }).join('');
+  }
+  function showCollect(id) {
+    const it = (ext.collect || []).find((x) => x.id === id);
+    if (!it) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'sheetwrap';
+    wrap.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-label="Your reward code"></div>';
+    wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-close]')) wrap.remove(); });
+    document.body.appendChild(wrap);
+    collectView(wrap, it, '');
+  }
+  // The code + QR sheet. While it is open, it checks every 4 s whether the staff marked it Given.
+  function collectView(wrap, it, note) {
+    const sheet = wrap.querySelector('.sheet');
+    const url = 'https://biz.barchata.com/venue/rewards?code=' + encodeURIComponent(it.code);
+    sheet.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h2>Show this to the staff</h2><button class="iconbtn" data-close aria-label="Close">✕</button></div>' +
+      '<div class="join-offer">' + esc(it.reward_title || 'Reward') + '</div>' +
+      '<p class="muted" style="margin:2px 0 14px">' + esc(it.venue_name || (ext.v && ext.v.name) || '') + (note ? ' · ' + esc(note) : '') + '</p>' +
+      '<div class="qr rd-qr">' + qrSvg(url) + '</div>' +
+      '<div class="rd-code" aria-label="Code ' + esc(String(it.code).split('').join(' ')) + '">' + esc(it.code) + '</div>' +
+      '<p class="sub" style="text-align:center;margin:0">Staff scan this, or type the code in BarChata Biz → Rewards.</p>' +
+      '<p class="muted" style="text-align:center;margin:6px 0 0">' + esc(untilText(it.expires_at)) + '. Not collected by then? Your Hearts come back.</p>' +
+      '<div class="gap"></div><button class="btn secondary" type="button" data-close>Close · it stays under Rewards</button>';
+    const venueId = it.venue_id || (ext.v && ext.v.id);
+    const tick = async () => {
+      if (!document.body.contains(wrap)) return;
+      let row = null;
+      try {
+        const { data } = await sb.rpc('my_reward_redemptions', { p_venue_id: venueId });
+        row = (data || []).find((x) => x.id === it.id) || null;
+      } catch (e) { /* try again next tick */ }
+      if (!document.body.contains(wrap)) return;
+      if (row && row.status !== 'pending') {
+        const ok = row.status === 'approved';
+        sheet.innerHTML = '<div class="center" style="min-height:0;padding:8px 0">' +
+          (ok ? '<div class="success">✓</div><h2>Enjoy your ' + esc(row.reward_title || 'reward') + '!</h2><p class="sub">Given by the staff at ' + esc(row.venue_name || '') + '.</p>'
+              : '<h2>' + (row.status === 'expired' ? 'This reward expired' : 'Not given') + '</h2><p class="sub">Your ' + fmt(row.hearts) + ' Hearts are back.</p>') +
+          '<button class="btn" type="button" data-close>Done</button></div>';
+        if (ext.v && ext.v.id === venueId) {
+          loadCollect(venueId);
+          if (!ok && ext.opts.uid) {
+            try {
+              const { data: m } = await sb.from('members').select('hearts').eq('venue_id', venueId).eq('profile_id', ext.opts.uid).maybeSingle();
+              if (m && ext.v && ext.v.id === venueId) { ext.hearts = Number(m.hearts || 0); paintExtras(); }
+            } catch (e) { /* shows on the next visit */ }
+          }
+        }
+        return;
+      }
+      setTimeout(tick, 4000);
+    };
+    setTimeout(tick, 4000);
   }
 
   // The place page's top: the business's photo softly blurred behind, its picture, name and address.

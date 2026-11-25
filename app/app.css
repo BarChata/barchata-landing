@@ -98,6 +98,12 @@ h2{font-family:"DM Sans";font-size:19px;font-weight:700;letter-spacing:-.2px}
 .join-done .join-hearts{align-self:center}
 .join-code{font-family:"DM Sans";font-size:44px;font-weight:800;letter-spacing:8px;color:var(--brand);line-height:1.1}
 .join-state{font-weight:800;font-size:17px;color:var(--ok)}
+/* Reward code + QR (Nov 25, 2026) */
+.rd-qr{max-width:236px;margin:0 auto}
+.rd-qr svg{width:208px;height:208px}
+.rd-code{font-family:"DM Sans";font-size:38px;font-weight:800;letter-spacing:5px;color:var(--brand);text-align:center;line-height:1.1;margin:14px 0 8px;font-variant-numeric:tabular-nums}
+.rd-ready{color:var(--brand);font-weight:700}
+.rd-ic{color:var(--brand)}
 
 /* Coaster landing (barchata.com/s), Spotlight design, Nov 23, 2026 */
 .spinner.sm{width:16px;height:16px;border-width:2px;flex:none}
