@@ -250,3 +250,7 @@ a.cz-pill.on{color:#000}
 .vz .wifi-pw{font-size:20px}
 .vz-wallet{flex:none;height:40px;padding:0 14px;border-radius:10px;border:1px solid rgba(var(--on),.35);background:#000;color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
 .vz-wallet:disabled{opacity:.5}
+
+/* Undo a check-in (Nov 26, 2026) */
+.vz-undo{display:block;margin:10px auto 0;background:none;border:0;color:var(--text2);font:600 13px/1.2 "DM Sans",system-ui,sans-serif;text-decoration:underline;text-underline-offset:3px;padding:6px 4px;cursor:pointer}
+.vz-undo:disabled{opacity:.6}

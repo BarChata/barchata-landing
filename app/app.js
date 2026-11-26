@@ -859,7 +859,29 @@
           if (act) {
             act.innerHTML = '<div class="vz-done"><span class="vz-check" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
               '<div class="vz-main"><p class="vz-t">' + (held ? 'Check-in saved' : again ? 'Already checked in today' : 'You’re checked in') + '</p><p class="vz-s">' + line + '</p></div>' +
-              '<a class="cz-pill" href="/app" data-link>My Hearts</a></div>';
+              '<a class="cz-pill" href="/app" data-link>My Hearts</a></div>' +
+              // Undo (Nov 26, 2026): a stray tap can be taken back for 10 minutes (undo_my_checkin on the server).
+              (!again && res.checkin_id ? '<button class="vz-undo" type="button" id="vzUndo">Undo check-in</button>' : '');
+            const ub = document.getElementById('vzUndo');
+            if (ub) {
+              const hide = setTimeout(() => { if (ub.isConnected) ub.remove(); }, 9 * 60 * 1000 + 50 * 1000);
+              let armed = false;
+              ub.onclick = async () => {
+                if (!armed) { armed = true; ub.textContent = pts > 0 ? 'Tap again to undo and return ' + pts + ' Hearts' : 'Tap again to undo'; return; }
+                ub.disabled = true; ub.textContent = 'Undoing…';
+                try {
+                  const { data: u, error: uErr } = await sb.rpc('undo_my_checkin', { p_checkin_id: res.checkin_id });
+                  if (uErr) throw uErr;
+                  if (!u || !u.ok) {
+                    toast((u && u.message) || ({ too_late: 'Check-ins can only be undone in the first 10 minutes.', not_found: 'This check-in is already gone.' }[u && u.error]) || 'Could not undo.');
+                    ub.remove(); return;
+                  }
+                  clearTimeout(hide);
+                  toast(Number(u.hearts_taken_back || 0) > 0 ? 'Check-in undone · ' + fmt(u.hearts_taken_back) + ' Hearts returned' : 'Check-in undone');
+                  setTimeout(() => location.reload(), 900);
+                } catch (err) { toast(err.message || 'Could not undo.'); ub.disabled = false; ub.textContent = 'Undo check-in'; armed = false; }
+              };
+            }
           }
           fillScanJoin();
           loadExtras(v, { signedIn: true, uid, checkedIn: true }); // after a check-in the Wi-Fi password and Play now can unlock
