@@ -1331,6 +1331,26 @@
     return '<p class="legal">Get the full app: ' + (APP_STORE_LIVE ? '<a href="https://apps.apple.com/app/id6769344926">App Store</a>' : '') + (PLAY_STORE_LIVE ? ' · <a href="https://play.google.com/store/apps/details?id=com.barchata.social">Google Play</a>' : '') + '</p>';
   }
 
+  // Staff code (Nov 25, 2026 - favourite servers): barchata.com/scan/ST-XXXXXXXX is a server's, bartender's or
+  // stylist's own QR. Saving them needs the BarChata app (the card, My people and notes live there), so the web
+  // page only explains it and opens the app or the store. Nothing about the person is shown here.
+  const STAFF_CODE = /^ST-[A-Z0-9]{8}$/i;
+  function viewStaffCode(code) {
+    const c = String(code).toUpperCase();
+    render(header() +
+      '<div class="center">' +
+        '<div style="font-size:44px;line-height:1">🙌</div>' +
+        '<h1>Save your server</h1>' +
+        '<p class="sub">This is a BarChata staff code. Open it in the BarChata app to say who looked after you, save them to My people and find them next time.</p>' +
+        '<div class="stack" style="width:100%">' +
+          '<a class="btn" href="barchata://scan/' + esc(encodeURIComponent(c)) + '">Open in the BarChata app</a>' +
+          (APP_STORE_LIVE ? '<a class="btn secondary" href="https://apps.apple.com/app/id6769344926">Get it on the App Store</a>' : '') +
+          (PLAY_STORE_LIVE ? '<a class="btn secondary" href="https://play.google.com/store/apps/details?id=com.barchata.social">Get it on Google Play</a>' : '') +
+        '</div>' +
+        '<p class="legal">Code ' + esc(c) + '. Once you have the app, scan it again with your camera.</p>' +
+      '</div>');
+  }
+
   // ------------------------------------------------------------------ router
   // Email unsubscribe (link in the footer of BarChata tips emails). Works signed in or out.
   async function viewUnsub(token) {
@@ -1383,6 +1403,7 @@
     if (params.get('stop')) return viewStop(params.get('stop'));
     if (/^\/s\/?$/i.test(location.pathname)) return viewCoaster(params); // printed coaster QR
     const code = scanCodeFromPath();
+    if (code && STAFF_CODE.test(code)) return viewStaffCode(code);
     if (code) return viewScan(code);
     const { data: { session } } = await sb.auth.getSession();
     if (params.get('reset') && session) return viewReset();
